@@ -2,7 +2,7 @@ import http.server, socketserver, json, hashlib, hmac, sqlite3, time, os, random
 from urllib.parse import parse_qs
 import os
 
-BOT_TOKEN = '' 
+BOT_TOKEN = os.environ.get('BOT_TOKEN', '')  # токен живёт в переменных окружения
 
 DB = 'data.db'
 
