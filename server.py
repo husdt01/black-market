@@ -2,7 +2,7 @@ import http.server, socketserver, json, hashlib, hmac, sqlite3, time, os, random
 from urllib.parse import parse_qs
 import os
 
-BOT_TOKEN = '8799256140:AAF2RsKrv5dya4njEnuXf4WStvh4b0KygQw'  # <-- ВСТАВЬ ТОКЕН БОТА
+BOT_TOKEN = '' 
 
 DB = 'data.db'
 
