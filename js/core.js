@@ -224,34 +224,30 @@ function openAuction(auc) {
 
 // ==================== ЗАПУСК ====================
 async function boot() {
-  // Загружаем данные с сервера
-  await loadState();
-  await loadMarket();
-  await loadAuctions();
-
-  // Лоадер
+  // Лоадер крутится сразу, сервер не блокирует вход
   const lines = ['CONNECTING...', 'ENCRYPTING SESSION...', 'ESTABLISHING SECURE CHANNEL...'];
   const L = $('#ld-line');
   let i = 0;
-  await new Promise(res => {
-    (function nx() {
-      if (i < lines.length) { L.textContent = lines[i++]; setTimeout(nx, 700); }
-      else { L.textContent = 'CHANNEL READY'; $('#enter').hidden = false; res(); }
-    })();
-  });
+  (function nx() {
+    if (i < lines.length) { L.textContent = lines[i++]; setTimeout(nx, 700); }
+    else { L.textContent = 'CHANNEL READY'; $('#enter').hidden = false; }
+  })();
 
-  $('#enter').addEventListener('click', async () => {
+  // Данные грузятся в фоне
+  loadState().catch(() => {});
+  loadMarket().catch(() => {});
+  loadAuctions().catch(() => {});
+
+  $('#enter').addEventListener('click', () => {
     $('#loader').style.opacity = '0';
-    setTimeout(async () => {
+    setTimeout(() => {
       $('#loader').remove();
       $('#app').classList.remove('hidden');
       render();
-      showNotification('ДОБРО ПОЖАЛОВАТЬ', `Сессия открыта`);
-
-      // Обновление рынка и аукционов каждые 5 секунд
-      setInterval(async () => {
-        await loadMarket();
-        await loadAuctions();
+      showNotification('ДОБРО ПОЖАЛОВАТЬ', 'Сессия открыта');
+      setInterval(() => {
+        loadMarket().catch(() => {});
+        loadAuctions().catch(() => {});
         if (!ui.open && ui.page === 'market') renderGrid();
         if (ui.page === 'auctions') renderAuctions();
         hdr();
