@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>BLACK MARKET</title>
+<link rel="stylesheet" href="css/style.css">
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+<div id="loader">
+  <h1>BLACK MARKET</h1>
+  <p>PRIVATE MARKET TERMINAL</p>
+  <div id="ld-line">CONNECTING...</div>
+  <button id="enter" class="btn" hidden>ENTER MARKET</button>
+</div>
+<div id="app" class="hidden">
+  <header>
+    <div class="logo">BLACK MARKET <span class="online"><i></i>ONLINE</span></div>
+    <div class="hdr-right">
+      <div class="bal"><small>БАЛАНС</small><b id="bal">₽ 0</b></div>
+      <button id="bell" class="icon-btn">🔔<span id="badge" hidden>0</span></button>
+    </div>
+  </header>
+  <main id="view"></main>
+  <nav id="tabbar">
+    <button class="tab on" data-page="market">РЫНОК</button>
+    <button class="tab" data-page="auctions">АУКЦИОН</button>
+    <button class="tab" data-page="inventory">ИНВЕНТ.</button>
+    <button class="tab" data-page="profile">ПРОФИЛЬ</button>
+  </nav>
+</div>
+<div id="modals"></div>
+<div id="toasts"></div>
+<script src="js/core.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/telegram.js"></script>
+</body>
+</html>
