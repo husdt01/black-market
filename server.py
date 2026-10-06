@@ -363,11 +363,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_json({'error': 'not found'}, 404)
 
 
-# ==================== ЗАПУСК ====================
 if __name__ == '__main__':
     init_db()
     PORT = int(os.environ.get('PORT', 8765))
-    with socketserver.TCPServer(('', PORT), Handler) as httpd:
-        httpd.allow_reuse_address = True
-        print(f'Server: http://localhost:{PORT}')
-        httpd.serve_forever()
+    httpd = http.server.ThreadingHTTPServer(('0.0.0.0', PORT), Handler)
+    httpd.daemon_threads = True
+    print(f'Server: http://localhost:{PORT}')
+    httpd.serve_forever()
