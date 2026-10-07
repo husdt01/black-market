@@ -13,13 +13,16 @@ let MARKET={products:[],tick:0};
 let AUCTIONS=[];
 
 async function api(path,method,body){
+  const ctl=new AbortController();
+  const to=setTimeout(()=>ctl.abort(),10000);
   try{
-    const o={method:method||'GET',headers:{}};
+    const o={method:method||'GET',headers:{},signal:ctl.signal};
     if(TG_ID)o.headers['X-TG-ID']=TG_ID;
     if(body){o.headers['Content-Type']='application/json';o.body=JSON.stringify(body)}
     const r=await fetch(path,o);
     return await r.json();
   }catch(e){return{error:String(e)}}
+  finally{clearTimeout(to)}
 }
 
 function badge(){const b=$('#badge');if(b){b.hidden=!unread;b.textContent=unread}}
@@ -54,19 +57,15 @@ async function buyProduct(p){
   const pr=Math.round(p.price);
   if(S.bal<pr)return showNotification('НЕДОСТАТОЧНО СРЕДСТВ','Баланс слишком мал','dn');
   const r=await api('/api/action','POST',{action:'buy',price:pr,item:{name:p.name,rarity:p.rarity,cat:p.cat,hue:Math.floor(Math.random()*360)}});
-  if(r.ok){S.bal=r.balance;showNotification('ПОКУПКА ЗАВЕРШЕНА',p.name+' в инвентаре','up');closeModal();render()}
+  if(r.ok){showNotification('ПОКУПКА ЗАВЕРШЕНА',p.name+' в инвентаре','up');closeModal();await loadState();render()}
   else showNotification('ОШИБКА',r.msg||'Покупка не удалась','dn');
 }
-function sellProduct(uid,price){
+async function sellProduct(uid,price){
   price=Math.round(price);
   if(!(price>0))return showNotification('НЕВЕРНАЯ ЦЕНА','Введите цену','dn');
-  const it=S.inv.find(x=>x.uid==uid);
-  api('/api/action','POST',{action:'sell',uid:uid,price:price}).then(r=>{
-    if(r.ok){S.bal=r.balance;S.inv=S.inv.filter(x=>x.uid!=uid);
-      S.tx.unshift({t:Date.now()/1000,type:'SELL',item:it?it.name:'',amount:price});
-      showNotification('ПРОДАЖА ЗАВЕРШЕНА','Продано за '+fmt(price),'up');closeModal();render()}
-    else showNotification('ОШИБКА',r.msg||'Продажа не удалась','dn');
-  });
+  const r=await api('/api/action','POST',{action:'sell',uid:uid,price:price});
+  if(r.ok){showNotification('ПРОДАЖА ЗАВЕРШЕНА','Продано за '+fmt(price),'up');closeModal();await loadState();render()}
+  else showNotification('ОШИБКА',r.msg||'Продажа не удалась','dn');
 }
 function sellModal(uid){
   const i=S.inv.find(x=>x.uid==uid);
@@ -88,13 +87,12 @@ function confirmBuy(p){
   $('#m-no').onclick=closeModal;
   $('#m-yes').onclick=()=>buyProduct(p);
 }
-function placeBid(auc,amount){
+async function placeBid(auc,amount){
   amount=Math.round(amount);
   if(!(amount>0))return showNotification('ОШИБКА','Введите ставку','dn');
-  api('/api/action','POST',{action:'bid',auction_id:auc.id,amount:amount}).then(r=>{
-    if(r.ok){S.bal=r.balance;showNotification('СТАВКА ПРИНЯТА','Ставка '+fmt(amount),'up');closeModal();loadAuctions().then(render)}
-    else showNotification('ОШИБКА',r.msg||'Ставка не принята','dn');
-  });
+  const r=await api('/api/action','POST',{action:'bid',auction_id:auc.id,amount:amount});
+  if(r.ok){showNotification('СТАВКА ПРИНЯТА','Ставка '+fmt(amount),'up');closeModal();await loadState();await loadAuctions();render()}
+  else showNotification('ОШИБКА',r.msg||'Ставка не принята','dn');
 }
 function openAuction(a){
   ui.open=a.id;
@@ -116,7 +114,7 @@ function openProduct(id){
   if(!p)return;
   ui.open=id;
   const c=((p.price/p.base)-1)*100;
-  modal('<h4>'+p.name+'</h4>'+
+  modal('<h4>'+p.name+'</h4>'+spark(p.hist,c>=0)+
     '<div class="line"><span>ID</span><b>'+p.id+'</b></div>'+
     '<div class="line"><span>РЕДКОСТЬ</span><b>'+p.rarity+'</b></div>'+
     '<div class="line"><span>ЦЕНА</span><b style="color:var(--grn)">'+fmt(p.price)+'</b></div>'+
@@ -125,6 +123,13 @@ function openProduct(id){
     '<div class="acts"><button class="btn" id="m-no">ЗАКРЫТЬ</button><button class="btn pri" id="m-yes">КУПИТЬ</button></div>');
   $('#m-no').onclick=closeModal;
   $('#m-yes').onclick=()=>confirmBuy(p);
+}
+
+function spark(hist,up){
+  if(!hist||hist.length<2)return'';
+  const h=hist.slice(-40),mn=Math.min.apply(null,h),mx=Math.max.apply(null,h),rg=(mx-mn)||1;
+  const pts=h.map((v,i)=>((i/(h.length-1))*100).toFixed(1)+','+(26-((v-mn)/rg)*24).toFixed(1)).join(' ');
+  return '<svg viewBox="0 0 100 28" preserveAspectRatio="none" style="width:100%;height:34px;display:block;margin:8px 0;background:rgba(255,255,255,.02);border:1px solid var(--ln);border-radius:6px"><polyline points="'+pts+'" fill="none" stroke="'+(up?'#7ee08f':'#b8483f')+'" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>';
 }
 
 function hdr(){const b=$('#bal');if(b)b.textContent=fmt(S.bal)}
@@ -141,7 +146,7 @@ function card(p){
   return '<article class="card r-'+p.rarity+'">'+
     '<div class="art"><i></i></div>'+
     '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut)"><span>'+p.rarity+'</span><span>'+p.id+'</span></div>'+
-    '<h3>'+p.name+'</h3>'+
+    '<h3>'+p.name+'</h3>'+spark(p.hist,c>=0)+
     '<div class="row"><span>Продавец</span><b>'+p.seller+'</b></div>'+
     '<div class="row"><span>Цена</span><b style="color:var(--grn)">'+fmt(p.price)+'</b></div>'+
     '<div class="row"><span>Изменение</span><b class="'+(c>=0?'up':'dn')+'">'+pct(c)+'</b></div>'+
@@ -250,7 +255,7 @@ function boot(){
     try{tg.ready();tg.expand()}catch(e){}
     if(tg.initData){
       fetch('/api/tg/validate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:tg.initData})})
-        .then(r=>r.json()).then(d=>{if(d&&d.valid){TG_ID=d.tg_id;S.user=d.username||'TRADER';loadState().catch(()=>{})}}).catch(()=>{});
+        .then(r=>r.json()).then(d=>{if(d&&d.valid){TG_ID=d.tg_id;S.user=d.username||'TRADER';loadState().catch(()=>{}).then(()=>{if(entered)render()})}}).catch(()=>{});
     }
   }
   boot();
