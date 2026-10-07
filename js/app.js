@@ -313,7 +313,7 @@ function renderProfile(){
   const profit=worth-100000;
   const sndOn=SND.on();
   $('#view').innerHTML='<h2 class="pt">ПРОФИЛЬ</h2>'+
-    '<div class="pf-h"><div class="av">👤</div><div class="pf-n"><b>'+S.user+'</b><small>РЕПУТАЦИЯ: '+S.rep+' · ID: '+TG_ID.slice(0,14)+'</small></div></div>'+
+    '<div class="pf-h"><div class="av">👤</div><div class="pf-n"><b>'+S.user+'</b><small>РЕПУТАЦИЯ: '+S.rep+'</small><small style="color:var(--mut);margin-top:3px">ID: '+TG_ID+'</small></div></div>'+
     '<div class="stats"><div class="stat"><small>СОСТОЯНИЕ</small><b>'+fmt(worth)+'</b></div>'+
     '<div class="stat"><small>ПРИБЫЛЬ</small><b class="'+(profit>=0?'up':'dn')+'">'+(profit>=0?'+':'')+fmt(profit)+'</b></div>'+
     '<div class="stat"><small>СДЕЛОК</small><b>'+S.tx.length+'</b></div>'+
