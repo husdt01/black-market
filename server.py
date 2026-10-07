@@ -98,6 +98,23 @@ def get_market():
             'exp': now + int(seeded_random(seed + "_e") * 3600) + 600
         })
     return {'tick': ft, 'time': now, 'products': products, 'raid': raid_info(now)}
+    
+    def item_price(item, ft):
+    name, cat, rarity, base = item
+    seed = f"{ft}_{name}"
+    r1 = seeded_random(seed + "_p")
+    vol = VOL.get(rarity, .02)
+    mult = RAID['mult'].get(name, 1)
+    change = (r1 - 0.5) * 2 * vol * 8
+    return round(max(base * 0.4, min(base * 2.2, base * (1 + change) * mult)))
+
+def market_price(name):
+    it = next((i for i in ITEMS if i[0] == name), None)
+    if not it: return None
+    now = int(time.time()); tick = now // 10
+    raid_check(now, tick)
+    ft = RAID['frozen'] if RAID['frozen'] is not None else tick
+    return item_price(it, ft)
 
 # ==================== АУКЦИОНЫ ====================
 def get_auctions():
