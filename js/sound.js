@@ -1,12 +1,19 @@
 'use strict';
 const SND=(function(){
-let ctx=null,master=null;
-const on=()=>localStorage.getItem('bm_sound')==='1';
+let ctx=null,master=null,ambOn=false;
+const on=()=>localStorage.getItem('bm_sound')!=='0';
 function init(){
   if(!ctx){const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return false;
     ctx=new AC();master=ctx.createGain();master.gain.value=.5;master.connect(ctx.destination)}
   if(ctx.state==='suspended')ctx.resume();
   return true}
+function amb(){
+  if(ambOn||!ctx)return;ambOn=true;
+  const g=ctx.createGain();g.gain.value=.012;g.connect(master);
+  const f=ctx.createBiquadFilter();f.type='lowpass';f.frequency.value=220;f.connect(g);
+  [55,55.7,110.3].forEach(fr=>{const o=ctx.createOscillator();o.type='sawtooth';o.frequency.value=fr;o.connect(f);o.start()});
+  const lfo=ctx.createOscillator();lfo.frequency.value=.07;const lg=ctx.createGain();lg.gain.value=.006;
+  lfo.connect(lg);lg.connect(g.gain);lfo.start()}
 function tone(f,d,o){o=o||{};if(!ctx)return;const t=ctx.currentTime+(o.at||0),os=ctx.createOscillator(),g=ctx.createGain(),v=o.v||.08;
   os.type=o.type||'sine';os.frequency.setValueAtTime(f,t);if(o.to)os.frequency.exponentialRampToValueAtTime(o.to,t+d);
   g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(v,t+.006);g.gain.exponentialRampToValueAtTime(.0001,t+d);
@@ -24,8 +31,9 @@ const FX={
   craft(){tone(70,1.2,{type:'sawtooth',v:.06,to:420})}
 };
 function play(n){if(!on()||!FX[n])return;if(!init())return;try{FX[n]()}catch(e){}}
-function set(v){localStorage.setItem('bm_sound',v?'1':'0');if(v)init()}
-['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,()=>{if(on())init()},true));
+function set(v){localStorage.setItem('bm_sound',v?'1':'0');if(v){if(init())amb()}}
+function unlock(){if(on()){if(init())amb()}}
+['pointerdown','keydown'].forEach(ev=>document.addEventListener(ev,unlock,true));
 document.addEventListener('click',e=>{if(e.target.closest('.btn,.chip,.tab'))play('click')},true);
 return{play,set,on};
 })();
