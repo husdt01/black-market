@@ -10,28 +10,32 @@
 <body>
 <div id="loader">
   <h1>BLACK MARKET</h1>
-  <p>PRIVATE MARKET TERMINAL</p>
-  <div id="ld-line">CONNECTING...</div>
-  <button id="enter" class="btn" hidden>ENTER MARKET</button>
+  <p>ЗАКРЫТЫЙ РЫНОК · ТЕРМИНАЛ</p>
+  <div id="ld-line">СОЕДИНЕНИЕ...</div>
+  <button id="enter" class="btn pri" hidden>ВОЙТИ В РЫНОК</button>
 </div>
 <div id="app" class="hidden">
   <header>
-    <div class="logo">BLACK MARKET <span class="online"><i></i>ONLINE</span></div>
+    <div class="logo">BLACK MARKET <span class="online"><i></i>В СЕТИ</span></div>
     <div class="hdr-right">
       <div class="bal"><small>БАЛАНС</small><b id="bal">₽ 0</b></div>
       <button id="bell" class="icon-btn">🔔<span id="badge" hidden>0</span></button>
     </div>
   </header>
+  <div id="raid"><b>⚠ РЕЙД · РЫНОК ЗАМОРОЖЕН</b><small id="rd-t"></small><div class="rd-bar"><i id="rd-i"></i></div></div>
   <main id="view"></main>
   <nav id="tabbar">
     <button class="tab on" data-page="market">РЫНОК</button>
     <button class="tab" data-page="auctions">АУКЦИОН</button>
+    <button class="tab" data-page="contracts">ЗАДАНИЯ</button>
     <button class="tab" data-page="inventory">ИНВЕНТ.</button>
+    <button class="tab" data-page="craft">КРАФТ</button>
     <button class="tab" data-page="profile">ПРОФИЛЬ</button>
   </nav>
 </div>
 <div id="modals"></div>
 <div id="toasts"></div>
+<script src="js/sound.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>
