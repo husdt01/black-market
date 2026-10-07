@@ -50,7 +50,7 @@ function closeModal(){ui.open=null;const m=$('.modal');if(m){m.classList.remove(
 async function loadState(){
   if(!TG_ID)return;
   const d=await api('/api/state');
-  if(d&&!d.error){S.bal=d.balance!=null?d.balance:100000;const st=d.state||{};S.inv=st.inv||[];S.tx=st.tx||[];S.rep=st.rep||0;if(d.username)S.user=d.username}
+  if(d&&!d.error){S.bal=d.balance!=null?d.balance:100000;const st=d.state||{};S.inv=st.inv||[];S.tx=st.tx||[];S.rep=st.rep||0;if(d.username&&S.user==='ГОСТЬ')S.user=d.username}
 }
 async function loadMarket(){const d=await api('/api/market');if(d&&d.products){MARKET=d;raidCheck()}}
 async function loadAuctions(){const d=await api('/api/auctions');if(d&&d.auctions)AUCTIONS=d.auctions}
