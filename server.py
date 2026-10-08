@@ -237,7 +237,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except Exception as e: self.send_json({'error': 'SERVER: ' + str(e)}, 500)
 
         def _get(self):
-        tg_id = self.headers.get('X-TG-ID', '')
+                tg_id = self.headers.get('X-TG-ID', '')
         if self.path == '/api/market':
             self.send_json(get_market())
         elif self.path == '/api/auctions':
@@ -281,7 +281,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             secret = hmac.new(b'WebAppData', BOT_TOKEN.encode(), hashlib.sha256).digest()
             params = parse_qs(init_data)
             received_hash = params.get('hash', [''])[0]
-            pairs = sorted(f"{k}={v[0]}" for k, v in params.items() if k != 'hash")
+            pairs = sorted(f"{k}={v[0]}" for k, v in params.items() if k != 'hash')
             computed = hmac.new(secret, '\n'.join(pairs).encode(), hashlib.sha256).hexdigest()
             if computed == received_hash:
                 user_data = json.loads(params.get('user', ['{}'])[0])
