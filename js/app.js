@@ -14,7 +14,7 @@ let ui={page:'market',cat:'ALL',open:null};
 let notes=[],unread=0,entered=false;
 let MARKET={products:[],tick:0,raid:{active:false,left:0}};
 let AUCTIONS=[],CONTRACTS=[];
-let raidWas=false;
+let raidWas=false,stateReady=false;
 
 async function api(path,method,body){
   const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),10000);
@@ -50,7 +50,14 @@ function closeModal(){ui.open=null;const m=$('.modal');if(m){m.classList.remove(
 async function loadState(){
   if(!TG_ID)return;
   const d=await api('/api/state');
-  if(d&&!d.error){S.bal=d.balance!=null?d.balance:100000;const st=d.state||{};S.inv=st.inv||[];S.tx=st.tx||[];S.rep=st.rep||0;if(d.username&&S.user==='ГОСТЬ')S.user=d.username}
+  if(d&&!d.error){
+    const old=new Set(S.inv.map(x=>x.uid));
+    S.bal=d.balance!=null?d.balance:100000;
+    const st=d.state||{};S.inv=st.inv||[];S.tx=st.tx||[];S.rep=st.rep||0;
+    if(d.username&&S.user==='ГОСТЬ')S.user=d.username;
+    if(stateReady){S.inv.forEach(x=>{if(!old.has(x.uid)){showNotification('ПОСТАВКА',x.name+' поступил в инвентарь','up');SND.play('ping')}})}
+    stateReady=true;
+  }
 }
 async function loadMarket(){const d=await api('/api/market');if(d&&d.products){MARKET=d;raidCheck()}}
 async function loadAuctions(){const d=await api('/api/auctions');if(d&&d.auctions)AUCTIONS=d.auctions}
@@ -98,6 +105,7 @@ async function sellModal(uid){
   $('#m-no').onclick=closeModal;
   $('#m-yes').onclick=()=>sellProduct(uid,+$('#ask').value);
 }
+function confirmBuy(p){
   const pr=Math.round(p.price);
   modal('<h4>ПОДТВЕРЖДЕНИЕ ПОКУПКИ</h4><div class="line"><span>ПРЕДМЕТ</span><b>'+p.name+'</b></div>'+
     '<div class="line"><span>РЕДКОСТЬ</span><b>'+(RAR_RU[p.rarity]||p.rarity)+'</b></div>'+
@@ -123,6 +131,7 @@ function openAuction(a){
     '<div class="line"><span>ЛИДЕР</span><b>'+(a.leader||'—')+'</b></div>'+
     '<div class="line"><span>СТАВОК</span><b>'+a.n+'</b></div>'+
     '<div class="line"><span>ОСТАЛОСЬ</span><b class="dn">'+left(a.left)+'</b></div>'+
+    '<div class="line"><span>ПОЛУЧЕНИЕ</span><b>после завершения торгов</b></div>'+
     '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">ВАША СТАВКА (мин. '+fmt(minBid)+')</span>'+
     '<input class="inp" id="bid-amt" type="number" min="'+minBid+'" value="'+minBid+'">'+
     '<div class="acts"><button class="btn" id="m-no">ЗАКРЫТЬ</button><button class="btn pri" id="m-yes">СДЕЛАТЬ СТАВКУ</button></div>');
@@ -145,7 +154,6 @@ function openProduct(id){
   $('#m-yes').onclick=()=>confirmBuy(p);
 }
 
-/* ===== КОНТРАКТЫ ===== */
 async function ctAccept(id){
   const r=await api('/api/action','POST',{action:'ct-accept',id:id});
   if(r.ok){showNotification('КОНТРАКТ ПРИНЯТ','Найдите предмет и сдайте его в течение 10 минут','up');SND.play('ping');await loadContracts();render()}
@@ -162,11 +170,10 @@ async function ctDrop(id){
   await loadContracts();render();
 }
 
-/* ===== КРАФТ ===== */
 function craftModal(rid){
   const r=RCP[rid];
   const pool=S.inv.filter(x=>x.rarity===r.from);
-  if(pool.length<r.need)return showNotification('НЕ ХВАТАЕТ ПРЕДМЕТОВ','Нужно '+r.need+' шт. «'+(RAR_RU[r.from])+'», у вас '+pool.length,'dn'),SND.play('err');
+  if(pool.length<r.need)return showNotification('НЕ ХВАТАЕТ ПРЕДМЕТОВ','Нужно '+r.need+' шт. «'+RAR_RU[r.from]+'», у вас '+pool.length,'dn'),SND.play('err');
   ui.open='craft';
   const pre=pool.slice(0,r.need).map(x=>x.uid);
   modal('<h4>КРАФТ · '+r.title+'</h4>'+
@@ -192,7 +199,6 @@ function craftModal(rid){
   };
 }
 
-/* ===== ГРАФИК ===== */
 function spark(hist,up){
   if(!hist||hist.length<2)return'';
   const h=hist.slice(-40),mn=Math.min.apply(null,h),mx=Math.max.apply(null,h),rg=(mx-mn)||1;
@@ -200,7 +206,6 @@ function spark(hist,up){
   return '<svg viewBox="0 0 100 28" preserveAspectRatio="none" style="width:100%;height:34px;display:block;margin:8px 0;background:rgba(255,255,255,.02);border:1px solid var(--ln);border-radius:6px"><polyline points="'+pts+'" fill="none" stroke="'+(up?'#7ee08f':'#b8483f')+'" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>';
 }
 
-/* ===== РЕНДЕР СТРАНИЦ ===== */
 function hdr(){const b=$('#bal');if(b)b.textContent=fmt(S.bal)}
 function render(){
   $$('.tab').forEach(t=>t.classList.toggle('on',t.dataset.page===ui.page));
@@ -326,7 +331,6 @@ function renderProfile(){
   $('#snd-btn').onclick=()=>{SND.set(!SND.on());showNotification('ЗВУК',SND.on()?'Включён':'Выключен');render()};
 }
 
-/* ===== КЛИКИ ===== */
 document.addEventListener('click',e=>{
   const tab=e.target.closest('.tab');
   if(tab){ui.page=tab.dataset.page;render();return}
@@ -355,7 +359,6 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 
-/* ===== РЕЙД-ТАЙМЕР ===== */
 setInterval(()=>{
   const r=MARKET.raid||{active:false,left:0};
   const t=$('#rd-t'),bar=$('#rd-i');
@@ -365,7 +368,6 @@ setInterval(()=>{
   }
 },1000);
 
-/* ===== ЗАПУСК ===== */
 function boot(){
   const lines=['СОЕДИНЕНИЕ...','ШИФРОВАНИЕ СЕССИИ...','УСТАНОВКА ЗАЩИЩЁННОГО КАНАЛА...'];
   const L=$('#ld-line');let i=0;
@@ -382,10 +384,8 @@ function boot(){
       $('#app').classList.remove('hidden');
       render();
       showNotification('ДОБРО ПОЖАЛОВАТЬ','Сессия открыта');
-      setInterval(()=>{
-        loadMarket().catch(()=>{});
-        loadAuctions().catch(()=>{});
-        loadContracts().catch(()=>{});
+      setInterval(async()=>{
+        await Promise.all([loadMarket().catch(()=>{}),loadAuctions().catch(()=>{}),loadContracts().catch(()=>{}),loadState().catch(()=>{})]);
         if(!ui.open)render();else hdr();
       },5000);
     },800);
@@ -398,9 +398,11 @@ function boot(){
   if(window.Telegram&&window.Telegram.WebApp){
     const tg=window.Telegram.WebApp;
     try{tg.ready();tg.expand()}catch(e){}
+    const tu=tg.initDataUnsafe&&tg.initDataUnsafe.user;
+    if(tu){const fn=((tu.first_name||'')+' '+(tu.last_name||'')).trim();if(fn)S.user=fn;else if(tu.username)S.user=tu.username}
     if(tg.initData){
       fetch('/api/tg/validate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({initData:tg.initData})})
-        .then(r=>r.json()).then(d=>{if(d&&d.valid){TG_ID=d.tg_id;S.user=d.username||'ТРЕЙДЕР';loadState().catch(()=>{}).then(()=>{if(entered)render()})}}).catch(()=>{});
+        .then(r=>r.json()).then(d=>{if(d&&d.valid){TG_ID=d.tg_id;loadState().catch(()=>{}).then(()=>{if(entered)render()})}}).catch(()=>{});
     }
   }
   boot();
