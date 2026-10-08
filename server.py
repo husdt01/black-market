@@ -66,16 +66,19 @@ def raid_info(now):
     return {'active': RAID['frozen'] is not None,
             'left': max(0, RAID['until'] - now) if RAID['frozen'] is not None else 0}
 
+K = 10
+
 def item_price(item, ft):
     name, cat, rarity, base = item
-    seed = f"{ft}_{name}"
-    r1 = seeded_random(seed + "_p")
     vol = VOL.get(rarity, .02)
     mult = RAID['mult'].get(name, 1)
-    change = (r1 - 0.5) * 2 * vol * 8
+    tr = 0.0
+    for i in range(K):
+        tr += seeded_random(f"{ft - i}_{name}_p") - 0.5
+    tr /= K
+    change = tr * 2 * vol * 8
     return round(max(base * 0.4, min(base * 2.2, base * (1 + change) * mult)))
-
-def market_price(name):
+    
     it = next((i for i in ITEMS if i[0] == name), None)
     if not it: return None
     now = int(time.time()); tick = now // 10
