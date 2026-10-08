@@ -93,20 +93,26 @@ def get_market():
     products = []
     for idx, item in enumerate(ITEMS):
         name, cat, rarity, base = item
-        seed = f"{ft}_{name}"
-        r2 = seeded_random(seed + "_d")
-        price = item_price(item, ft)
+        vol = VOL.get(rarity, .02)
+        mult = RAID['mult'].get(name, 1)
+        ns = [seeded_random(f"{t}_{name}_p") - 0.5 for t in range(ft - 69, ft + 1)]
+        w = sum(ns[0:K]) + ns[K] - ns[0]
         hist = []
         for i in range(60):
-            hist.append(item_price(item, ft - (59 - i)))
+            if i > 0:
+                w += ns[i + K] - ns[i]
+            tr = w / K
+            change = tr * 2 * vol * 8
+            hist.append(round(max(base * 0.4, min(base * 2.2, base * (1 + change) * mult))))
+        r2 = seeded_random(f"{ft}_{name}_d")
         products.append({
             'id': f'VM-{10000 + idx * 7 + ft % 100}',
             'name': name, 'cat': cat, 'rarity': rarity,
-            'price': price, 'base': base,
+            'price': hist[-1], 'base': base,
             'seller': NPCS[idx % len(NPCS)],
             'hist': hist, 'views': int(r2 * 900) + 20,
-            'sup': int(seeded_random(seed + "_s") * 11) + 1,
-            'exp': now + int(seeded_random(seed + "_e") * 3600) + 600
+            'sup': int(seeded_random(f"{ft}_{name}_s") * 11) + 1,
+            'exp': now + int(seeded_random(f"{ft}_{name}_e") * 3600) + 600
         })
     return {'tick': ft, 'time': now, 'products': products, 'raid': raid_info(now)}
 
@@ -227,6 +233,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_json({'auctions': get_auctions()})
         elif self.path == '/api/contracts':
             self.send_json({'contracts': get_contracts(tg_id)})
+                    elif self.path.startswith('/api/price'):
+            q = parse_qs(self.path.split('?', 1)[1] if '?' in self.path else '')
+            self.send_json({'price': market_price(q.get('name', [''])[0])})
         elif self.path.startswith('/api/state'):
             if not tg_id: return self.send_json({'error': 'no tg_id'}, 403)
             conn = db()
@@ -304,10 +313,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 idx = next((i for i, x in enumerate(inv) if x.get('uid') == uid), None)
                 if idx is not None and price > 0:
                     cur = market_price(inv[idx].get('name', '')) or inv[idx].get('val', 0) or price
-                    if price > cur * 1.15:
-                        resp = {'ok': False, 'msg': 'НЕТ ПОКУПАТЕЛЯ: цена выше рыночной более чем на 15%'}
+                     if price > cur * 1.15:
+                        resp = {'ok': False, 'msg': f'НЕТ ПОКУПАТЕЛЯ: рынок сейчас {cur}, максимум {round(cur * 1.15)}'}
                     elif price < cur * 0.3:
-                        resp = {'ok': False, 'msg': 'Слишком дёшево: рынок не примет такую цену'}
+                        resp = {'ok': False, 'msg': 'Слишком дёшево: рынок сейчас ' + str(cur) + ', минимум ' + str(round(cur * 0.3))}
                     else:
                         item = inv.pop(idx); balance += price
                         tx.insert(0, {'t': now, 'type': 'ПРОДАЖА', 'item': item.get('name',''), 'amount': price})
