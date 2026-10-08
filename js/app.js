@@ -81,21 +81,23 @@ async function sellProduct(uid,price){
   if(r.ok){showNotification('ПРОДАЖА ЗАВЕРШЕНА','Продано за '+fmt(price),'up');SND.play('sell');closeModal();await loadState();render()}
   else{showNotification('ОШИБКА',r.msg||'Продажа не удалась','dn');SND.play('err')}
 }
-function sellModal(uid){
+async function sellModal(uid){
   const i=S.inv.find(x=>x.uid==uid);
   if(!i)return showNotification('ОШИБКА','Предмета нет','dn');
-  const val=Math.round(i.val||i.bought||0);
+  const d=await api('/api/price?name='+encodeURIComponent(i.name));
+  const val=Math.round(d&&d.price?d.price:(i.val||i.bought||0));
+  ui.open='sell';
   modal('<h4>ПРОДАЖА · '+i.name+'</h4>'+
-    '<div class="line"><span>РЫНОЧНАЯ ЦЕНА</span><b>'+fmt(val)+'</b></div>'+
+    '<div class="line"><span>РЫНОК СЕЙЧАС</span><b>'+fmt(val)+'</b></div>'+
     '<div class="line"><span>КУПЛЕНО ЗА</span><b>'+fmt(i.bought||0)+'</b></div>'+
     '<div class="line"><span>МАКС. ЦЕНА (+15%)</span><b>'+fmt(Math.round(val*1.15))+'</b></div>'+
     '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">ВАША ЦЕНА</span>'+
     '<input class="inp" id="ask" type="number" min="1" value="'+val+'">'+
     '<div class="acts"><button class="btn" id="m-no">ОТМЕНА</button><button class="btn pri" id="m-yes">ПРОДАТЬ</button></div>');
+  $('#ask').oninput=()=>{const v=+$('#ask').value||0;$('#m-yes').disabled=(v>val*1.15||v<val*0.3)};
   $('#m-no').onclick=closeModal;
   $('#m-yes').onclick=()=>sellProduct(uid,+$('#ask').value);
 }
-function confirmBuy(p){
   const pr=Math.round(p.price);
   modal('<h4>ПОДТВЕРЖДЕНИЕ ПОКУПКИ</h4><div class="line"><span>ПРЕДМЕТ</span><b>'+p.name+'</b></div>'+
     '<div class="line"><span>РЕДКОСТЬ</span><b>'+(RAR_RU[p.rarity]||p.rarity)+'</b></div>'+
