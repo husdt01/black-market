@@ -236,7 +236,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         try: self._get()
         except Exception as e: self.send_json({'error': 'SERVER: ' + str(e)}, 500)
 
-    def _get(self):
+        def _get(self):
         tg_id = self.headers.get('X-TG-ID', '')
         if self.path == '/api/market':
             self.send_json(get_market())
