@@ -3,12 +3,17 @@ from urllib.parse import parse_qs
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN', '')
 DB = 'data.db'
+K = 10
 
 def db():
-    conn = sqlite3.connect(DB); conn.row_factory = sqlite3.Row; return conn
+    conn = sqlite3.connect(DB, timeout=10)
+    conn.row_factory = sqlite3.Row
+    conn.execute('PRAGMA busy_timeout=5000')
+    return conn
 
 def init_db():
     conn = db()
+    conn.execute('PRAGMA journal_mode=WAL')
     conn.execute('''CREATE TABLE IF NOT EXISTS users(tg_id TEXT PRIMARY KEY, username TEXT,
         balance REAL DEFAULT 100000, state TEXT DEFAULT '{}', updated REAL DEFAULT 0)''')
     conn.execute('''CREATE TABLE IF NOT EXISTS auctions(id TEXT PRIMARY KEY, name TEXT, cat TEXT,
@@ -66,8 +71,6 @@ def raid_info(now):
     return {'active': RAID['frozen'] is not None,
             'left': max(0, RAID['until'] - now) if RAID['frozen'] is not None else 0}
 
-K = 10
-
 def item_price(item, ft):
     name, cat, rarity, base = item
     vol = VOL.get(rarity, .02)
@@ -78,7 +81,8 @@ def item_price(item, ft):
     tr /= K
     change = tr * 2 * vol * 8
     return round(max(base * 0.4, min(base * 2.2, base * (1 + change) * mult)))
-    
+
+def market_price(name):
     it = next((i for i in ITEMS if i[0] == name), None)
     if not it: return None
     now = int(time.time()); tick = now // 10
@@ -126,11 +130,12 @@ def get_auctions():
             if wid:
                 u = conn.execute("SELECT state FROM users WHERE tg_id=?", (wid,)).fetchone()
                 if u:
-                    st = json.loads(u['state'] or '{}'); inv = st.get('inv', [])
+                    st = json.loads(u['state'] or '{}'); inv = st.get('inv', []); tx = st.get('tx', [])
                     inv.append({'uid': int(now * 1000), 'name': r['name'], 'rarity': r['rarity'],
                                 'cat': r['cat'], 'hue': 200, 'bought': r['current_bid'],
                                 'val': r['current_bid'], 'date': now})
-                    st['inv'] = inv
+                    tx.insert(0, {'t': now, 'type': 'АУКЦИОН', 'item': r['name'], 'amount': 0})
+                    st['inv'] = inv; st['tx'] = tx[:100]
                     conn.execute("UPDATE users SET state=? WHERE tg_id=?", (json.dumps(st, ensure_ascii=False), wid))
     conn.execute("UPDATE auctions SET status='finished' WHERE end_time < ? AND status='active'", (now,))
     active = conn.execute("SELECT COUNT(*) FROM auctions WHERE status='active'").fetchone()[0]
@@ -210,6 +215,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, X-TG-ID')
         super().end_headers()
 
+    def log_message(self, *a): pass
+
     def do_OPTIONS(self):
         self.send_response(200); self.end_headers()
 
@@ -226,6 +233,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         return json.loads(self.rfile.read(length).decode('utf-8')) if length else {}
 
     def do_GET(self):
+        try: self._get()
+        except Exception as e: self.send_json({'error': 'SERVER: ' + str(e)}, 500)
+
+    def _get(self):
         tg_id = self.headers.get('X-TG-ID', '')
         if self.path == '/api/market':
             self.send_json(get_market())
@@ -233,7 +244,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_json({'auctions': get_auctions()})
         elif self.path == '/api/contracts':
             self.send_json({'contracts': get_contracts(tg_id)})
-                    elif self.path.startswith('/api/price'):
+        elif self.path.startswith('/api/price'):
             q = parse_qs(self.path.split('?', 1)[1] if '?' in self.path else '')
             self.send_json({'price': market_price(q.get('name', [''])[0])})
         elif self.path.startswith('/api/state'):
@@ -259,28 +270,29 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
 
     def do_POST(self):
+        try: self._post()
+        except Exception as e: self.send_json({'ok': False, 'valid': False, 'msg': 'SERVER: ' + str(e)}, 500)
+
+    def _post(self):
         if self.path == '/api/tg/validate':
             data = self.read_body(); init_data = data.get('initData', '')
             if not init_data or not BOT_TOKEN:
                 return self.send_json({'valid': False, 'msg': 'no initData or token'}, 403)
-            try:
-                secret = hmac.new(b'WebAppData', BOT_TOKEN.encode(), hashlib.sha256).digest()
-                params = parse_qs(init_data)
-                received_hash = params.get('hash', [''])[0]
-                pairs = sorted(f"{k}={v[0]}" for k, v in params.items() if k != 'hash')
-                computed = hmac.new(secret, '\n'.join(pairs).encode(), hashlib.sha256).hexdigest()
-                if computed == received_hash:
-                    user_data = json.loads(params.get('user', ['{}'])[0])
-                    tg_id = str(user_data.get('id', '')); username = user_data.get('username', '')
-                    conn = db()
-                    conn.execute("INSERT OR IGNORE INTO users(tg_id, username) VALUES(?,?)", (tg_id, username))
-                    conn.execute("UPDATE users SET username=? WHERE tg_id=?", (username, tg_id))
-                    conn.commit(); conn.close()
-                    self.send_json({'valid': True, 'tg_id': tg_id, 'username': username})
-                else:
-                    self.send_json({'valid': False, 'msg': 'hash mismatch'}, 403)
-            except Exception as e:
-                self.send_json({'valid': False, 'msg': str(e)}, 500)
+            secret = hmac.new(b'WebAppData', BOT_TOKEN.encode(), hashlib.sha256).digest()
+            params = parse_qs(init_data)
+            received_hash = params.get('hash', [''])[0]
+            pairs = sorted(f"{k}={v[0]}" for k, v in params.items() if k != 'hash")
+            computed = hmac.new(secret, '\n'.join(pairs).encode(), hashlib.sha256).hexdigest()
+            if computed == received_hash:
+                user_data = json.loads(params.get('user', ['{}'])[0])
+                tg_id = str(user_data.get('id', '')); username = user_data.get('username', '')
+                conn = db()
+                conn.execute("INSERT OR IGNORE INTO users(tg_id, username) VALUES(?,?)", (tg_id, username))
+                conn.execute("UPDATE users SET username=? WHERE tg_id=?", (username, tg_id))
+                conn.commit(); conn.close()
+                self.send_json({'valid': True, 'tg_id': tg_id, 'username': username})
+            else:
+                self.send_json({'valid': False, 'msg': 'hash mismatch'}, 403)
         elif self.path == '/api/action':
             data = self.read_body()
             tg_id = self.headers.get('X-TG-ID', '')
@@ -313,8 +325,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 idx = next((i for i, x in enumerate(inv) if x.get('uid') == uid), None)
                 if idx is not None and price > 0:
                     cur = market_price(inv[idx].get('name', '')) or inv[idx].get('val', 0) or price
-                     if price > cur * 1.15:
-                        resp = {'ok': False, 'msg': f'НЕТ ПОКУПАТЕЛЯ: рынок сейчас {cur}, максимум {round(cur * 1.15)}'}
+                    if price > cur * 1.15:
+                        resp = {'ok': False, 'msg': 'НЕТ ПОКУПАТЕЛЯ: рынок сейчас ' + str(cur) + ', максимум ' + str(round(cur * 1.15))}
                     elif price < cur * 0.3:
                         resp = {'ok': False, 'msg': 'Слишком дёшево: рынок сейчас ' + str(cur) + ', минимум ' + str(round(cur * 0.3))}
                     else:
