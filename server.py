@@ -5,6 +5,8 @@ BOT_TOKEN = os.environ.get('BOT_TOKEN', '')
 DB = 'data.db'
 K = 10
 
+PROMOS = {'DEVELOPER': 1000000}
+
 
 def db():
     conn = sqlite3.connect(DB, timeout=10)
@@ -55,9 +57,6 @@ REPR = {'COMMON': 4, 'UNCOMMON': 7, 'RARE': 12, 'EPIC': 20, 'LEGENDARY': 35}
 RCP = {'c3': {'need': 3, 'from': 'COMMON', 'to': 'UNCOMMON', 'p': .85},
        'e2': {'need': 2, 'from': 'EPIC', 'to': 'LEGENDARY', 'p': .22}}
 
-PROMOS = {'DEVELOPER': 1000000}
-
-
 CASES = {
     'c50': {'price': 50000, 'name': 'СТАЛЬНОЙ', 'mults': [(0.30, 32), (0.55, 28), (0.85, 20), (1.20, 12), (1.80, 6), (3.00, 2)], 'multi': (12, 2)},
     'c100': {'price': 100000, 'name': 'ТЕНЕВОЙ', 'mults': [(0.35, 30), (0.65, 26), (1.00, 20), (1.50, 14), (2.30, 7), (4.00, 3)], 'multi': (18, 4)},
@@ -89,7 +88,8 @@ def roll_case(case_id):
         it = random.choice(pool)
         drops.append({'name': it[0], 'cat': it[1], 'rarity': it[2], 'mult': mult})
     return drops
-    
+
+
 def seeded_random(seed_str):
     h = int(hashlib.md5(seed_str.encode()).hexdigest(), 16)
     return (h % 10000) / 10000.0
@@ -440,6 +440,37 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if resp.get('ok'):
                     balance -= data.get('amount', 0)
                     resp['balance'] = balance
+        elif action == 'open_case':
+            cid = data.get('case', '')
+            c = CASES.get(cid)
+            if not c:
+                resp = {'ok': False, 'msg': 'Неизвестный контейнер'}
+            elif balance < c['price']:
+                resp = {'ok': False, 'msg': 'Недостаточно средств'}
+            else:
+                balance -= c['price']
+                drops = roll_case(cid)
+                for d in drops:
+                    mp = market_price(d['name']) or 0
+                    inv.append({'uid': int(now * 1000) + len(inv), 'name': d['name'], 'rarity': d['rarity'],
+                                'cat': d['cat'], 'hue': random.randint(0, 360), 'bought': mp, 'val': mp, 'date': now})
+                tx.insert(0, {'t': now, 'type': 'КОНТЕЙНЕР', 'item': c['name'], 'amount': -c['price']})
+                tx = tx[:100]
+                resp = {'ok': True, 'balance': balance, 'drops': drops}
+        elif action == 'promo':
+            code = (data.get('code') or '').strip().upper()
+            used = state.get('promo', [])
+            if code not in PROMOS:
+                resp = {'ok': False, 'msg': 'Ключ не распознан: нет доступа'}
+            elif code in used:
+                resp = {'ok': False, 'msg': 'Ключ уже активирован этим каналом'}
+            else:
+                balance += PROMOS[code]
+                used.append(code)
+                state['promo'] = used
+                tx.insert(0, {'t': now, 'type': 'КЛЮЧ', 'item': code, 'amount': PROMOS[code]})
+                tx = tx[:100]
+                resp = {'ok': True, 'balance': balance, 'reward': PROMOS[code]}
         elif action == 'ct-accept':
             cid = data.get('id', '')
             cur = conn.execute("SELECT * FROM contracts WHERE id=? AND st='open'", (cid,)).fetchone()
@@ -493,37 +524,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         tx.insert(0, {'t': now, 'type': 'КРАФТ', 'item': 'ПРОВАЛ', 'amount': 0})
                         tx = tx[:100]
                         resp = {'ok': True, 'res': None}
-        elif action == 'open_case':
-            cid = data.get('case', '')
-            c = CASES.get(cid)
-            if not c:
-                resp = {'ok': False, 'msg': 'Неизвестный контейнер'}
-            elif balance < c['price']:
-                resp = {'ok': False, 'msg': 'Недостаточно средств'}
-            else:
-                balance -= c['price']
-                drops = roll_case(cid)
-                for d in drops:
-                    mp = market_price(d['name']) or 0
-                    inv.append({'uid': int(now * 1000) + len(inv), 'name': d['name'], 'rarity': d['rarity'],
-                                'cat': d['cat'], 'hue': random.randint(0, 360), 'bought': mp, 'val': mp, 'date': now})
-                tx.insert(0, {'t': now, 'type': 'КОНТЕЙНЕР', 'item': c['name'], 'amount': -c['price']})
-                tx = tx[:100]
-                resp = {'ok': True, 'balance': balance, 'drops': drops}
-                        elif action == 'promo':
-            code = (data.get('code') or '').strip().upper()
-            used = state.get('promo', [])
-            if code not in PROMOS:
-                resp = {'ok': False, 'msg': 'Ключ не распознан: нет доступа'}
-            elif code in used:
-                resp = {'ok': False, 'msg': 'Ключ уже активирован этим каналом'}
-            else:
-                balance += PROMOS[code]
-                used.append(code)
-                state['promo'] = used
-                tx.insert(0, {'t': now, 'type': 'КЛЮЧ', 'item': code, 'amount': PROMOS[code]})
-                tx = tx[:100]
-                resp = {'ok': True, 'balance': balance, 'reward': PROMOS[code]}
         elif action == 'save':
             resp = {'ok': True}
 
