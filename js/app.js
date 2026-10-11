@@ -7,6 +7,7 @@ const left=s=>{s=Math.max(0,Math.floor(s));if(s>3600)return Math.floor(s/3600)+'
 const RAR_RU={COMMON:'ОБЫЧНЫЙ',UNCOMMON:'НЕОБЫЧНЫЙ',RARE:'РЕДКИЙ',EPIC:'ЭПИЧЕСКИЙ',LEGENDARY:'ЛЕГЕНДАРНЫЙ',UNKNOWN:'НЕИЗВЕСТНО'};
 const CATS=[['ALL','ВСЕ'],['TECH','ТЕХНИКА'],['ARTIFACTS','АРТЕФАКТЫ'],['COLLECTIBLES','КОЛЛЕКЦИЯ'],['VEHICLES','ТРАНСПОРТ'],['DEVICES','УСТРОЙСТВА'],['UNKNOWN','НЕИЗВЕСТНОЕ']];
 const RCP={c3:{need:3,from:'COMMON',to:'UNCOMMON',chance:'85%',title:'3 × ОБЫЧНЫЙ → НЕОБЫЧНЫЙ'},e2:{need:2,from:'EPIC',to:'LEGENDARY',chance:'22%',title:'2 × ЭПИЧЕСКИЙ → ЛЕГЕНДАРНЫЙ'}};
+const CASES={c50:{price:50000,name:'СТАЛЬНОЙ',t:1},c100:{price:100000,name:'ТЕНЕВОЙ',t:2},c150:{price:150000,name:'ОМЕГА',t:3}};
 
 let S={bal:100000,inv:[],tx:[],user:'ГОСТЬ',rep:0};
 let TG_ID='';
@@ -199,6 +200,44 @@ function craftModal(rid){
   };
 }
 
+function caseModal(cid){
+  const c=CASES[cid];
+  ui.open='case';
+  modal('<h4>КОНТЕЙНЕР · '+c.name+'</h4>'+
+    '<div class="line"><span>ЦЕНА</span><b>'+fmt(c.price)+'</b></div>'+
+    '<div class="line"><span>БАЛАНС</span><b>'+fmt(S.bal)+'</b></div>'+
+    '<div class="line"><span>МУЛЬТИ-ДРОП</span><b>до 3 предметов</b></div>'+
+    '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">Чем дороже контейнер — тем жирнее множитель стоимости и шанс нескольких предметов.</span>'+
+    '<div class="acts"><button class="btn" id="m-no">ОТМЕНА</button><button class="btn pri" id="m-yes">ОТКРЫТЬ</button></div>');
+  $('#m-no').onclick=closeModal;
+  $('#m-yes').onclick=()=>openCase(cid);
+}
+async function openCase(cid){
+  const c=CASES[cid];
+  if(S.bal<c.price)return showNotification('НЕДОСТАТОЧНО СРЕДСТВ','Нужно '+fmt(c.price),'dn'),SND.play('err');
+  closeModal();
+  ui.open='case';
+  modal('<h4>ВСКРЫТИЕ · '+c.name+'</h4><div class="case-box opening" id="cbox"><i></i><b></b></div><div style="text-align:center;color:var(--mut);font-size:11px;letter-spacing:.2em" id="cstat">ВСКРЫТИЕ...</div><div id="cdrops"></div>');
+  SND.play('craft');
+  const r=await api('/api/action','POST',{action:'open_case',case:cid});
+  setTimeout(async()=>{
+    const box=$('#cbox');if(box)box.style.display='none';
+    const st=$('#cstat');if(st)st.textContent='ДОБЫЧА:';
+    if(r.ok){
+      $('#cdrops').innerHTML=r.drops.map((d,i)=>'<div class="drop-line r-'+d.rarity+'" style="animation-delay:'+(i*0.15)+'s"><b>'+d.name+'</b><span>'+(RAR_RU[d.rarity]||d.rarity)+' · x'+d.mult+'</span></div>').join('');
+      const best=Math.max.apply(null,r.drops.map(d=>d.mult));
+      if(best>=1.8||r.drops.length>1)SND.play('rare');else SND.play('buy');
+      showNotification('КОНТЕЙНЕР ОТКРЫТ','Предметов: '+r.drops.length,'up');
+      await loadState();
+      hdr();
+    }else{
+      $('#cdrops').innerHTML='<div class="empty">'+(r.msg||'Ошибка')+'</div>';
+      SND.play('err');
+    }
+    ui.open=null;
+  },1000);
+}
+
 function spark(hist,up){
   if(!hist||hist.length<2)return'';
   const h=hist.slice(-40),mn=Math.min.apply(null,h),mx=Math.max.apply(null,h),rg=(mx-mn)||1;
@@ -236,7 +275,11 @@ function renderGrid(){
   g.innerHTML=a.length?a.map(card).join(''):'<div class="empty">НЕТ ЛОТОВ</div>';
 }
 function renderMarket(){
-  $('#view').innerHTML='<h2 class="pt">ОБЗОР РЫНКА</h2>'+
+  $('#view').innerHTML='<h2 class="pt">КОНТЕЙНЕРЫ</h2>'+
+    '<div class="case-row">'+Object.keys(CASES).map(k=>{const c=CASES[k];
+      return '<div class="case-card t'+c.t+'" data-case="'+k+'"><div class="case-ico"><i></i><b></b></div><h5>'+c.name+'</h5><small>мульти-дроп до 3</small><b class="cp">'+fmt(c.price)+'</b></div>';
+    }).join('')+'</div>'+
+    '<h2 class="pt">ОБЗОР РЫНКА</h2>'+
     '<div class="stats"><div class="stat"><small>ЛОТЫ</small><b>'+(MARKET.products||[]).length+'</b></div>'+
     '<div class="stat"><small>БАЛАНС</small><b>'+fmt(S.bal)+'</b></div>'+
     '<div class="stat"><small>ТИК</small><b>#'+(MARKET.tick||0)+'</b></div>'+
@@ -352,6 +395,8 @@ document.addEventListener('click',e=>{
   if(cd2){ctDrop(cd2.dataset.ctDrop);return}
   const cr=e.target.closest('[data-craft]');
   if(cr){craftModal(cr.dataset.craft);return}
+    const cs=e.target.closest('[data-case]');
+  if(cs){caseModal(cs.dataset.case);return}
   if(e.target.closest('#bell')){
     unread=0;badge();
     modal('<h4>УВЕДОМЛЕНИЯ</h4>'+(notes.slice(0,10).map(x=>'<div class="line"><span>'+x.title+'</span><b style="font-size:11px">'+x.msg+'</b></div>').join('')||'<div class="empty">ПУСТО</div>'));
