@@ -55,6 +55,9 @@ REPR = {'COMMON': 4, 'UNCOMMON': 7, 'RARE': 12, 'EPIC': 20, 'LEGENDARY': 35}
 RCP = {'c3': {'need': 3, 'from': 'COMMON', 'to': 'UNCOMMON', 'p': .85},
        'e2': {'need': 2, 'from': 'EPIC', 'to': 'LEGENDARY', 'p': .22}}
 
+PROMOS = {'DEVELOPER': 1000000}
+
+
 CASES = {
     'c50': {'price': 50000, 'name': 'СТАЛЬНОЙ', 'mults': [(0.30, 32), (0.55, 28), (0.85, 20), (1.20, 12), (1.80, 6), (3.00, 2)], 'multi': (12, 2)},
     'c100': {'price': 100000, 'name': 'ТЕНЕВОЙ', 'mults': [(0.35, 30), (0.65, 26), (1.00, 20), (1.50, 14), (2.30, 7), (4.00, 3)], 'multi': (18, 4)},
@@ -507,6 +510,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 tx.insert(0, {'t': now, 'type': 'КОНТЕЙНЕР', 'item': c['name'], 'amount': -c['price']})
                 tx = tx[:100]
                 resp = {'ok': True, 'balance': balance, 'drops': drops}
+                        elif action == 'promo':
+            code = (data.get('code') or '').strip().upper()
+            used = state.get('promo', [])
+            if code not in PROMOS:
+                resp = {'ok': False, 'msg': 'Ключ не распознан: нет доступа'}
+            elif code in used:
+                resp = {'ok': False, 'msg': 'Ключ уже активирован этим каналом'}
+            else:
+                balance += PROMOS[code]
+                used.append(code)
+                state['promo'] = used
+                tx.insert(0, {'t': now, 'type': 'КЛЮЧ', 'item': code, 'amount': PROMOS[code]})
+                tx = tx[:100]
+                resp = {'ok': True, 'balance': balance, 'reward': PROMOS[code]}
         elif action == 'save':
             resp = {'ok': True}
 
