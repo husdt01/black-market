@@ -4,10 +4,10 @@ const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const fmt=n=>'₽ '+Math.round(n).toLocaleString('ru-RU');
 const pct=c=>(c>=0?'+':'')+c.toFixed(2)+'%';
 const left=s=>{s=Math.max(0,Math.floor(s));if(s>3600)return Math.floor(s/3600)+'ч '+Math.floor(s%3600/60)+'м';return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
-const RAR_RU={COMMON:'ОБЫЧНЫЙ',UNCOMMON:'НЕОБЫЧНЫЙ',RARE:'РЕДКИЙ',EPIC:'ЭПИЧЕСКИЙ',LEGENDARY:'ЛЕГЕНДАРНЫЙ',UNKNOWN:'НЕИЗВЕСТНО'};
+const RAR_RU={COMMON:'ОБЫЧНЫЙ',UNCOMMON:'НЕОБЫЧНЫЙ',RARE:'РЕДКИЙ',EPIC:'ЭПИЧЕСКИЙ',LEGENDARY:'ЛЕГЕНДАРНЫЙ',UNKNOWN:'НЕИЗВЕСТНО',RUNE:'РУНА'};
 const CATS=[['ALL','ВСЕ'],['TECH','ТЕХНИКА'],['ARTIFACTS','АРТЕФАКТЫ'],['COLLECTIBLES','КОЛЛЕКЦИЯ'],['VEHICLES','ТРАНСПОРТ'],['DEVICES','УСТРОЙСТВА'],['UNKNOWN','НЕИЗВЕСТНОЕ']];
 const RCP={c3:{need:3,from:'COMMON',to:'UNCOMMON',chance:'85%',title:'3 × ОБЫЧНЫЙ → НЕОБЫЧНЫЙ'},e2:{need:2,from:'EPIC',to:'LEGENDARY',chance:'22%',title:'2 × ЭПИЧЕСКИЙ → ЛЕГЕНДАРНЫЙ'}};
-const CASES={c50:{price:50000,name:'СТАЛЬНОЙ',t:1},c100:{price:100000,name:'ТЕНЕВОЙ',t:2},c150:{price:150000,name:'ОМЕГА',t:3}};
+const CASES={c50:{price:50000,name:'СТАЛЬНОЙ',t:1},c100:{price:100000,name:'ТЕНЕВОЙ',t:2},c150:{price:150000,name:'ОМЕГА',t:3},c500:{price:500000,name:'РУНА',t:4}};
 
 let S={bal:100000,inv:[],tx:[],user:'ГОСТЬ',rep:0};
 let TG_ID='';
@@ -207,6 +207,7 @@ function caseModal(cid){
     '<div class="line"><span>ЦЕНА</span><b>'+fmt(c.price)+'</b></div>'+
     '<div class="line"><span>БАЛАНС</span><b>'+fmt(S.bal)+'</b></div>'+
     '<div class="line"><span>МУЛЬТИ-ДРОП</span><b>до 3 предметов</b></div>'+
+    (cid==='c500'?'<div class="line"><span>ВНУТРИ</span><b style="color:#a06be0">СЕКРЕТНЫЕ РУНЫ · вне рынка</b></div>':'')+
     '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">Чем дороже контейнер — тем жирнее множитель стоимости и шанс нескольких предметов.</span>'+
     '<div class="acts"><button class="btn" id="m-no">ОТМЕНА</button><button class="btn pri" id="m-yes">ОТКРЫТЬ</button></div>');
   $('#m-no').onclick=closeModal;
