@@ -24,9 +24,10 @@ def init_db():
     conn.execute('''CREATE TABLE IF NOT EXISTS auctions(id TEXT PRIMARY KEY, name TEXT, cat TEXT,
         rarity TEXT, start_price REAL, current_bid REAL, leader TEXT, bids TEXT DEFAULT '[]',
         end_time REAL, status TEXT DEFAULT 'active')''')
+    conn.execute('''CREATE TABLE IF NOT EXISTS contracts(id TEXT PRIMARY KEY, npc TEXT, name TEXT,
+        cat TEXT, rarity TEXT, reward REAL, rep INTEGER, exp REAL, st TEXT DEFAULT 'open',
+        tg_id TEXT DEFAULT '', end_task REAL DEFAULT 0)''')
     conn.execute('''CREATE TABLE IF NOT EXISTS star_orders(nonce TEXT PRIMARY KEY, tg_id TEXT, pkg TEXT,
-        stars INTEGER, bal INTEGER, status TEXT DEFAULT 'pending', created REAL DEFAULT 0)''')
-        conn.execute('''CREATE TABLE IF NOT EXISTS star_orders(nonce TEXT PRIMARY KEY, tg_id TEXT, pkg TEXT,
         stars INTEGER, bal INTEGER, status TEXT DEFAULT 'pending', created REAL DEFAULT 0)''')
     conn.commit()
     conn.close()
