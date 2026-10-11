@@ -7,10 +7,10 @@ const left=s=>{s=Math.max(0,Math.floor(s));if(s>3600)return Math.floor(s/3600)+'
 const RAR_RU={COMMON:'ОБЫЧНЫЙ',UNCOMMON:'НЕОБЫЧНЫЙ',RARE:'РЕДКИЙ',EPIC:'ЭПИЧЕСКИЙ',LEGENDARY:'ЛЕГЕНДАРНЫЙ',UNKNOWN:'НЕИЗВЕСТНО',RUNE:'РУНА'};
 const CATS=[['ALL','ВСЕ'],['TECH','ТЕХНИКА'],['ARTIFACTS','АРТЕФАКТЫ'],['COLLECTIBLES','КОЛЛЕКЦИЯ'],['VEHICLES','ТРАНСПОРТ'],['DEVICES','УСТРОЙСТВА'],['UNKNOWN','НЕИЗВЕСТНОЕ']];
 const RCP={c3:{need:3,from:'COMMON',to:'UNCOMMON',chance:'85%',title:'3 × ОБЫЧНЫЙ → НЕОБЫЧНЫЙ'},e2:{need:2,from:'EPIC',to:'LEGENDARY',chance:'22%',title:'2 × ЭПИЧЕСКИЙ → ЛЕГЕНДАРНЫЙ'}};
-const STAR_PKGS={p10:{stars:10,bal:50000},p25:{stars:25,bal:140000},p50:{stars:50,bal:300000},p100:{stars:100,bal:650000}};
 const CASES={c50:{price:50000,name:'СТАЛЬНОЙ',t:1},c100:{price:100000,name:'ТЕНЕВОЙ',t:2},c150:{price:150000,name:'ОМЕГА',t:3},c500:{price:500000,name:'РУНА',t:4}};
+const STAR_PKGS={p10:{stars:10,bal:50000},p25:{stars:25,bal:140000},p50:{stars:50,bal:300000},p100:{stars:100,bal:650000}};
 
-let S={bal:100000,inv:[],tx:[],user:'ГОСТЬ',rep:0};
+let S={bal:100000,inv:[],tx:[],user:'ГОСТЬ',rep:0,promo:[]};
 let TG_ID='';
 let ui={page:'market',cat:'ALL',open:null};
 let notes=[],unread=0,entered=false;
@@ -19,12 +19,14 @@ let AUCTIONS=[],CONTRACTS=[];
 let raidWas=false,stateReady=false,promoDraft='';
 
 async function api(path,method,body){
-  const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),10000);
+  const ctl=new AbortController();
+  const to=setTimeout(()=>ctl.abort(),8000);
   try{
     const o={method:method||'GET',headers:{},signal:ctl.signal};
     if(TG_ID)o.headers['X-TG-ID']=TG_ID;
     if(body){o.headers['Content-Type']='application/json';o.body=JSON.stringify(body)}
-    const r=await fetch(path,o);return await r.json();
+    const r=await fetch(path,o);
+    return await r.json();
   }catch(e){return{error:String(e)}}
   finally{clearTimeout(to)}
 }
@@ -201,6 +203,13 @@ function craftModal(rid){
   };
 }
 
+function spark(hist,up){
+  if(!hist||hist.length<2)return'';
+  const h=hist.slice(-40),mn=Math.min.apply(null,h),mx=Math.max.apply(null,h),rg=(mx-mn)||1;
+  const pts=h.map((v,i)=>((i/(h.length-1))*100).toFixed(1)+','+(26-((v-mn)/rg)*24).toFixed(1)).join(' ');
+  return '<svg viewBox="0 0 100 28" preserveAspectRatio="none" style="width:100%;height:34px;display:block;margin:8px 0;background:rgba(255,255,255,.02);border:1px solid var(--ln);border-radius:6px"><polyline points="'+pts+'" fill="none" stroke="'+(up?'#7ee08f':'#b8483f')+'" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>';
+}
+
 function caseModal(cid){
   const c=CASES[cid];
   ui.open='case';
@@ -240,29 +249,23 @@ async function openCase(cid){
   },1000);
 }
 
-function renderKeys(){
-  const used=S.promo||[];
-      '<h2 class="pt">ПОПОЛНЕНИЕ · TELEGRAM STARS</h2>'+
-    '<div class="card" style="margin-bottom:14px">'+
-    '<div style="font-size:10px;color:var(--amb);letter-spacing:.2em">ОПЛАТА ЗВЁЗДАМИ TELEGRAM</div>'+
-    '<h3>БАЛАНС ЗА ЗВЁЗДЫ</h3>'+
-    Object.keys(STAR_PKGS).map(k=>{const p=STAR_PKGS[k];
-      return '<div class="line"><span>'+p.stars+' ★ → '+fmt(p.bal)+'</span><b><button class="btn pri" style="min-height:34px;padding:6px 14px" data-stars="'+k+'">КУПИТЬ</button></b></div>';
-    }).join('')+
-    '</div>'+
-  $('#view').innerHTML='<h2 class="pt">ШИФР-КАНАЛ</h2>'+
-    '<div class="card" style="margin-bottom:12px">'+
-    '<div style="font-size:10px;color:var(--amb);letter-spacing:.2em">ДОСТУП // ЗАКРЫТЫЙ КАНАЛ</div>'+
-    '<h3>ШИФР-КЛЮЧ</h3>'+
-    '<span style="font-size:11px;color:var(--mut);display:block;margin:6px 0 10px">Ключи распространяются по закрытым каналам связи. Введи ключ — терминал проверит подпись и зачислит активы.</span>'+
-    '<input class="inp" id="promo-inp" placeholder="ВВЕДИ КЛЮЧ..." style="text-transform:uppercase;letter-spacing:.15em">'+
-    '<div class="ft"><button class="btn pri" data-promo="1">ДЕШИФРОВАТЬ</button></div>'+
-    '</div>'+
-    '<h2 class="pt">АКТИВИРОВАННЫЕ КЛЮЧИ · '+used.length+'</h2>'+
-    '<div style="display:flex;flex-direction:column;gap:8px">'+
-    (used.length?used.map(p=>'<div class="line"><span>'+p+'</span><b class="up">АКТИВИРОВАН</b></div>').join(''):'<div class="empty">КЛЮЧЕЙ НЕТ</div>')+
-    '</div>';
+async function buyStars(pkg){
+  if(!(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openInvoice))return showNotification('НЕДОСТУПНО','Оплата звёздами работает только в Telegram','dn');
+  const r=await api('/api/stars/order','POST',{pkg:pkg});
+  if(!r.ok)return showNotification('ОШИБКА',r.msg||'Не удалось создать счёт','dn');
+  window.Telegram.WebApp.openInvoice(r.link,async(st)=>{
+    if(st==='paid'){
+      SND.play('rare');
+      showNotification('ОПЛАТА ПРИНЯТА','Зачисление...','up');
+      for(let i=0;i<4;i++){await new Promise(res=>setTimeout(res,1500));await loadState()}
+      hdr();render();
+      showNotification('БАЛАНС ПОПОЛНЕН','Звёзды зачислены на счёт','up');
+    }else{
+      showNotification('ОПЛАТА ОТМЕНЕНА','Счёт не оплачен','dn');
+    }
+  });
 }
+
 async function redeemPromo(){
   const inp=$('#promo-inp');
   const code=(inp?inp.value:'').trim().toUpperCase();
@@ -287,30 +290,6 @@ async function redeemPromo(){
   }
 }
 
-async function buyStars(pkg){
-  if(!(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openInvoice))return showNotification('НЕДОСТУПНО','Оплата звёздами работает только в Telegram','dn');
-  const r=await api('/api/stars/order','POST',{pkg:pkg});
-  if(!r.ok)return showNotification('ОШИБКА',r.msg||'Не удалось создать счёт','dn');
-  window.Telegram.WebApp.openInvoice(r.link,async(st)=>{
-    if(st==='paid'){
-      SND.play('rare');
-      showNotification('ОПЛАТА ПРИНЯТА','Зачисление...','up');
-      for(let i=0;i<4;i++){await new Promise(res=>setTimeout(res,1500));await loadState()}
-      hdr();render();
-      showNotification('БАЛАНС ПОПОЛНЕН','Звёзды зачислены на счёт','up');
-    }else{
-      showNotification('ОПЛАТА ОТМЕНЕНА','Счёт не оплачен','dn');
-    }
-  });
-}
-
-function spark(hist,up){
-  if(!hist||hist.length<2)return'';
-  const h=hist.slice(-40),mn=Math.min.apply(null,h),mx=Math.max.apply(null,h),rg=(mx-mn)||1;
-  const pts=h.map((v,i)=>((i/(h.length-1))*100).toFixed(1)+','+(26-((v-mn)/rg)*24).toFixed(1)).join(' ');
-  return '<svg viewBox="0 0 100 28" preserveAspectRatio="none" style="width:100%;height:34px;display:block;margin:8px 0;background:rgba(255,255,255,.02);border:1px solid var(--ln);border-radius:6px"><polyline points="'+pts+'" fill="none" stroke="'+(up?'#7ee08f':'#b8483f')+'" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg>';
-}
-
 function hdr(){const b=$('#bal');if(b)b.textContent=fmt(S.bal)}
 function render(){
   $$('.tab').forEach(t=>t.classList.toggle('on',t.dataset.page===ui.page));
@@ -319,7 +298,6 @@ function render(){
   else if(ui.page==='contracts')renderContracts();
   else if(ui.page==='inventory')renderInventory();
   else if(ui.page==='craft')renderCraft();
-  else if(ui.page==='keys')renderKeys();
   else renderProfile();
   hdr();
 }
@@ -436,6 +414,14 @@ function renderProfile(){
     '<div class="stat"><small>СДЕЛОК</small><b>'+S.tx.length+'</b></div>'+
     '<div class="stat"><small>ИНВЕНТАРЬ</small><b>'+S.inv.length+'</b></div></div>'+
     '<div class="ft" style="margin-bottom:14px"><button class="btn '+(sndOn?'pri':'')+'" id="snd-btn">ЗВУК: '+(sndOn?'ВКЛ':'ВЫКЛ')+'</button></div>'+
+    '<h2 class="pt">ПОПОЛНЕНИЕ · TELEGRAM STARS</h2>'+
+    '<div class="card" style="margin-bottom:14px">'+
+    '<div style="font-size:10px;color:var(--amb);letter-spacing:.2em">ОПЛАТА ЗВЁЗДАМИ TELEGRAM</div>'+
+    '<h3>БАЛАНС ЗА ЗВЁЗДЫ</h3>'+
+    Object.keys(STAR_PKGS).map(k=>{const p=STAR_PKGS[k];
+      return '<div class="line"><span>'+p.stars+' ★ → '+fmt(p.bal)+'</span><b><button class="btn pri" style="min-height:34px;padding:6px 14px" data-stars="'+k+'">КУПИТЬ</button></b></div>';
+    }).join('')+
+    '</div>'+
     '<h2 class="pt">ШИФР-КАНАЛ</h2>'+
     '<div class="card" style="margin-bottom:14px">'+
     '<div style="font-size:10px;color:var(--amb);letter-spacing:.2em">ДОСТУП // ЗАКРЫТЫЙ КАНАЛ</div>'+
@@ -444,7 +430,7 @@ function renderProfile(){
     '<div class="ft"><button class="btn pri" data-promo="1">ДЕШИФРОВАТЬ</button></div>'+
     ((S.promo||[]).length?'<div style="margin-top:10px">'+(S.promo||[]).map(p=>'<div class="line"><span>'+p+'</span><b class="up">АКТИВИРОВАН</b></div>').join('')+'</div>':'')+
     '</div>'+
-    '<h2 class="pt">ПОСЛЕДНИЕ СДЕЛКИ</h2>'+
+    '<h2 class="pt">ПОСЛЕДНИЕ СДЕЛКИ</h2><div style="display:flex;flex-direction:column;gap:8px">'+
     (S.tx.slice(0,15).map(t=>'<div class="line"><span>'+new Date(t.t*1000).toLocaleTimeString('ru-RU')+' · '+t.type+'</span><b class="'+(t.amount>0?'up':t.amount<0?'dn':'')+'">'+(t.amount?(t.amount>0?'+':'-')+fmt(Math.abs(t.amount)):'—')+'</b></div>').join('')||'<div class="empty">НЕТ СДЕЛОК</div>')+'</div>';
   $('#snd-btn').onclick=()=>{SND.set(!SND.on());showNotification('ЗВУК',SND.on()?'Включён':'Выключен');render()};
   const pi=$('#promo-inp');
@@ -472,11 +458,11 @@ document.addEventListener('click',e=>{
   if(cd2){ctDrop(cd2.dataset.ctDrop);return}
   const cr=e.target.closest('[data-craft]');
   if(cr){craftModal(cr.dataset.craft);return}
-    const cs=e.target.closest('[data-case]');
+  const cs=e.target.closest('[data-case]');
   if(cs){caseModal(cs.dataset.case);return}
-    const stb=e.target.closest('[data-stars]');
+  const stb=e.target.closest('[data-stars]');
   if(stb){buyStars(stb.dataset.stars);return}
-    const pm=e.target.closest('[data-promo]');
+  const pm=e.target.closest('[data-promo]');
   if(pm){redeemPromo();return}
   if(e.target.closest('#bell')){
     unread=0;badge();
@@ -511,9 +497,9 @@ function boot(){
       render();
       showNotification('ДОБРО ПОЖАЛОВАТЬ','Сессия открыта');
       setInterval(async()=>{
-        await Promise.all([loadMarket().catch(()=>{}),loadAuctions().catch(()=>{}),loadContracts().catch(()=>{}),loadState().catch(()=>{})]);
         const ae=document.activeElement;
         if(!ui.open&&!(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA')))render();else hdr();
+        await Promise.all([loadMarket().catch(()=>{}),loadAuctions().catch(()=>{}),loadContracts().catch(()=>{}),loadState().catch(()=>{})]);
       },5000);
     },800);
   });
