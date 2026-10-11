@@ -1,5 +1,6 @@
 import http.server, socketserver, json, hashlib, hmac, sqlite3, time, os, random
 from urllib.parse import parse_qs
+import urllib.request
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN', '')
 DB = 'data.db'
@@ -26,6 +27,8 @@ def init_db():
     conn.execute('''CREATE TABLE IF NOT EXISTS contracts(id TEXT PRIMARY KEY, npc TEXT, name TEXT,
         cat TEXT, rarity TEXT, reward REAL, rep INTEGER, exp REAL, st TEXT DEFAULT 'open',
         tg_id TEXT DEFAULT '', end_task REAL DEFAULT 0)''')
+        conn.execute('''CREATE TABLE IF NOT EXISTS star_orders(nonce TEXT PRIMARY KEY, tg_id TEXT, pkg TEXT,
+        stars INTEGER, bal INTEGER, status TEXT DEFAULT 'pending', created REAL DEFAULT 0)''')
     conn.commit()
     conn.close()
 
@@ -298,6 +301,54 @@ def get_contracts(tg_id):
     return out
 
 
+APP_URL = os.environ.get('APP_URL', 'https://black-market-5bno.onrender.com')
+
+PACKAGES = {
+    'p10': {'stars': 10, 'bal': 50000, 'title': '50 000 на баланс'},
+    'p25': {'stars': 25, 'bal': 140000, 'title': '140 000 на баланс'},
+    'p50': {'stars': 50, 'bal': 300000, 'title': '300 000 на баланс'},
+    'p100': {'stars': 100, 'bal': 650000, 'title': '650 000 на баланс'},
+}
+
+
+def tg_api(method, params=None):
+    url = 'https://api.telegram.org/bot' + BOT_TOKEN + '/' + method
+    data = json.dumps(params or {}).encode('utf-8')
+    req = urllib.request.Request(url, data=data, headers={'Content-Type': 'application/json'})
+    try:
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return json.loads(r.read().decode('utf-8'))
+    except Exception as e:
+        return {'ok': False, 'description': str(e)}
+
+
+def credit_stars(tg_id, pkg, nonce, stars):
+    p = PACKAGES.get(pkg)
+    if not p or p['stars'] != stars:
+        return False
+    conn = db()
+    row = conn.execute("SELECT * FROM star_orders WHERE nonce=?", (nonce,)).fetchone()
+    if not row or row['status'] != 'pending':
+        conn.close()
+        return False
+    conn.execute("UPDATE star_orders SET status='paid' WHERE nonce=?", (nonce,))
+    user = conn.execute("SELECT * FROM users WHERE tg_id=?", (tg_id,)).fetchone()
+    if not user:
+        conn.execute("INSERT INTO users(tg_id) VALUES(?)", (tg_id,))
+        conn.commit()
+        user = conn.execute("SELECT * FROM users WHERE tg_id=?", (tg_id,)).fetchone()
+    balance = user['balance'] + p['bal']
+    state = json.loads(user['state'] or '{}')
+    tx = state.get('tx', [])
+    tx.insert(0, {'t': time.time(), 'type': 'ЗВЁЗДЫ', 'item': p['title'], 'amount': p['bal']})
+    state['tx'] = tx[:100]
+    conn.execute("UPDATE users SET balance=?, state=? WHERE tg_id=?",
+                 (balance, json.dumps(state, ensure_ascii=False), tg_id))
+    conn.commit()
+    conn.close()
+    return True
+
+
 class Handler(http.server.SimpleHTTPRequestHandler):
     extensions_map = {**http.server.SimpleHTTPRequestHandler.extensions_map,
                       '.css': 'text/css', '.js': 'application/javascript',
@@ -379,13 +430,61 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_json({'ok': False, 'valid': False, 'msg': 'SERVER: ' + str(e)}, 500)
 
     def _post(self):
-        if self.path == '/api/tg/validate':
+        if self.path == '/api/tg/webhook':
+            self._webhook()
+        elif self.path == '/api/tg/validate':
             self._validate()
+        elif self.path == '/api/stars/order':
+            tg_id = self.headers.get('X-TG-ID', '')
+            if not tg_id:
+                return self.send_json({'ok': False, 'msg': 'no auth'}, 403)
+            self._stars_order(tg_id)
         elif self.path == '/api/action':
             self._action()
         else:
             self.send_json({'error': 'not found'}, 404)
+    def _webhook(self):
+        up = self.read_body()
+        try:
+            msg = up.get('message') or {}
+            sp = msg.get('successful_payment')
+            if sp and sp.get('currency') == 'XTR':
+                parts = (sp.get('invoice_payload') or '').split('|')
+                if len(parts) == 3:
+                    credit_stars(parts[0], parts[1], parts[2], sp.get('total_amount', 0))
+            pcq = up.get('pre_checkout_query')
+            if pcq:
+                tg_api('answerPrecheckoutQuery', {'pre_checkout_query_id': pcq.get('id'), 'ok': True})
+        except Exception:
+            pass
+        self.send_json({'ok': True})
 
+    def _stars_order(self, tg_id):
+        data = self.read_body()
+        pkg = data.get('pkg', '')
+        p = PACKAGES.get(pkg)
+        if not p:
+            return self.send_json({'ok': False, 'msg': 'Неизвестный пакет'})
+        nonce = str(random.randint(100000, 999999)) + str(int(time.time()))
+        conn = db()
+        conn.execute("INSERT OR REPLACE INTO star_orders(nonce,tg_id,pkg,stars,bal,status,created) VALUES(?,?,?,?,?,'pending',?)",
+                     (nonce, tg_id, pkg, p['stars'], p['bal'], time.time()))
+        conn.commit()
+        conn.close()
+        payload = '|'.join([tg_id, pkg, nonce])
+        r = tg_api('createInvoiceLink', {
+            'title': 'BLACK MARKET · ' + p['title'],
+            'description': 'Пополнение игрового баланса',
+            'payload': payload,
+            'provider_token': '',
+            'currency': 'XTR',
+            'prices': [{'label': p['title'], 'amount': p['stars']}],
+        })
+        if r.get('ok'):
+            self.send_json({'ok': True, 'link': r.get('result')})
+        else:
+            self.send_json({'ok': False, 'msg': str(r.get('description'))})
+            
     def _validate(self):
         data = self.read_body()
         init_data = data.get('initData', '')
@@ -571,7 +670,10 @@ if __name__ == '__main__':
     class Server(http.server.ThreadingHTTPServer):
         daemon_threads = True
         allow_reuse_address = True
-
+        
+    if BOT_TOKEN:
+        tg_api('setWebhook', {'url': APP_URL + '/api/tg/webhook'})
+        
     httpd = Server(('0.0.0.0', PORT), Handler)
     print('Server on port', PORT)
     httpd.serve_forever()
