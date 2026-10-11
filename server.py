@@ -55,7 +55,38 @@ REPR = {'COMMON': 4, 'UNCOMMON': 7, 'RARE': 12, 'EPIC': 20, 'LEGENDARY': 35}
 RCP = {'c3': {'need': 3, 'from': 'COMMON', 'to': 'UNCOMMON', 'p': .85},
        'e2': {'need': 2, 'from': 'EPIC', 'to': 'LEGENDARY', 'p': .22}}
 
+CASES = {
+    'c50': {'price': 50000, 'name': 'СТАЛЬНОЙ', 'mults': [(0.30, 32), (0.55, 28), (0.85, 20), (1.20, 12), (1.80, 6), (3.00, 2)], 'multi': (12, 2)},
+    'c100': {'price': 100000, 'name': 'ТЕНЕВОЙ', 'mults': [(0.35, 30), (0.65, 26), (1.00, 20), (1.50, 14), (2.30, 7), (4.00, 3)], 'multi': (18, 4)},
+    'c150': {'price': 150000, 'name': 'ОМЕГА', 'mults': [(0.40, 28), (0.75, 25), (1.15, 21), (1.80, 15), (2.80, 8), (5.00, 3)], 'multi': (24, 6)},
+}
 
+
+def roll_case(case_id):
+    c = CASES.get(case_id)
+    if not c:
+        return None
+    r = random.randint(1, 100)
+    count = 3 if r <= c['multi'][1] else (2 if r <= c['multi'][0] + c['multi'][1] else 1)
+    drops = []
+    for _ in range(count):
+        total = sum(p for _, p in c['mults'])
+        x = random.randint(1, total)
+        acc = 0
+        mult = c['mults'][0][0]
+        for m, p in c['mults']:
+            acc += p
+            if x <= acc:
+                mult = m
+                break
+        target = c['price'] * mult
+        pool = [i for i in ITEMS if i[2] != 'UNKNOWN' and target * 0.7 <= i[3] <= target * 1.3]
+        if not pool:
+            pool = [min((i for i in ITEMS if i[2] != 'UNKNOWN'), key=lambda i: abs(i[3] - target))]
+        it = random.choice(pool)
+        drops.append({'name': it[0], 'cat': it[1], 'rarity': it[2], 'mult': mult})
+    return drops
+    
 def seeded_random(seed_str):
     h = int(hashlib.md5(seed_str.encode()).hexdigest(), 16)
     return (h % 10000) / 10000.0
@@ -459,6 +490,23 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         tx.insert(0, {'t': now, 'type': 'КРАФТ', 'item': 'ПРОВАЛ', 'amount': 0})
                         tx = tx[:100]
                         resp = {'ok': True, 'res': None}
+        elif action == 'open_case':
+            cid = data.get('case', '')
+            c = CASES.get(cid)
+            if not c:
+                resp = {'ok': False, 'msg': 'Неизвестный контейнер'}
+            elif balance < c['price']:
+                resp = {'ok': False, 'msg': 'Недостаточно средств'}
+            else:
+                balance -= c['price']
+                drops = roll_case(cid)
+                for d in drops:
+                    mp = market_price(d['name']) or 0
+                    inv.append({'uid': int(now * 1000) + len(inv), 'name': d['name'], 'rarity': d['rarity'],
+                                'cat': d['cat'], 'hue': random.randint(0, 360), 'bought': mp, 'val': mp, 'date': now})
+                tx.insert(0, {'t': now, 'type': 'КОНТЕЙНЕР', 'item': c['name'], 'amount': -c['price']})
+                tx = tx[:100]
+                resp = {'ok': True, 'balance': balance, 'drops': drops}
         elif action == 'save':
             resp = {'ok': True}
 
