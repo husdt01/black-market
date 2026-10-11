@@ -7,6 +7,7 @@ const left=s=>{s=Math.max(0,Math.floor(s));if(s>3600)return Math.floor(s/3600)+'
 const RAR_RU={COMMON:'ОБЫЧНЫЙ',UNCOMMON:'НЕОБЫЧНЫЙ',RARE:'РЕДКИЙ',EPIC:'ЭПИЧЕСКИЙ',LEGENDARY:'ЛЕГЕНДАРНЫЙ',UNKNOWN:'НЕИЗВЕСТНО',RUNE:'РУНА'};
 const CATS=[['ALL','ВСЕ'],['TECH','ТЕХНИКА'],['ARTIFACTS','АРТЕФАКТЫ'],['COLLECTIBLES','КОЛЛЕКЦИЯ'],['VEHICLES','ТРАНСПОРТ'],['DEVICES','УСТРОЙСТВА'],['UNKNOWN','НЕИЗВЕСТНОЕ']];
 const RCP={c3:{need:3,from:'COMMON',to:'UNCOMMON',chance:'85%',title:'3 × ОБЫЧНЫЙ → НЕОБЫЧНЫЙ'},e2:{need:2,from:'EPIC',to:'LEGENDARY',chance:'22%',title:'2 × ЭПИЧЕСКИЙ → ЛЕГЕНДАРНЫЙ'}};
+const STAR_PKGS={p10:{stars:10,bal:50000},p25:{stars:25,bal:140000},p50:{stars:50,bal:300000},p100:{stars:100,bal:650000}};
 const CASES={c50:{price:50000,name:'СТАЛЬНОЙ',t:1},c100:{price:100000,name:'ТЕНЕВОЙ',t:2},c150:{price:150000,name:'ОМЕГА',t:3},c500:{price:500000,name:'РУНА',t:4}};
 
 let S={bal:100000,inv:[],tx:[],user:'ГОСТЬ',rep:0};
@@ -241,6 +242,14 @@ async function openCase(cid){
 
 function renderKeys(){
   const used=S.promo||[];
+      '<h2 class="pt">ПОПОЛНЕНИЕ · TELEGRAM STARS</h2>'+
+    '<div class="card" style="margin-bottom:14px">'+
+    '<div style="font-size:10px;color:var(--amb);letter-spacing:.2em">ОПЛАТА ЗВЁЗДАМИ TELEGRAM</div>'+
+    '<h3>БАЛАНС ЗА ЗВЁЗДЫ</h3>'+
+    Object.keys(STAR_PKGS).map(k=>{const p=STAR_PKGS[k];
+      return '<div class="line"><span>'+p.stars+' ★ → '+fmt(p.bal)+'</span><b><button class="btn pri" style="min-height:34px;padding:6px 14px" data-stars="'+k+'">КУПИТЬ</button></b></div>';
+    }).join('')+
+    '</div>'+
   $('#view').innerHTML='<h2 class="pt">ШИФР-КАНАЛ</h2>'+
     '<div class="card" style="margin-bottom:12px">'+
     '<div style="font-size:10px;color:var(--amb);letter-spacing:.2em">ДОСТУП // ЗАКРЫТЫЙ КАНАЛ</div>'+
@@ -276,6 +285,23 @@ async function redeemPromo(){
     SND.play('err');
     showNotification('ДОСТУП ЗАПРЕЩЁН',r.msg||'','dn');
   }
+}
+
+async function buyStars(pkg){
+  if(!(window.Telegram&&window.Telegram.WebApp&&window.Telegram.WebApp.openInvoice))return showNotification('НЕДОСТУПНО','Оплата звёздами работает только в Telegram','dn');
+  const r=await api('/api/stars/order','POST',{pkg:pkg});
+  if(!r.ok)return showNotification('ОШИБКА',r.msg||'Не удалось создать счёт','dn');
+  window.Telegram.WebApp.openInvoice(r.link,async(st)=>{
+    if(st==='paid'){
+      SND.play('rare');
+      showNotification('ОПЛАТА ПРИНЯТА','Зачисление...','up');
+      for(let i=0;i<4;i++){await new Promise(res=>setTimeout(res,1500));await loadState()}
+      hdr();render();
+      showNotification('БАЛАНС ПОПОЛНЕН','Звёзды зачислены на счёт','up');
+    }else{
+      showNotification('ОПЛАТА ОТМЕНЕНА','Счёт не оплачен','dn');
+    }
+  });
 }
 
 function spark(hist,up){
@@ -448,6 +474,8 @@ document.addEventListener('click',e=>{
   if(cr){craftModal(cr.dataset.craft);return}
     const cs=e.target.closest('[data-case]');
   if(cs){caseModal(cs.dataset.case);return}
+    const stb=e.target.closest('[data-stars]');
+  if(stb){buyStars(stb.dataset.stars);return}
     const pm=e.target.closest('[data-promo]');
   if(pm){redeemPromo();return}
   if(e.target.closest('#bell')){
