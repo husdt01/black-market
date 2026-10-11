@@ -54,7 +54,7 @@ async function loadState(){
   if(d&&!d.error){
     const old=new Set(S.inv.map(x=>x.uid));
     S.bal=d.balance!=null?d.balance:100000;
-    const st=d.state||{};S.inv=st.inv||[];S.tx=st.tx||[];S.rep=st.rep||0;
+    const st=d.state||{};S.inv=st.inv||[];S.tx=st.tx||[];S.rep=st.rep||0;S.promo=st.promo||[];
     if(d.username&&S.user==='ГОСТЬ')S.user=d.username;
     if(stateReady){S.inv.forEach(x=>{if(!old.has(x.uid)){showNotification('ПОСТАВКА',x.name+' поступил в инвентарь','up');SND.play('ping')}})}
     stateReady=true;
@@ -238,6 +238,44 @@ async function openCase(cid){
   },1000);
 }
 
+function renderKeys(){
+  const used=S.promo||[];
+  $('#view').innerHTML='<h2 class="pt">ШИФР-КАНАЛ</h2>'+
+    '<div class="card" style="margin-bottom:12px">'+
+    '<div style="font-size:10px;color:var(--amb);letter-spacing:.2em">ДОСТУП // ЗАКРЫТЫЙ КАНАЛ</div>'+
+    '<h3>ШИФР-КЛЮЧ</h3>'+
+    '<span style="font-size:11px;color:var(--mut);display:block;margin:6px 0 10px">Ключи распространяются по закрытым каналам связи. Введи ключ — терминал проверит подпись и зачислит активы.</span>'+
+    '<input class="inp" id="promo-inp" placeholder="ВВЕДИ КЛЮЧ..." style="text-transform:uppercase;letter-spacing:.15em">'+
+    '<div class="ft"><button class="btn pri" data-promo="1">ДЕШИФРОВАТЬ</button></div>'+
+    '</div>'+
+    '<h2 class="pt">АКТИВИРОВАННЫЕ КЛЮЧИ · '+used.length+'</h2>'+
+    '<div style="display:flex;flex-direction:column;gap:8px">'+
+    (used.length?used.map(p=>'<div class="line"><span>'+p+'</span><b class="up">АКТИВИРОВАН</b></div>').join(''):'<div class="empty">КЛЮЧЕЙ НЕТ</div>')+
+    '</div>';
+}
+async function redeemPromo(){
+  const inp=$('#promo-inp');
+  const code=(inp?inp.value:'').trim().toUpperCase();
+  if(!code)return showNotification('ОШИБКА','Введи ключ','dn'),SND.play('err');
+  const r=await api('/api/action','POST',{action:'promo',code:code});
+  if(r.ok){
+    let n=0;
+    const scr=setInterval(()=>{
+      if(!inp||!document.body.contains(inp)){clearInterval(scr);return}
+      inp.value=code.split('').map((ch,i)=>i<n?ch:String.fromCharCode(33+Math.floor(Math.random()*60))).join('');
+      n++;
+      if(n>code.length)clearInterval(scr);
+    },40);
+    SND.play('rare');
+    showNotification('ДОСТУП РАЗРЕШЁН','Ключ принят: +'+fmt(r.reward),'up');
+    await loadState();
+    render();
+  }else{
+    SND.play('err');
+    showNotification('ДОСТУП ЗАПРЕЩЁН',r.msg||'','dn');
+  }
+}
+
 function spark(hist,up){
   if(!hist||hist.length<2)return'';
   const h=hist.slice(-40),mn=Math.min.apply(null,h),mx=Math.max.apply(null,h),rg=(mx-mn)||1;
@@ -253,6 +291,7 @@ function render(){
   else if(ui.page==='contracts')renderContracts();
   else if(ui.page==='inventory')renderInventory();
   else if(ui.page==='craft')renderCraft();
+  else if(ui.page==='keys')renderKeys();
   else renderProfile();
   hdr();
 }
@@ -397,6 +436,8 @@ document.addEventListener('click',e=>{
   if(cr){craftModal(cr.dataset.craft);return}
     const cs=e.target.closest('[data-case]');
   if(cs){caseModal(cs.dataset.case);return}
+    const pm=e.target.closest('[data-promo]');
+  if(pm){redeemPromo();return}
   if(e.target.closest('#bell')){
     unread=0;badge();
     modal('<h4>УВЕДОМЛЕНИЯ</h4>'+(notes.slice(0,10).map(x=>'<div class="line"><span>'+x.title+'</span><b style="font-size:11px">'+x.msg+'</b></div>').join('')||'<div class="empty">ПУСТО</div>'));
