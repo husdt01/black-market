@@ -15,7 +15,7 @@ let ui={page:'market',cat:'ALL',open:null};
 let notes=[],unread=0,entered=false;
 let MARKET={products:[],tick:0,raid:{active:false,left:0}};
 let AUCTIONS=[],CONTRACTS=[];
-let raidWas=false,stateReady=false;
+let raidWas=false,stateReady=false,promoDraft='';
 
 async function api(path,method,body){
   const ctl=new AbortController();const to=setTimeout(()=>ctl.abort(),10000);
@@ -268,6 +268,7 @@ async function redeemPromo(){
     },40);
     SND.play('rare');
     showNotification('ДОСТУП РАЗРЕШЁН','Ключ принят: +'+fmt(r.reward),'up');
+    promoDraft='';
     await loadState();
     render();
   }else{
@@ -408,9 +409,19 @@ function renderProfile(){
     '<div class="stat"><small>СДЕЛОК</small><b>'+S.tx.length+'</b></div>'+
     '<div class="stat"><small>ИНВЕНТАРЬ</small><b>'+S.inv.length+'</b></div></div>'+
     '<div class="ft" style="margin-bottom:14px"><button class="btn '+(sndOn?'pri':'')+'" id="snd-btn">ЗВУК: '+(sndOn?'ВКЛ':'ВЫКЛ')+'</button></div>'+
-    '<h2 class="pt">ПОСЛЕДНИЕ СДЕЛКИ</h2><div style="display:flex;flex-direction:column;gap:8px">'+
+    '<h2 class="pt">ШИФР-КАНАЛ</h2>'+
+    '<div class="card" style="margin-bottom:14px">'+
+    '<div style="font-size:10px;color:var(--amb);letter-spacing:.2em">ДОСТУП // ЗАКРЫТЫЙ КАНАЛ</div>'+
+    '<h3>ШИФР-КЛЮЧ</h3>'+
+    '<input class="inp" id="promo-inp" placeholder="ВВЕДИ КЛЮЧ..." value="'+(promoDraft||'')+'" style="text-transform:uppercase;letter-spacing:.15em">'+
+    '<div class="ft"><button class="btn pri" data-promo="1">ДЕШИФРОВАТЬ</button></div>'+
+    ((S.promo||[]).length?'<div style="margin-top:10px">'+(S.promo||[]).map(p=>'<div class="line"><span>'+p+'</span><b class="up">АКТИВИРОВАН</b></div>').join('')+'</div>':'')+
+    '</div>'+
+    '<h2 class="pt">ПОСЛЕДНИЕ СДЕЛКИ</h2>'+
     (S.tx.slice(0,15).map(t=>'<div class="line"><span>'+new Date(t.t*1000).toLocaleTimeString('ru-RU')+' · '+t.type+'</span><b class="'+(t.amount>0?'up':t.amount<0?'dn':'')+'">'+(t.amount?(t.amount>0?'+':'-')+fmt(Math.abs(t.amount)):'—')+'</b></div>').join('')||'<div class="empty">НЕТ СДЕЛОК</div>')+'</div>';
   $('#snd-btn').onclick=()=>{SND.set(!SND.on());showNotification('ЗВУК',SND.on()?'Включён':'Выключен');render()};
+  const pi=$('#promo-inp');
+  if(pi)pi.oninput=e=>{promoDraft=e.target.value};
 }
 
 document.addEventListener('click',e=>{
@@ -472,7 +483,8 @@ function boot(){
       showNotification('ДОБРО ПОЖАЛОВАТЬ','Сессия открыта');
       setInterval(async()=>{
         await Promise.all([loadMarket().catch(()=>{}),loadAuctions().catch(()=>{}),loadContracts().catch(()=>{}),loadState().catch(()=>{})]);
-        if(!ui.open)render();else hdr();
+        const ae=document.activeElement;
+        if(!ui.open&&!(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA')))render();else hdr();
       },5000);
     },800);
   });
