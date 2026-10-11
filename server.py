@@ -61,7 +61,21 @@ CASES = {
     'c50': {'price': 50000, 'name': 'СТАЛЬНОЙ', 'mults': [(0.30, 32), (0.55, 28), (0.85, 20), (1.20, 12), (1.80, 6), (3.00, 2)], 'multi': (12, 2)},
     'c100': {'price': 100000, 'name': 'ТЕНЕВОЙ', 'mults': [(0.35, 30), (0.65, 26), (1.00, 20), (1.50, 14), (2.30, 7), (4.00, 3)], 'multi': (18, 4)},
     'c150': {'price': 150000, 'name': 'ОМЕГА', 'mults': [(0.40, 28), (0.75, 25), (1.15, 21), (1.80, 15), (2.80, 8), (5.00, 3)], 'multi': (24, 6)},
+    'c500': {'price': 500000, 'name': 'РУНА', 'runes': True, 'multi': (8, 2)},
 }
+
+RUNES = [
+    ['РУНА ПЕПЛА', 50000, 240, 'EPIC'],
+    ['РУНА ТУМАНА', 90000, 200, 'EPIC'],
+    ['РУНА МОРОЗА', 150000, 160, 'EPIC'],
+    ['РУНА БУРИ', 220000, 120, 'LEGENDARY'],
+    ['РУНА КРОВИ', 320000, 90, 'LEGENDARY'],
+    ['РУНА ЛУНЫ', 500000, 70, 'LEGENDARY'],
+    ['РУНА СОЛНЦА', 750000, 50, 'LEGENDARY'],
+    ['РУНА БЕЗДНЫ', 1100000, 35, 'RUNE'],
+    ['РУНА ВЕЧНОСТИ', 1700000, 25, 'RUNE'],
+    ['РУНА ПЕРВОИСТОКА', 3000000, 10, 'RUNE'],
+]
 
 
 def roll_case(case_id):
@@ -71,6 +85,19 @@ def roll_case(case_id):
     r = random.randint(1, 100)
     count = 3 if r <= c['multi'][1] else (2 if r <= c['multi'][0] + c['multi'][1] else 1)
     drops = []
+    if c.get('runes'):
+        for _ in range(count):
+            total = sum(r[2] for r in RUNES)
+            x = random.randint(1, total)
+            acc = 0
+            pick = RUNES[0]
+            for rn in RUNES:
+                acc += rn[2]
+                if x <= acc:
+                    pick = rn
+                    break
+            drops.append({'name': pick[0], 'cat': 'RUNE', 'rarity': pick[3], 'mult': 1, 'rune': True, 'val': pick[1]})
+        return drops
     for _ in range(count):
         total = sum(p for _, p in c['mults'])
         x = random.randint(1, total)
@@ -451,9 +478,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 balance -= c['price']
                 drops = roll_case(cid)
                 for d in drops:
-                    mp = market_price(d['name']) or 0
+                    mp = d.get('val') or market_price(d['name']) or 0
                     inv.append({'uid': int(now * 1000) + len(inv), 'name': d['name'], 'rarity': d['rarity'],
-                                'cat': d['cat'], 'hue': random.randint(0, 360), 'bought': mp, 'val': mp, 'date': now})
+                                'cat': d['cat'], 'hue': random.randint(0, 360), 'bought': mp, 'val': mp,
+                                'rune': bool(d.get('rune')), 'date': now})
                 tx.insert(0, {'t': now, 'type': 'КОНТЕЙНЕР', 'item': c['name'], 'amount': -c['price']})
                 tx = tx[:100]
                 resp = {'ok': True, 'balance': balance, 'drops': drops}
