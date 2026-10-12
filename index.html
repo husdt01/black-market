@@ -1,40 +1,54 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>BLACK MARKET</title>
-<link rel="stylesheet" href="css/style.css">
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>BLACK MARKET</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div id="loader">
-  <h1>BLACK MARKET</h1>
-  <p>ЗАКРЫТЫЙ РЫНОК · ТЕРМИНАЛ</p>
-  <div id="ld-line">СОЕДИНЕНИЕ...</div>
-  <button id="enter" class="btn pri" hidden>ВОЙТИ В РЫНОК</button>
-</div>
-<div id="app" class="hidden">
-  <header>
-    <div class="logo">BLACK MARKET <span class="online"><i></i>В СЕТИ</span></div>
-    <div class="hdr-right">
-      <div class="bal"><small>БАЛАНС</small><b id="bal">₽ 0</b></div>
-      <button id="bell" class="icon-btn">🔔<span id="badge" hidden>0</span></button>
+  <div id="loader">
+    <div class="loader-content">
+      <div class="spinner"></div>
+      <div id="ld-line" style="margin-top:16px;font-size:12px;letter-spacing:.2em;color:var(--mut)">СОЕДИНЕНИЕ...</div>
+      <button id="enter" class="btn pri" style="margin-top:24px" hidden>ВОЙТИ НА РЫНОК</button>
     </div>
-  </header>
-  <div id="raid"><b>⚠ РЕЙД · РЫНОК ЗАМОРОЖЕН</b><small id="rd-t"></small><div class="rd-bar"><i id="rd-i"></i></div></div>
-  <main id="view"></main>
-  <div class="tabs">
-  <button class="tab on" data-page="market">РЫНОК</button>
-  <button class="tab" data-page="auctions">АУКЦИОНЫ</button>
-  <button class="tab" data-page="missions">ЗАДАНИЯ</button>
-  <button class="tab" data-page="inventory">ИНВЕНТАРЬ</button>
-  <button class="tab" data-page="mercenaries">НАЁМНИКИ</button>
-  <button class="tab" data-page="profile">ПРОФИЛЬ</button>
-</div>
-<div id="modals"></div>
-<div id="toasts"></div>
-<script src="js/sound.js"></script>
-<script src="js/app.js"></script>
+  </div>
+
+  <div id="app" class="hidden">
+    <header>
+      <div class="h-left">
+        <span style="font-size:10px;color:var(--mut)">БАЛАНС</span>
+        <b id="bal" style="font-size:18px;color:var(--grn)">₽ 0</b>
+      </div>
+      <div class="h-right">
+        <button id="bell" style="position:relative;background:none;border:none;color:var(--tx);font-size:20px;cursor:pointer">
+          🔔<span id="badge" class="badge" hidden>0</span>
+        </button>
+      </div>
+    </header>
+
+    <div id="raid" class="raid-bar" hidden>
+      <div id="rd-i" class="raid-fill"></div>
+      <span id="rd-t" class="raid-text">ТОРГИ ПРИОСТАНОВЛЕНЫ</span>
+    </div>
+
+    <main id="view"></main>
+
+    <nav class="tabs">
+      <button class="tab on" data-page="market">РЫНОК</button>
+      <button class="tab" data-page="auctions">АУКЦИОНЫ</button>
+      <button class="tab" data-page="missions">ЗАДАНИЯ</button>
+      <button class="tab" data-page="inventory">ИНВЕНТАРЬ</button>
+      <button class="tab" data-page="mercenaries">НАЁМНИКИ</button>
+      <button class="tab" data-page="profile">ПРОФИЛЬ</button>
+    </nav>
+  </div>
+
+  <div id="toasts"></div>
+  <div id="modals"></div>
+
+  <script src="js/app.js"></script>
 </body>
 </html>
