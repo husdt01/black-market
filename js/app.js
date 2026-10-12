@@ -81,7 +81,7 @@ async function buyProduct(p){
   const r=await api('/api/action','POST',{action:'buy',price:pr,item:{name:p.name,rarity:p.rarity,cat:p.cat,hue:Math.floor(Math.random()*360)}});
   if(r.ok){
     showNotification('ПОКУПКА ЗАВЕРШЕНА',p.name+' в инвентаре','up');
-    SND.play(['EPIC','LEGENDARY'].includes(p.rarity)?'rare':'buy');
+    SND.play(['EPIC','LEGENDARY','RUNE'].includes(p.rarity)?'rare':'buy');
     closeModal();await loadState();render();
   }else{showNotification('ОШИБКА',r.msg||'Покупка не удалась','dn');SND.play('err')}
 }
@@ -291,7 +291,11 @@ async function redeemPromo(){
       if(n>code.length)clearInterval(scr);
     },40);
     SND.play('rare');
-    showNotification('ДОСТУП РАЗРЕШЁН','Ключ принят: +'+fmt(r.reward),'up');
+    if(r.item){
+      showNotification('ДОСТУП РАЗРЕШЁН','Получен артефакт: '+r.item,'up');
+    }else{
+      showNotification('ДОСТУП РАЗРЕШЁН','Ключ принят: +'+fmt(r.reward),'up');
+    }
     promoDraft='';
     await loadState();
     render();
@@ -307,7 +311,7 @@ function render(){
   if(ui.page==='market')renderMarket();
   else if(ui.page==='auctions')renderAuctions();
   else if(ui.page==='contracts')renderContracts();
-          '<div class="ft"><button class="btn pri" data-sell="'+i.uid+'">ПРОДАТЬ</button></div></article>';
+  else if(ui.page==='inventory')renderInventory();
   else if(ui.page==='craft')renderCraft();
   else renderProfile();
   hdr();
@@ -419,7 +423,7 @@ function renderProfile(){
   const profit=worth-100000;
   const sndOn=SND.on();
   $('#view').innerHTML='<h2 class="pt">ПРОФИЛЬ</h2>'+
-    '<div class="pf-h"><div class="av">👤</div><div class="pf-n"><b>'+S.user+'</b><small>РЕПУТАЦИЯ: '+S.rep+'</small><small style="color:var(--mut);margin-top:3px">ID: '+TG_ID+'</small></div></div>'+
+    '<div class="pf-h"><div class="av"></div><div class="pf-n"><b>'+S.user+'</b><small>РЕПУТАЦИЯ: '+S.rep+'</small><small style="color:var(--mut);margin-top:3px">ID: '+TG_ID+'</small></div></div>'+
     '<div class="stats"><div class="stat"><small>СОСТОЯНИЕ</small><b>'+fmt(worth)+'</b></div>'+
     '<div class="stat"><small>ПРИБЫЛЬ</small><b class="'+(profit>=0?'up':'dn')+'">'+(profit>=0?'+':'')+fmt(profit)+'</b></div>'+
     '<div class="stat"><small>СДЕЛОК</small><b>'+S.tx.length+'</b></div>'+
@@ -509,8 +513,12 @@ function boot(){
       showNotification('ДОБРО ПОЖАЛОВАТЬ','Сессия открыта');
       setInterval(async()=>{
         const ae=document.activeElement;
-        if(!ui.open&&!(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA')))render();else hdr();
-        await Promise.all([loadMarket().catch(()=>{}),loadAuctions().catch(()=>{}),loadContracts().catch(()=>{}),loadState().catch(()=>{})]);
+        if(!ui.open&&!(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'))){
+          await Promise.all([loadMarket().catch(()=>{}),loadAuctions().catch(()=>{}),loadContracts().catch(()=>{}),loadState().catch(()=>{})]);
+          render();
+        }else{
+          hdr();
+        }
       },5000);
     },800);
   });
