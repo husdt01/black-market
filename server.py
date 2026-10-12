@@ -604,7 +604,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             idx = next((i for i, x in enumerate(inv) if x.get('uid') == uid), None)
             if idx is not None and price > 0:
                 item = inv[idx]
-                if item.get('rune'):
+                if item.get('rune') or item.get('case'):
                     fixed = item.get('val', 0)
                     if price != fixed:
                         resp = {'ok': False, 'msg': 'РУНЫ ПРОДАЮТСЯ ТОЛЬКО ПО ФИКС-ЦЕНЕ: ' + str(fixed)}
@@ -769,6 +769,42 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         tx.insert(0, {'t': now, 'type': 'КРАФТ', 'item': 'ПРОВАЛ', 'amount': 0})
                         tx = tx[:100]
                         resp = {'ok': True, 'res': None}
+                                elif action == 'start_convoy':
+            convoy = state.get('convoy', {})
+            veh_uid = convoy.get('vehicle')
+            mercs = convoy.get('mercenaries', [])
+            weaps = convoy.get('weapons', [])
+            arms = convoy.get('armor', [])
+            if not veh_uid:
+                resp = {'ok': False, 'msg': 'Нужна машина'}
+            else:
+                power = 0
+                removed = []
+                for uid in [veh_uid] + mercs + weaps + arms:
+                    idx = next((i for i, x in enumerate(inv) if x.get('uid') == uid), None)
+                    if idx is None:
+                        resp = {'ok': False, 'msg': 'Компонент потерян'}
+                        break
+                    power += inv[idx].get('power', 1)
+                    removed.append(idx)
+                else:
+                    for idx in sorted(removed, reverse=True):
+                        inv.pop(idx)
+                    success_chance = min(95, 25 + power * 3)
+                    success = random.randint(1, 100) <= success_chance
+                    if success:
+                        reward = 5000000 + power * 500000
+                        balance += reward
+                        inv.append({'uid': int(now * 1000), 'name': 'КЕЙС КОНВОЯ', 'rarity': 'LEGENDARY',
+                                    'cat': 'CONVOY_CASE', 'hue': 45, 'bought': 15000000, 'val': 15000000,
+                                    'case': True, 'date': now})
+                        tx.insert(0, {'t': now, 'type': 'РЕЙД', 'item': 'УСПЕХ', 'amount': reward})
+                        resp = {'ok': True, 'balance': balance, 'success': True, 'reward': reward, 'chance': success_chance}
+                    else:
+                        tx.insert(0, {'t': now, 'type': 'РЕЙД', 'item': 'ПРОВАЛ', 'amount': 0})
+                        resp = {'ok': True, 'balance': balance, 'success': False, 'chance': success_chance}
+                    state['convoy'] = {'vehicle': None, 'mercenaries': [], 'weapons': [], 'armor': []}
+                    tx = tx[:100]
         elif action == 'save':
             resp = {'ok': True}
 
