@@ -95,19 +95,30 @@ async function sellProduct(uid,price){
 async function sellModal(uid){
   const i=S.inv.find(x=>x.uid==uid);
   if(!i)return showNotification('ОШИБКА','Предмета нет','dn');
-  const d=await api('/api/price?name='+encodeURIComponent(i.name));
-  const val=Math.round(d&&d.price?d.price:(i.val||i.bought||0));
   ui.open='sell';
-  modal('<h4>ПРОДАЖА · '+i.name+'</h4>'+
-    '<div class="line"><span>РЫНОК СЕЙЧАС</span><b>'+fmt(val)+'</b></div>'+
-    '<div class="line"><span>КУПЛЕНО ЗА</span><b>'+fmt(i.bought||0)+'</b></div>'+
-    '<div class="line"><span>МАКС. ЦЕНА (+15%)</span><b>'+fmt(Math.round(val*1.15))+'</b></div>'+
-    '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">ВАША ЦЕНА</span>'+
-    '<input class="inp" id="ask" type="number" min="1" value="'+val+'">'+
-    '<div class="acts"><button class="btn" id="m-no">ОТМЕНА</button><button class="btn pri" id="m-yes">ПРОДАТЬ</button></div>');
-  $('#ask').oninput=()=>{const v=+$('#ask').value||0;$('#m-yes').disabled=(v>val*1.15||v<val*0.3)};
-  $('#m-no').onclick=closeModal;
-  $('#m-yes').onclick=()=>sellProduct(uid,+$('#ask').value);
+  if(i.rune){
+    const val=i.val||i.bought||0;
+    modal('<h4>ПРОДАЖА · '+i.name+'</h4>'+
+      '<div class="line"><span>ТИП</span><b style="color:var(--amb)">КОЛЛЕКЦИОННАЯ РУНА</b></div>'+
+      '<div class="line"><span>ФИКС-ЦЕНА</span><b>'+fmt(val)+'</b></div>'+
+      '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">Руны продаются только по фиксированной стоимости, без влияния рынка.</span>'+
+      '<div class="acts"><button class="btn" id="m-no">ОТМЕНА</button><button class="btn pri" id="m-yes">ПРОДАТЬ ЗА '+fmt(val)+'</button></div>');
+    $('#m-no').onclick=closeModal;
+    $('#m-yes').onclick=()=>sellProduct(uid,val);
+  }else{
+    const d=await api('/api/price?name='+encodeURIComponent(i.name));
+    const val=Math.round(d&&d.price?d.price:(i.val||i.bought||0));
+    modal('<h4>ПРОДАЖА · '+i.name+'</h4>'+
+      '<div class="line"><span>РЫНОК СЕЙЧАС</span><b>'+fmt(val)+'</b></div>'+
+      '<div class="line"><span>КУПЛЕНО ЗА</span><b>'+fmt(i.bought||0)+'</b></div>'+
+      '<div class="line"><span>МАКС. ЦЕНА (+15%)</span><b>'+fmt(Math.round(val*1.15))+'</b></div>'+
+      '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">ВАША ЦЕНА</span>'+
+      '<input class="inp" id="ask" type="number" min="1" value="'+val+'">'+
+      '<div class="acts"><button class="btn" id="m-no">ОТМЕНА</button><button class="btn pri" id="m-yes">ПРОДАТЬ</button></div>');
+    $('#ask').oninput=()=>{const v=+$('#ask').value||0;$('#m-yes').disabled=(v>val*1.15||v<val*0.3)};
+    $('#m-no').onclick=closeModal;
+    $('#m-yes').onclick=()=>sellProduct(uid,+$('#ask').value);
+  }
 }
 function confirmBuy(p){
   const pr=Math.round(p.price);
