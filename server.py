@@ -5,8 +5,36 @@ import urllib.request
 BOT_TOKEN = os.environ.get('BOT_TOKEN', '')
 DB = 'data.db'
 K = 10
+APP_URL = os.environ.get('APP_URL', 'https://black-market-5bno.onrender.com')
 
 PROMOS = {'DEVELOPER': 1000000}
+
+PACKAGES = {
+    'p10': {'stars': 10, 'bal': 50000, 'title': '50 000 на баланс'},
+    'p25': {'stars': 25, 'bal': 140000, 'title': '140 000 на баланс'},
+    'p50': {'stars': 50, 'bal': 300000, 'title': '300 000 на баланс'},
+    'p100': {'stars': 100, 'bal': 650000, 'title': '650 000 на баланс'},
+}
+
+RUNES = [
+    ['РУНА ПЕПЛА', 150000, 320, 'EPIC'],
+    ['РУНА ТУМАНА', 220000, 250, 'EPIC'],
+    ['РУНА МОРОЗА', 320000, 180, 'EPIC'],
+    ['РУНА БУРИ', 450000, 110, 'LEGENDARY'],
+    ['РУНА КРОВИ', 620000, 70, 'LEGENDARY'],
+    ['РУНА ЛУНЫ', 850000, 40, 'LEGENDARY'],
+    ['РУНА СОЛНЦА', 1200000, 18, 'LEGENDARY'],
+    ['РУНА БЕЗДНЫ', 1700000, 8, 'RUNE'],
+    ['РУНА ВЕЧНОСТИ', 2500000, 3, 'RUNE'],
+    ['РУНА ПЕРВОИСТОКА', 4000000, 1, 'RUNE'],
+]
+
+CASES = {
+    'c50': {'price': 50000, 'name': 'СТАЛЬНОЙ', 'mults': [(0.30, 32), (0.55, 28), (0.85, 20), (1.20, 12), (1.80, 6), (3.00, 2)], 'multi': (12, 2)},
+    'c100': {'price': 100000, 'name': 'ТЕНЕВОЙ', 'mults': [(0.35, 30), (0.65, 26), (1.00, 20), (1.50, 14), (2.30, 7), (4.00, 3)], 'multi': (18, 4)},
+    'c150': {'price': 150000, 'name': 'ОМЕГА', 'mults': [(0.40, 28), (0.75, 25), (1.15, 21), (1.80, 15), (2.80, 8), (5.00, 3)], 'multi': (24, 6)},
+    'c500': {'price': 500000, 'name': 'РУНА', 'runes': True, 'multi': (8, 2)},
+}
 
 
 def db():
@@ -60,26 +88,6 @@ REPR = {'COMMON': 4, 'UNCOMMON': 7, 'RARE': 12, 'EPIC': 20, 'LEGENDARY': 35}
 RCP = {'c3': {'need': 3, 'from': 'COMMON', 'to': 'UNCOMMON', 'p': .85},
        'e2': {'need': 2, 'from': 'EPIC', 'to': 'LEGENDARY', 'p': .22}}
 
-CASES = {
-    'c50': {'price': 50000, 'name': 'СТАЛЬНОЙ', 'mults': [(0.30, 32), (0.55, 28), (0.85, 20), (1.20, 12), (1.80, 6), (3.00, 2)], 'multi': (12, 2)},
-    'c100': {'price': 100000, 'name': 'ТЕНЕВОЙ', 'mults': [(0.35, 30), (0.65, 26), (1.00, 20), (1.50, 14), (2.30, 7), (4.00, 3)], 'multi': (18, 4)},
-    'c150': {'price': 150000, 'name': 'ОМЕГА', 'mults': [(0.40, 28), (0.75, 25), (1.15, 21), (1.80, 15), (2.80, 8), (5.00, 3)], 'multi': (24, 6)},
-    'c500': {'price': 500000, 'name': 'РУНА', 'runes': True, 'multi': (8, 2)},
-}
-
-RUNES = [
-    ['РУНА ПЕПЛА', 150000, 320, 'EPIC'],
-    ['РУНА ТУМАНА', 220000, 250, 'EPIC'],
-    ['РУНА МОРОЗА', 320000, 180, 'EPIC'],
-    ['РУНА БУРИ', 450000, 110, 'LEGENDARY'],
-    ['РУНА КРОВИ', 620000, 70, 'LEGENDARY'],
-    ['РУНА ЛУНЫ', 850000, 40, 'LEGENDARY'],
-    ['РУНА СОЛНЦА', 1200000, 18, 'LEGENDARY'],
-    ['РУНА БЕЗДНЫ', 1700000, 8, 'RUNE'],
-    ['РУНА ВЕЧНОСТИ', 2500000, 3, 'RUNE'],
-    ['РУНА ПЕРВОИСТОКА', 4000000, 1, 'RUNE'],
-]
-
 
 def roll_case(case_id):
     c = CASES.get(case_id)
@@ -90,7 +98,7 @@ def roll_case(case_id):
     drops = []
     if c.get('runes'):
         for _ in range(count):
-            total = sum(r[2] for r in RUNES)
+            total = sum(rn[2] for rn in RUNES)
             x = random.randint(1, total)
             acc = 0
             pick = RUNES[0]
@@ -301,16 +309,6 @@ def get_contracts(tg_id):
     return out
 
 
-APP_URL = os.environ.get('APP_URL', 'https://black-market-5bno.onrender.com')
-
-PACKAGES = {
-    'p10': {'stars': 10, 'bal': 50000, 'title': '50 000 на баланс'},
-    'p25': {'stars': 25, 'bal': 140000, 'title': '140 000 на баланс'},
-    'p50': {'stars': 50, 'bal': 300000, 'title': '300 000 на баланс'},
-    'p100': {'stars': 100, 'bal': 650000, 'title': '650 000 на баланс'},
-}
-
-
 def tg_api(method, params=None):
     url = 'https://api.telegram.org/bot' + BOT_TOKEN + '/' + method
     data = json.dumps(params or {}).encode('utf-8')
@@ -443,6 +441,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self._action()
         else:
             self.send_json({'error': 'not found'}, 404)
+
     def _webhook(self):
         up = self.read_body()
         try:
@@ -458,6 +457,28 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         except Exception:
             pass
         self.send_json({'ok': True})
+
+    def _validate(self):
+        data = self.read_body()
+        init_data = data.get('initData', '')
+        if not init_data or not BOT_TOKEN:
+            return self.send_json({'valid': False, 'msg': 'no initData or token'}, 403)
+        secret = hmac.new(b'WebAppData', BOT_TOKEN.encode(), hashlib.sha256).digest()
+        params = parse_qs(init_data)
+        received_hash = params.get('hash', [''])[0]
+        pairs = sorted(f"{k}={v[0]}" for k, v in params.items() if k != 'hash')
+        computed = hmac.new(secret, '\n'.join(pairs).encode(), hashlib.sha256).hexdigest()
+        if computed != received_hash:
+            return self.send_json({'valid': False, 'msg': 'hash mismatch'}, 403)
+        user_data = json.loads(params.get('user', ['{}'])[0])
+        tg_id = str(user_data.get('id', ''))
+        username = user_data.get('username', '')
+        conn = db()
+        conn.execute("INSERT OR IGNORE INTO users(tg_id, username) VALUES(?,?)", (tg_id, username))
+        conn.execute("UPDATE users SET username=? WHERE tg_id=?", (username, tg_id))
+        conn.commit()
+        conn.close()
+        self.send_json({'valid': True, 'tg_id': tg_id, 'username': username})
 
     def _stars_order(self, tg_id):
         data = self.read_body()
@@ -484,28 +505,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_json({'ok': True, 'link': r.get('result')})
         else:
             self.send_json({'ok': False, 'msg': str(r.get('description'))})
-            
-    def _validate(self):
-        data = self.read_body()
-        init_data = data.get('initData', '')
-        if not init_data or not BOT_TOKEN:
-            return self.send_json({'valid': False, 'msg': 'no initData or token'}, 403)
-        secret = hmac.new(b'WebAppData', BOT_TOKEN.encode(), hashlib.sha256).digest()
-        params = parse_qs(init_data)
-        received_hash = params.get('hash', [''])[0]
-        pairs = sorted(f"{k}={v[0]}" for k, v in params.items() if k != 'hash')
-        computed = hmac.new(secret, '\n'.join(pairs).encode(), hashlib.sha256).hexdigest()
-        if computed != received_hash:
-            return self.send_json({'valid': False, 'msg': 'hash mismatch'}, 403)
-        user_data = json.loads(params.get('user', ['{}'])[0])
-        tg_id = str(user_data.get('id', ''))
-        username = user_data.get('username', '')
-        conn = db()
-        conn.execute("INSERT OR IGNORE INTO users(tg_id, username) VALUES(?,?)", (tg_id, username))
-        conn.execute("UPDATE users SET username=? WHERE tg_id=?", (username, tg_id))
-        conn.commit()
-        conn.close()
-        self.send_json({'valid': True, 'tg_id': tg_id, 'username': username})
 
     def _action(self):
         data = self.read_body()
@@ -690,14 +689,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 if __name__ == '__main__':
     init_db()
     PORT = int(os.environ.get('PORT', 8765))
+    if BOT_TOKEN:
+        tg_api('setWebhook', {'url': APP_URL + '/api/tg/webhook'})
 
     class Server(http.server.ThreadingHTTPServer):
         daemon_threads = True
         allow_reuse_address = True
-        
-    if BOT_TOKEN:
-        tg_api('setWebhook', {'url': APP_URL + '/api/tg/webhook'})
-        
+
     httpd = Server(('0.0.0.0', PORT), Handler)
     print('Server on port', PORT)
     httpd.serve_forever()
