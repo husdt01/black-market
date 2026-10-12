@@ -307,7 +307,7 @@ function render(){
   if(ui.page==='market')renderMarket();
   else if(ui.page==='auctions')renderAuctions();
   else if(ui.page==='contracts')renderContracts();
-  else if(ui.page==='inventory')renderInventory();
+          '<div class="ft"><button class="btn pri" data-sell="'+i.uid+'">ПРОДАТЬ</button></div></article>';
   else if(ui.page==='craft')renderCraft();
   else renderProfile();
   hdr();
