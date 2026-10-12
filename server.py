@@ -545,16 +545,25 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             price = data.get('price', 0)
             idx = next((i for i, x in enumerate(inv) if x.get('uid') == uid), None)
             if idx is not None and price > 0:
-                if inv[idx].get('rune'):
-                    resp = {'ok': False, 'msg': 'РУНЫ НЕЛЬЗЯ ПРОДАТЬ: это коллекционный артефакт'}
+                item = inv[idx]
+                if item.get('rune'):
+                    fixed = item.get('val', 0)
+                    if price != fixed:
+                        resp = {'ok': False, 'msg': 'РУНЫ ПРОДАЮТСЯ ТОЛЬКО ПО ФИКС-ЦЕНЕ: ' + str(fixed)}
+                    else:
+                        inv.pop(idx)
+                        balance += price
+                        tx.insert(0, {'t': now, 'type': 'ПРОДАЖА', 'item': item.get('name', ''), 'amount': price})
+                        tx = tx[:100]
+                        resp = {'ok': True, 'balance': balance}
                 else:
-                    cur = market_price(inv[idx].get('name', '')) or inv[idx].get('val', 0) or price
+                    cur = market_price(item.get('name', '')) or item.get('val', 0) or price
                     if price > cur * 1.15:
                         resp = {'ok': False, 'msg': 'НЕТ ПОКУПАТЕЛЯ: рынок сейчас ' + str(cur) + ', максимум ' + str(round(cur * 1.15))}
                     elif price < cur * 0.3:
                         resp = {'ok': False, 'msg': 'Слишком дёшево: рынок сейчас ' + str(cur) + ', минимум ' + str(round(cur * 0.3))}
                     else:
-                        item = inv.pop(idx)
+                        inv.pop(idx)
                         balance += price
                         tx.insert(0, {'t': now, 'type': 'ПРОДАЖА', 'item': item.get('name', ''), 'amount': price})
                         tx = tx[:100]
