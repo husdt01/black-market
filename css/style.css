@@ -174,3 +174,12 @@ h2.pt:before{content:">> ";color:var(--amb)}
 .case-card.t4 .case-ico b{background:#a06be0;box-shadow:0 0 12px #a06be0}
 .r-RUNE{--rc:#a06be0;box-shadow:0 0 24px rgba(160,107,224,.28)}
 .drop-line.r-RUNE{border-color:rgba(160,107,224,.7);box-shadow:0 0 18px rgba(160,107,224,.35)}
+#loader{position:fixed;inset:0;background:#0c0d10;display:flex;align-items:center;justify-content:center;z-index:9999;transition:opacity .5s}
+#loader.hidden{opacity:0;pointer-events:none}
+.spinner{width:40px;height:40px;border:3px solid var(--ln);border-top-color:var(--amb);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#app.hidden{display:none}
+.badge{position:absolute;top:-4px;right:-6px;background:var(--red);color:#fff;font-size:9px;padding:2px 5px;border-radius:10px}
+.raid-bar{position:relative;height:4px;background:var(--red);margin-bottom:8px;overflow:hidden}
+.raid-fill{position:absolute;left:0;top:0;height:100%;background:var(--amb);width:100%;transition:width 1s linear}
+.raid-text{position:absolute;left:8px;top:-18px;font-size:9px;letter-spacing:.15em;color:var(--red)}
