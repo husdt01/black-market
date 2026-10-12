@@ -545,17 +545,20 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             price = data.get('price', 0)
             idx = next((i for i, x in enumerate(inv) if x.get('uid') == uid), None)
             if idx is not None and price > 0:
-                cur = market_price(inv[idx].get('name', '')) or inv[idx].get('val', 0) or price
-                if price > cur * 1.15:
-                    resp = {'ok': False, 'msg': 'НЕТ ПОКУПАТЕЛЯ: рынок сейчас ' + str(cur) + ', максимум ' + str(round(cur * 1.15))}
-                elif price < cur * 0.3:
-                    resp = {'ok': False, 'msg': 'Слишком дёшево: рынок сейчас ' + str(cur) + ', минимум ' + str(round(cur * 0.3))}
+                if inv[idx].get('rune'):
+                    resp = {'ok': False, 'msg': 'РУНЫ НЕЛЬЗЯ ПРОДАТЬ: это коллекционный артефакт'}
                 else:
-                    item = inv.pop(idx)
-                    balance += price
-                    tx.insert(0, {'t': now, 'type': 'ПРОДАЖА', 'item': item.get('name', ''), 'amount': price})
-                    tx = tx[:100]
-                    resp = {'ok': True, 'balance': balance}
+                    cur = market_price(inv[idx].get('name', '')) or inv[idx].get('val', 0) or price
+                    if price > cur * 1.15:
+                        resp = {'ok': False, 'msg': 'НЕТ ПОКУПАТЕЛЯ: рынок сейчас ' + str(cur) + ', максимум ' + str(round(cur * 1.15))}
+                    elif price < cur * 0.3:
+                        resp = {'ok': False, 'msg': 'Слишком дёшево: рынок сейчас ' + str(cur) + ', минимум ' + str(round(cur * 0.3))}
+                    else:
+                        item = inv.pop(idx)
+                        balance += price
+                        tx.insert(0, {'t': now, 'type': 'ПРОДАЖА', 'item': item.get('name', ''), 'amount': price})
+                        tx = tx[:100]
+                        resp = {'ok': True, 'balance': balance}
             else:
                 resp = {'ok': False, 'msg': 'Ошибка продажи'}
         elif action == 'bid':
@@ -587,7 +590,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif action == 'promo':
             code = (data.get('code') or '').strip().upper()
             used = state.get('promo', [])
-            if code not in PROMOS:
+            if code == 'ZERO':
+                if 'ZERO' in used:
+                    resp = {'ok': False, 'msg': 'Ключ уже активирован этим каналом'}
+                else:
+                    inv.append({'uid': int(now * 1000), 'name': 'РУНА ПЕРВОИСТОКА', 'rarity': 'RUNE',
+                                'cat': 'RUNE', 'hue': random.randint(0, 360), 'bought': 4000000, 'val': 4000000,
+                                'rune': True, 'date': now})
+                    used.append('ZERO')
+                    state['promo'] = used
+                    tx.insert(0, {'t': now, 'type': 'КЛЮЧ', 'item': 'ZERO', 'amount': 0})
+                    tx = tx[:100]
+                    resp = {'ok': True, 'balance': balance, 'reward': 0, 'item': 'РУНА ПЕРВОИСТОКА'}
+            elif code not in PROMOS:
                 resp = {'ok': False, 'msg': 'Ключ не распознан: нет доступа'}
             elif code in used:
                 resp = {'ok': False, 'msg': 'Ключ уже активирован этим каналом'}
