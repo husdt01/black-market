@@ -607,7 +607,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 if item.get('rune') or item.get('case'):
                     fixed = item.get('val', 0)
                     if price != fixed:
-                        resp = {'ok': False, 'msg': 'РУНЫ ПРОДАЮТСЯ ТОЛЬКО ПО ФИКС-ЦЕНЕ: ' + str(fixed)}
+                        resp = {'ok': False, 'msg': 'ПРОДАЁТСЯ ТОЛЬКО ПО ФИКС-ЦЕНЕ: ' + str(fixed)}
                     else:
                         inv.pop(idx)
                         balance += price
@@ -769,7 +769,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         tx.insert(0, {'t': now, 'type': 'КРАФТ', 'item': 'ПРОВАЛ', 'amount': 0})
                         tx = tx[:100]
                         resp = {'ok': True, 'res': None}
-                                elif action == 'start_convoy':
+        elif action == 'start_convoy':
             convoy = state.get('convoy', {})
             veh_uid = convoy.get('vehicle')
             mercs = convoy.get('mercenaries', [])
