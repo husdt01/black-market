@@ -1,4 +1,26 @@
 'use strict';
+const SND = {
+  _on: true,
+  on: function() { return this._on; },
+  set: function(v) { this._on = v; },
+  play: function(type) {
+    if (!this._on) return;
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      if (type === 'rare') { osc.frequency.value = 800; gain.gain.value = 0.1; osc.start(); osc.stop(ctx.currentTime + 0.15); }
+      else if (type === 'err' || type === 'fail') { osc.frequency.value = 150; gain.gain.value = 0.1; osc.start(); osc.stop(ctx.currentTime + 0.2); }
+      else if (type === 'raid') { osc.frequency.value = 300; gain.gain.value = 0.1; osc.start(); osc.stop(ctx.currentTime + 0.3); }
+      else { osc.frequency.value = 400; gain.gain.value = 0.05; osc.start(); osc.stop(ctx.currentTime + 0.05); }
+    } catch(e) {}
+  }
+};
+
+const $=(s,r=document)=>r.querySelector(s);
+// ... дальше идет остальной код app.js без изменений ...
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const fmt=n=>'₽ '+Math.round(n).toLocaleString('ru-RU');
