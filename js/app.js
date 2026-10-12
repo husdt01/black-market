@@ -1,4 +1,5 @@
 'use strict';
+
 const SND = {
   _on: true,
   on: function() { return this._on; },
@@ -14,13 +15,14 @@ const SND = {
       if (type === 'rare') { osc.frequency.value = 800; gain.gain.value = 0.1; osc.start(); osc.stop(ctx.currentTime + 0.15); }
       else if (type === 'err' || type === 'fail') { osc.frequency.value = 150; gain.gain.value = 0.1; osc.start(); osc.stop(ctx.currentTime + 0.2); }
       else if (type === 'raid') { osc.frequency.value = 300; gain.gain.value = 0.1; osc.start(); osc.stop(ctx.currentTime + 0.3); }
-      else { osc.frequency.value = 400; gain.gain.value = 0.05; osc.start(); osc.stop(ctx.currentTime + 0.05); }
+      else if (type === 'raidEnd') { osc.frequency.value = 600; gain.gain.value = 0.1; osc.start(); osc.stop(ctx.currentTime + 0.2); }
+      else if (type === 'sell') { osc.frequency.value = 500; gain.gain.value = 0.08; osc.start(); osc.stop(ctx.currentTime + 0.1); }
+      else if (type === 'buy' || type === 'click' || type === 'ping') { osc.frequency.value = 400; gain.gain.value = 0.05; osc.start(); osc.stop(ctx.currentTime + 0.05); }
+      else if (type === 'craft') { osc.frequency.value = 250; gain.gain.value = 0.08; osc.start(); osc.stop(ctx.currentTime + 0.12); }
     } catch(e) {}
   }
 };
 
-const $=(s,r=document)=>r.querySelector(s);
-// ... дальше идет остальной код app.js без изменений ...
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const fmt=n=>'₽ '+Math.round(n).toLocaleString('ru-RU');
@@ -247,14 +249,6 @@ async function buyMerc(name,price){
   if(r.ok){showNotification('НАЁМНИК НАНЯТ',name,'up');SND.play('buy');await loadState();render()}
   else{showNotification('ОШИБКА',r.msg||'','dn');SND.play('err')}
 }
-async function buyArmor(name,price,qty){
-  qty=Math.max(1,parseInt(qty)||1);
-  const total=price*qty;
-  if(S.bal<total)return showNotification('НЕДОСТАТОЧНО СРЕДСТВ','','dn'),SND.play('err');
-  const r=await api('/api/action','POST',{action:'buy',price:price,qty:qty,item:{name:name,rarity:ARMOR.find(a=>a[0]===name)[3],cat:'ARMOR',hue:Math.floor(Math.random()*360),power:ARMOR.find(a=>a[0]===name)[2]}});
-  if(r.ok){showNotification('БРОНЯ ЗАКУПЛЕНА',name+' x'+qty,'up');SND.play('buy');await loadState();render()}
-  else{showNotification('ОШИБКА',r.msg||'','dn');SND.play('err')}
-}
 
 function craftModal(rid){
   const r=RCP[rid];
@@ -417,7 +411,7 @@ async function startConvoy(){
     '<div class="line"><span>СИЛА КОНВОЯ</span><b>'+convoyPower()+'</b></div>'+
     '<div class="line"><span>ШАНС УСПЕХА</span><b class="up">'+chance+'%</b></div>'+
     '<div class="line"><span>ОЖИДАЕМАЯ НАГРАДА</span><b style="color:var(--grn)">'+fmt(convoyReward())+' + КЕЙС</b></div>'+
-    '<span style="font-size:11px;color:var(--red);display:block;margin-top:12px"> ВСЕ КОМПОНЕНТЫ БУДУТ ПОТРАЧЕНЫ НЕЗАВИСИМО ОТ ИСХОДА</span>'+
+    '<span style="font-size:11px;color:var(--red);display:block;margin-top:12px">⚠ ВСЕ КОМПОНЕНТЫ БУДУТ ПОТРАЧЕНЫ НЕЗАВИСИМО ОТ ИСХОДА</span>'+
     '<div class="acts"><button class="btn" id="m-no">ОТМЕНА</button><button class="btn pri" id="m-yes">В ПУТЬ</button></div>');
   $('#m-no').onclick=closeModal;
   $('#m-yes').onclick=async()=>{
@@ -481,7 +475,7 @@ function card(p){
     '<div class="row"><span>Продавец</span><b>'+p.seller+'</b></div>'+
     '<div class="row"><span>Цена</span><b style="color:var(--grn)">'+fmt(p.price)+(isArmor?' <small style="color:var(--mut)">/ шт.</small>':'')+'</b></div>'+
     '<div class="row"><span>Изменение</span><b class="'+(c>=0?'up':'dn')+'">'+pct(c)+'</b></div>'+
-    '<div class="ft"><button class="btn pri" data-buy="'+p.id+'">'+(isArmor?'КУПИТЬ':'КУПИТЬ')+'</button><button class="btn" data-view="'+p.id+'">ДЕТАЛИ</button></div>'+
+    '<div class="ft"><button class="btn pri" data-buy="'+p.id+'">КУПИТЬ</button><button class="btn" data-view="'+p.id+'">ДЕТАЛИ</button></div>'+
     '</article>';
 }
 function renderGrid(){
@@ -707,10 +701,16 @@ setInterval(()=>{
 
 function boot(){
   const lines=['СОЕДИНЕНИЕ...','ШИФРОВАНИЕ СЕССИИ...','УСТАНОВКА ЗАЩИЩЁННОГО КАНАЛА...'];
-  const L=$('#ld-line');let i=0;
+  const L=$('#ld-line');
+  let i=0;
   (function nx(){
-    if(i<lines.length){L.textContent=lines[i++];setTimeout(nx,700)}
-    else{L.textContent='КАНАЛ ГОТОВ';$('#enter').hidden=false}
+    if(i<lines.length){
+      L.textContent=lines[i++];
+      setTimeout(nx,700);
+    }else{
+      L.textContent='КАНАЛ ГОТОВ';
+      $('#enter').hidden=false;
+    }
   })();
   Promise.all([loadState().catch(()=>{}),loadMarket().catch(()=>{}),loadAuctions().catch(()=>{}),loadContracts().catch(()=>{}),loadRuneContracts().catch(()=>{})]).then(()=>{if(entered)render()});
   $('#enter').addEventListener('click',()=>{
