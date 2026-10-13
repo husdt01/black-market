@@ -20,6 +20,28 @@
     <div class="loader-bottom">BLACK MARKET В СЕТИ</div>
   </div>
 
+  <script>
+    (function(){
+      const L = document.getElementById('ld-line');
+      const btn = document.getElementById('enter');
+      const lines = ['СОЕДИНЕНИЕ...', 'ШИФРОВАНИЕ СЕССИИ...', 'УСТАНОВКА ЗАЩИЩЁННОГО КАНАЛА...'];
+      let i = 0;
+      function nx(){
+        if(i < lines.length){
+          if(L) L.textContent = lines[i++];
+          setTimeout(nx, 700);
+        } else {
+          if(L) L.textContent = 'КАНАЛ ГОТОВ';
+          if(btn) btn.style.display = 'inline-block';
+        }
+      }
+      setTimeout(nx, 500);
+      setTimeout(function(){
+        if(btn && btn.style.display !== 'inline-block') btn.style.display = 'inline-block';
+      }, 3500);
+    })();
+  </script>
+
   <div id="app" class="hidden">
     <header>
       <div class="h-left">
