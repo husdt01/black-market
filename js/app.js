@@ -709,27 +709,54 @@ function boot(){
       setTimeout(nx,700);
     }else{
       L.textContent='КАНАЛ ГОТОВ';
-      $('#enter').hidden=false;
+      const btn=$('#enter');
+      if(btn) btn.hidden=false;
     }
   })();
-  Promise.all([loadState().catch(()=>{}),loadMarket().catch(()=>{}),loadAuctions().catch(()=>{}),loadContracts().catch(()=>{}),loadRuneContracts().catch(()=>{})]).then(()=>{if(entered)render()});
-  $('#enter').addEventListener('click',()=>{
-    entered=true;
-    $('#loader').style.opacity='0';
-    setTimeout(()=>{
-      $('#loader').remove();
-      $('#app').classList.remove('hidden');
-      render();
-      showNotification('ДОБРО ПОЖАЛОВАТЬ','Сессия открыта');
-      setInterval(async()=>{
-        const ae=document.activeElement;
-        if(!ui.open&&!(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'))){
-          await Promise.all([loadMarket().catch(()=>{}),loadAuctions().catch(()=>{}),loadContracts().catch(()=>{}),loadRuneContracts().catch(()=>{}),loadState().catch(()=>{})]);
-          render();
-        }else{hdr();}
-      },5000);
-    },800);
-  });
+  // Защита: кнопка появится через 3 секунды в любом случае
+  setTimeout(()=>{
+    const btn=$('#enter');
+    if(btn && btn.hidden) btn.hidden=false;
+  }, 3000);
+  
+  Promise.all([
+    loadState().catch(()=>{}),
+    loadMarket().catch(()=>{}),
+    loadAuctions().catch(()=>{}),
+    loadContracts().catch(()=>{}),
+    loadRuneContracts().catch(()=>{})
+  ]).then(()=>{ if(entered) render(); }).catch(()=>{});
+  
+  const btn=$('#enter');
+  if(btn){
+    btn.addEventListener('click',()=>{
+      entered=true;
+      const loader=$('#loader');
+      if(loader) loader.style.opacity='0';
+      setTimeout(()=>{
+        if(loader) loader.remove();
+        const gl=document.querySelector('.green-line');
+        if(gl) gl.remove();
+        const app=$('#app');
+        if(app) app.classList.remove('hidden');
+        try{ render(); }catch(e){}
+        showNotification('ДОБРО ПОЖАЛОВАТЬ','Сессия открыта');
+        setInterval(async()=>{
+          const ae=document.activeElement;
+          if(!ui.open&&!(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'))){
+            await Promise.all([
+              loadMarket().catch(()=>{}),
+              loadAuctions().catch(()=>{}),
+              loadContracts().catch(()=>{}),
+              loadRuneContracts().catch(()=>{}),
+              loadState().catch(()=>{})
+            ]);
+            try{ render(); }catch(e){}
+          }else{ try{ hdr(); }catch(e){} }
+        },5000);
+      },800);
+    });
+  }
 }
 
 (function(){
