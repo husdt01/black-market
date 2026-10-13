@@ -34,52 +34,6 @@ CASES = {
     'c100': {'price': 100000, 'name': 'ТЕНЕВОЙ', 'mults': [(0.35, 30), (0.65, 26), (1.00, 20), (1.50, 14), (2.30, 7), (4.00, 3)], 'multi': (18, 4)},
     'c150': {'price': 150000, 'name': 'ОМЕГА', 'mults': [(0.40, 28), (0.75, 25), (1.15, 21), (1.80, 15), (2.80, 8), (5.00, 3)], 'multi': (24, 6)},
     'c500': {'price': 500000, 'name': 'РУНА', 'runes': True, 'multi': (8, 2)},
-    'c1m': {'price': 1000000, 'name': 'АРСЕНАЛ', 'type': 'weapon', 'multi': (100, 0)},
-    'c5m': {'price': 5000000, 'name': 'КОНВОЙ', 'type': 'vehicle', 'multi': (100, 0)},
-}
-
-VEHICLES = [
-    ['ПЫЛЬНЫЙ БЕГУН', 1000000, 1, 'COMMON'],
-    ['СТАЛЬНОЙ ВОЛК', 2500000, 2, 'UNCOMMON'],
-    ['ЧЁРНЫЙ ЯСТРЕБ', 5000000, 3, 'RARE'],
-    ['ПРИЗРАК ШОССЕ', 8000000, 4, 'RARE'],
-    ['ЖЕЛЕЗНЫЙ ВОРОБЕЙ', 12000000, 5, 'EPIC'],
-    ['ОНИКСОВОЕ КРЫЛО', 15000000, 6, 'EPIC'],
-    ['ТЕНЕВОЙ СТРАЖ', 18000000, 7, 'LEGENDARY'],
-    ['ШТОРМОВОЙ КАТЕР', 20000000, 8, 'LEGENDARY'],
-    ['БРОНЕНОСЕЦ ZERO', 23000000, 9, 'LEGENDARY'],
-    ['ЛЕВИАФАН', 25000000, 10, 'LEGENDARY'],
-]
-
-WEAPONS = [
-    ['ПЕПЕЛЬНЫЙ НОЖ', 50000, 1, 'COMMON', 5],
-    ['КВАНТОВЫЙ ПИСТОЛЕТ', 150000, 2, 'UNCOMMON', 8],
-    ['НУАР-ВИНТОВКА', 400000, 3, 'RARE', 12],
-    ['КРИО-ШТУРМ', 900000, 4, 'EPIC', 16],
-    ['ОБСИДИАНОВЫЙ ЛУЧ', 2000000, 5, 'LEGENDARY', 22],
-]
-
-ARMOR = [
-    ['КЕВЛАР-1', 30000, 1, 'COMMON', 3],
-    ['СТАЛЬНАЯ ПЛАСТИНА', 120000, 2, 'UNCOMMON', 7],
-    ['ТИТАН-3', 350000, 3, 'RARE', 12],
-    ['НУЛЕВАЯ БРОНЯ', 800000, 4, 'EPIC', 18],
-]
-
-MERCENARIES = [
-    ['БЕГУН', 80000, 1, 'COMMON', 4],
-    ['СТРЕЛОК', 250000, 2, 'UNCOMMON', 8],
-    ['ТЕНЬ', 600000, 3, 'RARE', 14],
-    ['ПРИЗРАК', 1500000, 4, 'EPIC', 22],
-]
-
-CASES = {
-    'c50': {'price': 50000, 'name': 'СТАЛЬНОЙ', 'mults': [(0.30, 32), (0.55, 28), (0.85, 20), (1.20, 12), (1.80, 6), (3.00, 2)], 'multi': (12, 2)},
-    'c100': {'price': 100000, 'name': 'ТЕНЕВОЙ', 'mults': [(0.35, 30), (0.65, 26), (1.00, 20), (1.50, 14), (2.30, 7), (4.00, 3)], 'multi': (18, 4)},
-    'c150': {'price': 150000, 'name': 'ОМЕГА', 'mults': [(0.40, 28), (0.75, 25), (1.15, 21), (1.80, 15), (2.80, 8), (5.00, 3)], 'multi': (24, 6)},
-    'c500': {'price': 500000, 'name': 'РУНА', 'runes': True, 'multi': (8, 2)},
-    'c1m': {'price': 1000000, 'name': 'АРСЕНАЛ', 'type': 'weapon', 'multi': (100, 0)},
-    'c5m': {'price': 5000000, 'name': 'КОНВОЙ', 'type': 'vehicle', 'multi': (100, 0)},
 }
 
 
@@ -103,9 +57,6 @@ def init_db():
         tg_id TEXT DEFAULT '', end_task REAL DEFAULT 0)''')
     conn.execute('''CREATE TABLE IF NOT EXISTS star_orders(nonce TEXT PRIMARY KEY, tg_id TEXT, pkg TEXT,
         stars INTEGER, bal INTEGER, status TEXT DEFAULT 'pending', created REAL DEFAULT 0)''')
-    conn.execute('''CREATE TABLE IF NOT EXISTS rune_contracts(id TEXT PRIMARY KEY, rune_name TEXT,
-        count INTEGER, reward REAL, bonus REAL, st TEXT DEFAULT 'open', tg_id TEXT DEFAULT '',
-        deadline REAL DEFAULT 0)''')
     conn.commit()
     conn.close()
 
@@ -115,19 +66,21 @@ ITEMS = [
     ['ОРБИТАЛЬНЫЙ КЛЮЧ', 'ARTIFACTS', 'LEGENDARY', 91400], ['НЕИЗВЕСТНОЕ УСТРОЙСТВО', 'UNKNOWN', 'UNKNOWN', 60000],
     ['НУЛЬ-ЯДРО', 'UNKNOWN', 'UNKNOWN', 32000], ['ПРИЗРАЧНЫЙ ДИСК', 'TECH', 'UNCOMMON', 4200],
     ['ПЕПЕЛЬНАЯ РЕЛИКВИЯ', 'ARTIFACTS', 'RARE', 27800], ['БЛЕДНАЯ МАСКА', 'COLLECTIBLES', 'COMMON', 1900],
+    ['ЖЕЛЕЗНЫЙ ВОРОБЕЙ', 'VEHICLES', 'EPIC', 76500], ['ПЫЛЬНЫЙ БЕГУН', 'VEHICLES', 'UNCOMMON', 8800],
     ['РЕШЁТЧАТЫЙ УЗЕЛ', 'DEVICES', 'RARE', 15900], ['СИГИЛ 07', 'COLLECTIBLES', 'UNCOMMON', 3100],
     ['ЛИНЗА ПЕПЛА', 'DEVICES', 'COMMON', 2400], ['ПОЛАЯ КОРОНА', 'ARTIFACTS', 'LEGENDARY', 138000],
     ['СТАТИЧНАЯ ПРИЗМА', 'DEVICES', 'EPIC', 39500], ['МОТЫЛЬКОВЫЙ ПРОТОКОЛ', 'TECH', 'COMMON', 1500],
     ['КРИОЯЧЕЙКА', 'TECH', 'RARE', 18700], ['ТЛЕЮЩИЙ ФЛЮКС', 'DEVICES', 'UNCOMMON', 5600],
     ['НУАР-ШИФР', 'TECH', 'EPIC', 54300], ['БАРХАТНОЕ ЭХО', 'ARTIFACTS', 'RARE', 22400],
-    ['РЖАВЫЙ ОРЕОЛ', 'COLLECTIBLES', 'COMMON', 2100], ['ПИКСЕЛЬНАЯ ПЫЛЬ', 'DEVICES', 'COMMON', 1700],
-    ['ЯДРО МИРАЖА', 'UNKNOWN', 'UNKNOWN', 45000], ['АТЛАСНЫЙ ВАКУУМ', 'ARTIFACTS', 'EPIC', 41200],
-    ['КОБАЛЬТОВАЯ РУНА', 'COLLECTIBLES', 'RARE', 13600], ['ЛУННЫЙ БИЛЕТ', 'COLLECTIBLES', 'UNCOMMON', 4700],
+    ['РЖАВЫЙ ОРЕОЛ', 'COLLECTIBLES', 'COMMON', 2100], ['ОНИКСОВОЕ КРЫЛО', 'VEHICLES', 'EPIC', 68900],
+    ['ПИКСЕЛЬНАЯ ПЫЛЬ', 'DEVICES', 'COMMON', 1700], ['ЯДРО МИРАЖА', 'UNKNOWN', 'UNKNOWN', 45000],
+    ['АТЛАСНЫЙ ВАКУУМ', 'ARTIFACTS', 'EPIC', 41200], ['КОБАЛЬТОВАЯ РУНА', 'COLLECTIBLES', 'RARE', 13600],
+    ['ПРИЗРАК ШОССЕ', 'VEHICLES', 'RARE', 19800], ['ЛУННЫЙ БИЛЕТ', 'COLLECTIBLES', 'UNCOMMON', 4700],
     ['КВАРЦЕВЫЙ ВОЙ', 'DEVICES', 'UNCOMMON', 7300], ['ОБСИДИАНОВАЯ КАРТА', 'ARTIFACTS', 'LEGENDARY', 112000],
     ['НЕЙРОИНТЕРФЕЙС', 'TECH', 'RARE', 21400], ['ГЛУБИННЫЙ СКУТЕР', 'VEHICLES', 'COMMON', 3900],
-    ['ВИНИЛ «ЭХО-7»', 'COLLECTIBLES', 'RARE', 16800], ['ОКО БУРИ', 'ARTIFACTS', 'EPIC', 44700],
-    ['ЗАПЕЧАТАННАЯ КАПСУЛА', 'UNKNOWN', 'UNKNOWN', 28000], ['КАРТА МЁРТВЫХ', 'COLLECTIBLES', 'EPIC', 37300],
-    ['ОПТИЧЕСКИЙ КАМУФЛЯЖ', 'TECH', 'UNCOMMON', 6200]
+    ['ВИНИЛ «ЭХО-7»', 'COLLECTIBLES', 'RARE', 16800], ['ШТОРМОВОЙ КАТЕР', 'VEHICLES', 'LEGENDARY', 126000],
+    ['ОКО БУРИ', 'ARTIFACTS', 'EPIC', 44700], ['ЗАПЕЧАТАННАЯ КАПСУЛА', 'UNKNOWN', 'UNKNOWN', 28000],
+    ['КАРТА МЁРТВЫХ', 'COLLECTIBLES', 'EPIC', 37300], ['ОПТИЧЕСКИЙ КАМУФЛЯЖ', 'TECH', 'UNCOMMON', 6200]
 ]
 VOL = {'COMMON': .012, 'UNCOMMON': .015, 'RARE': .02, 'EPIC': .026, 'LEGENDARY': .03, 'UNKNOWN': .04}
 NPCS = ['ZERO', 'NEXUS', 'BLACKBOX', 'MERCURY', 'VOID_21', 'RAVEN', 'ORBIT', 'GHOST']
@@ -142,8 +95,6 @@ def roll_case(case_id):
         return None
     r = random.randint(1, 100)
     count = 3 if r <= c['multi'][1] else (2 if r <= c['multi'][0] + c['multi'][1] else 1)
-    if c.get('type') == 'weapon':
-        count = max(2, count)
     drops = []
     if c.get('runes'):
         for _ in range(count):
@@ -157,16 +108,6 @@ def roll_case(case_id):
                     pick = rn
                     break
             drops.append({'name': pick[0], 'cat': 'RUNE', 'rarity': pick[3], 'mult': 1, 'rune': True, 'val': pick[1]})
-        return drops
-    if c.get('type') == 'vehicle':
-        for _ in range(count):
-            pick = random.choice(VEHICLES)
-            drops.append({'name': pick[0], 'cat': 'VEHICLE', 'rarity': pick[3], 'mult': 1, 'vehicle': True, 'val': pick[1], 'power': pick[2]})
-        return drops
-    if c.get('type') == 'weapon':
-        for _ in range(count):
-            pick = random.choice(WEAPONS)
-            drops.append({'name': pick[0], 'cat': 'WEAPON', 'rarity': pick[3], 'mult': 1, 'weapon': True, 'val': pick[1], 'power': pick[4]})
         return drops
     for _ in range(count):
         total = sum(p for _, p in c['mults'])
@@ -295,7 +236,7 @@ def get_auctions():
     active = conn.execute("SELECT COUNT(*) FROM auctions WHERE status='active'").fetchone()[0]
     if active < 5:
         for i in range(5 - active):
-            item = random.choice(ITEMS + VEHICLES[:3])
+            item = random.choice(ITEMS)
             aid = f"AU-{int(now * 1000)}-{i}"
             conn.execute("INSERT OR IGNORE INTO auctions(id,name,cat,rarity,start_price,current_bid,leader,end_time) VALUES(?,?,?,?,?,?,?,?)",
                          (aid, item[0], item[1], item[2], round(item[3] * 0.5), round(item[3] * 0.5), None,
@@ -311,6 +252,36 @@ def get_auctions():
                     'bids': bids[-10:], 'end': r['end_time'],
                     'left': max(0, int(r['end_time'] - now)), 'n': len(bids)})
     return out
+
+
+def place_bid(auction_id, amount, tg_id, username):
+    conn = db()
+    row = conn.execute("SELECT * FROM auctions WHERE id=? AND status='active'", (auction_id,)).fetchone()
+    if not row:
+        conn.close()
+        return {'ok': False, 'msg': 'Аукцион не найден или завершён'}
+    if time.time() > row['end_time']:
+        conn.close()
+        return {'ok': False, 'msg': 'Аукцион завершён'}
+    min_bid = row['current_bid'] + max(100, int(row['start_price'] * 0.05))
+    if amount < min_bid:
+        conn.close()
+        return {'ok': False, 'msg': f'Минимум: {min_bid}'}
+    user = conn.execute("SELECT balance FROM users WHERE tg_id=?", (tg_id,)).fetchone()
+    if not user or user['balance'] < amount:
+        conn.close()
+        return {'ok': False, 'msg': 'Недостаточно средств'}
+    bids = json.loads(row['bids'] or '[]')
+    if bids:
+        prev_id = bids[-1].get('id')
+        if prev_id and prev_id != tg_id:
+            conn.execute("UPDATE users SET balance = balance + ? WHERE tg_id=?", (row['current_bid'], prev_id))
+    bids.append({'who': username or tg_id, 'id': tg_id, 'amt': amount, 't': time.time()})
+    conn.execute("UPDATE auctions SET current_bid=?, leader=?, bids=? WHERE id=?",
+                 (amount, username or tg_id, json.dumps(bids[-20:]), auction_id))
+    conn.commit()
+    conn.close()
+    return {'ok': True, 'bid': amount, 'leader': username or tg_id}
 
 
 def get_contracts(tg_id):
@@ -334,31 +305,6 @@ def get_contracts(tg_id):
     for r in rows:
         d = dict(r)
         d['left'] = max(0, int((r['end_task'] if r['st'] == 'acc' else r['exp']) - now))
-        out.append(d)
-    return out
-
-
-def get_rune_contracts(tg_id):
-    conn = db()
-    now = time.time()
-    conn.execute("DELETE FROM rune_contracts WHERE st='open' AND deadline < ?", (now,))
-    open_n = conn.execute("SELECT COUNT(*) c FROM rune_contracts WHERE st='open'").fetchone()['c']
-    while open_n < 2:
-        rune = random.choice(RUNES)
-        cid = f"RC-{int(now * 1000)}-{random.randint(100, 999)}"
-        count = random.randint(1, 3)
-        reward = rune[1] * count
-        bonus = round(reward * random.uniform(0.2, 0.5))
-        conn.execute("INSERT INTO rune_contracts(id,rune_name,count,reward,bonus,deadline) VALUES(?,?,?,?,?,?)",
-                     (cid, rune[0], count, reward, bonus, now + random.randint(600, 1800)))
-        open_n += 1
-    conn.commit()
-    rows = conn.execute("SELECT * FROM rune_contracts WHERE st='open' OR (st='acc' AND tg_id=?) ORDER BY st DESC", (tg_id,)).fetchall()
-    conn.close()
-    out = []
-    for r in rows:
-        d = dict(r)
-        d['left'] = max(0, int((r['deadline'] if r['st'] == 'acc' else r['deadline']) - now))
         out.append(d)
     return out
 
@@ -448,8 +394,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.send_json({'auctions': get_auctions()})
         elif self.path == '/api/contracts':
             self.send_json({'contracts': get_contracts(tg_id)})
-        elif self.path == '/api/rune-contracts':
-            self.send_json({'contracts': get_rune_contracts(tg_id)})
         elif self.path.startswith('/api/price'):
             q = parse_qs(self.path.split('?', 1)[1] if '?' in self.path else '')
             self.send_json({'price': market_price(q.get('name', [''])[0])})
@@ -587,13 +531,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             else:
                 price = data.get('price', 0)
                 item = data.get('item', {})
-                qty = data.get('qty', 1)
-                total = price * qty
-                if balance >= total:
-                    balance -= total
-                    for _ in range(qty):
-                        inv.append({**item, 'uid': int(now * 1000) + len(inv), 'bought': price, 'val': price, 'date': now})
-                    tx.insert(0, {'t': now, 'type': 'ПОКУПКА', 'item': item.get('name', ''), 'amount': -total})
+                if balance >= price:
+                    balance -= price
+                    inv.append({**item, 'uid': int(now * 1000), 'bought': price, 'val': price, 'date': now})
+                    tx.insert(0, {'t': now, 'type': 'ПОКУПКА', 'item': item.get('name', ''), 'amount': -price})
                     tx = tx[:100]
                     resp = {'ok': True, 'balance': balance}
                 else:
@@ -604,10 +545,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             idx = next((i for i, x in enumerate(inv) if x.get('uid') == uid), None)
             if idx is not None and price > 0:
                 item = inv[idx]
-                if item.get('rune') or item.get('case'):
+                if item.get('rune'):
                     fixed = item.get('val', 0)
                     if price != fixed:
-                        resp = {'ok': False, 'msg': 'ПРОДАЁТСЯ ТОЛЬКО ПО ФИКС-ЦЕНЕ: ' + str(fixed)}
+                        resp = {'ok': False, 'msg': 'РУНЫ ПРОДАЮТСЯ ТОЛЬКО ПО ФИКС-ЦЕНЕ: ' + str(fixed)}
                     else:
                         inv.pop(idx)
                         balance += price
@@ -650,8 +591,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     mp = d.get('val') or market_price(d['name']) or 0
                     inv.append({'uid': int(now * 1000) + len(inv), 'name': d['name'], 'rarity': d['rarity'],
                                 'cat': d['cat'], 'hue': random.randint(0, 360), 'bought': mp, 'val': mp,
-                                'rune': bool(d.get('rune')), 'vehicle': bool(d.get('vehicle')),
-                                'weapon': bool(d.get('weapon')), 'power': d.get('power', 0), 'date': now})
+                                'rune': bool(d.get('rune')), 'date': now})
                 tx.insert(0, {'t': now, 'type': 'КОНТЕЙНЕР', 'item': c['name'], 'amount': -c['price']})
                 tx = tx[:100]
                 resp = {'ok': True, 'balance': balance, 'drops': drops}
@@ -709,41 +649,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         elif action == 'ct-drop':
             conn.execute("DELETE FROM contracts WHERE id=? AND st='acc' AND tg_id=?", (data.get('id', ''), tg_id))
             resp = {'ok': True}
-        elif action == 'rc-accept':
-            cid = data.get('id', '')
-            cur = conn.execute("SELECT * FROM rune_contracts WHERE id=? AND st='open'", (cid,)).fetchone()
-            if cur:
-                conn.execute("UPDATE rune_contracts SET st='acc', tg_id=? WHERE id=?", (tg_id, cid))
-                resp = {'ok': True}
-            else:
-                resp = {'ok': False, 'msg': 'Контракт недоступен'}
-        elif action == 'rc-done':
-            cid = data.get('id', '')
-            cur = conn.execute("SELECT * FROM rune_contracts WHERE id=? AND st='acc' AND tg_id=?", (cid, tg_id)).fetchone()
-            if not cur:
-                resp = {'ok': False, 'msg': 'Контракт не найден'}
-            else:
-                count = 0
-                for x in inv:
-                    if x.get('name') == cur['rune_name'] and x.get('rune'):
-                        count += 1
-                if count < cur['count']:
-                    resp = {'ok': False, 'msg': f'Нужно {cur["count"]} рун {cur["rune_name"]}, у вас {count}'}
-                else:
-                    removed = 0
-                    for x in inv[:]:
-                        if x.get('name') == cur['rune_name'] and x.get('rune') and removed < cur['count']:
-                            inv.remove(x)
-                            removed += 1
-                    total = cur['reward'] + cur['bonus']
-                    balance += total
-                    tx.insert(0, {'t': now, 'type': 'РУН-КОНТРАКТ', 'item': cur['rune_name'], 'amount': total})
-                    tx = tx[:100]
-                    conn.execute("DELETE FROM rune_contracts WHERE id=?", (cid,))
-                    resp = {'ok': True, 'balance': balance, 'reward': total}
-        elif action == 'rc-drop':
-            conn.execute("DELETE FROM rune_contracts WHERE id=? AND st='acc' AND tg_id=?", (data.get('id', ''), tg_id))
-            resp = {'ok': True}
         elif action == 'craft':
             rid = data.get('recipe', '')
             uids = data.get('uids', [])
@@ -769,42 +674,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         tx.insert(0, {'t': now, 'type': 'КРАФТ', 'item': 'ПРОВАЛ', 'amount': 0})
                         tx = tx[:100]
                         resp = {'ok': True, 'res': None}
-        elif action == 'start_convoy':
-            convoy = state.get('convoy', {})
-            veh_uid = convoy.get('vehicle')
-            mercs = convoy.get('mercenaries', [])
-            weaps = convoy.get('weapons', [])
-            arms = convoy.get('armor', [])
-            if not veh_uid:
-                resp = {'ok': False, 'msg': 'Нужна машина'}
-            else:
-                power = 0
-                removed = []
-                for uid in [veh_uid] + mercs + weaps + arms:
-                    idx = next((i for i, x in enumerate(inv) if x.get('uid') == uid), None)
-                    if idx is None:
-                        resp = {'ok': False, 'msg': 'Компонент потерян'}
-                        break
-                    power += inv[idx].get('power', 1)
-                    removed.append(idx)
-                else:
-                    for idx in sorted(removed, reverse=True):
-                        inv.pop(idx)
-                    success_chance = min(95, 25 + power * 3)
-                    success = random.randint(1, 100) <= success_chance
-                    if success:
-                        reward = 5000000 + power * 500000
-                        balance += reward
-                        inv.append({'uid': int(now * 1000), 'name': 'КЕЙС КОНВОЯ', 'rarity': 'LEGENDARY',
-                                    'cat': 'CONVOY_CASE', 'hue': 45, 'bought': 15000000, 'val': 15000000,
-                                    'case': True, 'date': now})
-                        tx.insert(0, {'t': now, 'type': 'РЕЙД', 'item': 'УСПЕХ', 'amount': reward})
-                        resp = {'ok': True, 'balance': balance, 'success': True, 'reward': reward, 'chance': success_chance}
-                    else:
-                        tx.insert(0, {'t': now, 'type': 'РЕЙД', 'item': 'ПРОВАЛ', 'amount': 0})
-                        resp = {'ok': True, 'balance': balance, 'success': False, 'chance': success_chance}
-                    state['convoy'] = {'vehicle': None, 'mercenaries': [], 'weapons': [], 'armor': []}
-                    tx = tx[:100]
         elif action == 'save':
             resp = {'ok': True}
 
@@ -815,36 +684,6 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         conn.commit()
         conn.close()
         self.send_json(resp)
-
-
-def place_bid(auction_id, amount, tg_id, username):
-    conn = db()
-    row = conn.execute("SELECT * FROM auctions WHERE id=? AND status='active'", (auction_id,)).fetchone()
-    if not row:
-        conn.close()
-        return {'ok': False, 'msg': 'Аукцион не найден или завершён'}
-    if time.time() > row['end_time']:
-        conn.close()
-        return {'ok': False, 'msg': 'Аукцион завершён'}
-    min_bid = row['current_bid'] + max(100, int(row['start_price'] * 0.05))
-    if amount < min_bid:
-        conn.close()
-        return {'ok': False, 'msg': f'Минимум: {min_bid}'}
-    user = conn.execute("SELECT balance FROM users WHERE tg_id=?", (tg_id,)).fetchone()
-    if not user or user['balance'] < amount:
-        conn.close()
-        return {'ok': False, 'msg': 'Недостаточно средств'}
-    bids = json.loads(row['bids'] or '[]')
-    if bids:
-        prev_id = bids[-1].get('id')
-        if prev_id and prev_id != tg_id:
-            conn.execute("UPDATE users SET balance = balance + ? WHERE tg_id=?", (row['current_bid'], prev_id))
-    bids.append({'who': username or tg_id, 'id': tg_id, 'amt': amount, 't': time.time()})
-    conn.execute("UPDATE auctions SET current_bid=?, leader=?, bids=? WHERE id=?",
-                 (amount, username or tg_id, json.dumps(bids[-20:]), auction_id))
-    conn.commit()
-    conn.close()
-    return {'ok': True, 'bid': amount, 'leader': username or tg_id}
 
 
 if __name__ == '__main__':
