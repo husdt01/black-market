@@ -701,46 +701,48 @@ setInterval(()=>{
 
 function boot(){
   const lines=['СОЕДИНЕНИЕ...','ШИФРОВАНИЕ СЕССИИ...','УСТАНОВКА ЗАЩИЩЁННОГО КАНАЛА...'];
-  const L=$('#ld-line');
+  const L=document.getElementById('ld-line');
   let i=0;
   (function nx(){
     if(i<lines.length){
-      L.textContent=lines[i++];
+      if(L) L.textContent=lines[i++];
       setTimeout(nx,700);
     }else{
-      L.textContent='КАНАЛ ГОТОВ';
-      const btn=$('#enter');
-      if(btn) btn.hidden=false;
+      if(L) L.textContent='КАНАЛ ГОТОВ';
+      const btn=document.getElementById('enter');
+      if(btn) btn.classList.add('show');
     }
   })();
-  // Защита: кнопка появится через 3 секунды в любом случае
+  
   setTimeout(()=>{
-    const btn=$('#enter');
-    if(btn && btn.hidden) btn.hidden=false;
+    const btn=document.getElementById('enter');
+    if(btn && !btn.classList.contains('show')) btn.classList.add('show');
   }, 3000);
   
-  Promise.all([
-    loadState().catch(()=>{}),
-    loadMarket().catch(()=>{}),
-    loadAuctions().catch(()=>{}),
-    loadContracts().catch(()=>{}),
-    loadRuneContracts().catch(()=>{})
-  ]).then(()=>{ if(entered) render(); }).catch(()=>{});
+  try{
+    Promise.all([
+      loadState().catch(()=>{}),
+      loadMarket().catch(()=>{}),
+      loadAuctions().catch(()=>{}),
+      loadContracts().catch(()=>{}),
+      loadRuneContracts().catch(()=>{})
+    ]).then(()=>{ if(entered) render(); }).catch(()=>{});
+  }catch(e){}
   
-  const btn=$('#enter');
+  const btn=document.getElementById('enter');
   if(btn){
     btn.addEventListener('click',()=>{
       entered=true;
-      const loader=$('#loader');
+      const loader=document.getElementById('loader');
       if(loader) loader.style.opacity='0';
       setTimeout(()=>{
         if(loader) loader.remove();
         const gl=document.querySelector('.green-line');
         if(gl) gl.remove();
-        const app=$('#app');
+        const app=document.getElementById('app');
         if(app) app.classList.remove('hidden');
         try{ render(); }catch(e){}
-        showNotification('ДОБРО ПОЖАЛОВАТЬ','Сессия открыта');
+        try{ showNotification('ДОБРО ПОЖАЛОВАТЬ','Сессия открыта'); }catch(e){}
         setInterval(async()=>{
           const ae=document.activeElement;
           if(!ui.open&&!(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'))){
