@@ -554,3 +554,40 @@ main { flex: 1; padding: 12px 16px 80px; }
   animation: spin 1s linear infinite;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+/* ===== ЗЕЛЁНАЯ ПОЛОСА ===== */
+.green-line {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #7ee08f, transparent);
+  z-index: 9998;
+  animation: pulse 2s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* ===== КНОПКА ВХОДА ===== */
+#enter {
+  display: inline-block !important;
+  margin-top: 24px;
+  padding: 12px 28px;
+  background: transparent;
+  border: 1px solid var(--amb);
+  color: var(--amb);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-family: var(--mono);
+}
+#enter:hover {
+  background: var(--amb);
+  color: var(--bg);
+}
+#enter[hidden] {
+  display: none !important;
+}
