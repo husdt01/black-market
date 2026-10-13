@@ -15,32 +15,29 @@
     <div class="loader-title">BLACK MARKET</div>
     <div class="loader-subtitle">ЗАКРЫТЫЙ РЫНОК · ТЕРМИНАЛ</div>
     <div class="spinner"></div>
-    <div id="ld-line" style="margin-top:16px;font-size:12px;letter-spacing:.2em;color:var(--mut)">СОЕДИНЕНИЕ...</div>
-    <button id="enter" class="btn pri" style="margin-top:24px;display:none">ВОЙТИ НА РЫНОК</button>
+    <div id="ld-line">СОЕДИНЕНИЕ...</div>
+    <button id="enter">ВОЙТИ В РЫНОК</button>
     <div class="loader-bottom">BLACK MARKET В СЕТИ</div>
   </div>
 
   <div id="app" class="hidden">
     <header>
-      <div class="h-left">
-        <span style="font-size:10px;color:var(--mut)">БАЛАНС</span>
-        <b id="bal" style="font-size:18px;color:var(--grn)">₽ 0</b>
-      </div>
-      <div class="h-right">
-        <button id="bell" style="position:relative;background:none;border:none;color:var(--tx);font-size:20px;cursor:pointer">
-          🔔<span id="badge" class="badge" hidden>0</span>
-        </button>
-      </div>
+      <div class="brand">BLACK MARKET<span class="dot"></span><span class="online">В СЕТИ</span></div>
+      <div class="h-bal"><span>БАЛАНС</span><b id="bal">₽ 0</b></div>
+      <button id="bell">🔔<span id="badge" class="badge" hidden>0</span></button>
     </header>
+
     <div id="raid" class="raid-bar" hidden>
       <div id="rd-i" class="raid-fill"></div>
-      <span id="rd-t" class="raid-text">ТОРГИ ПРИОСТАНОВЛЕНЫ</span>
+      <span id="rd-t" class="raid-text">⚠ РЕЙД · РЫНОК ЗАМОРОЖЕН</span>
     </div>
+
     <main id="view"></main>
+
     <nav class="tabs">
       <button class="tab on" data-page="market">РЫНОК</button>
-      <button class="tab" data-page="auctions">АУКЦИОНЫ</button>
-      <button class="tab" data-page="contracts">КОНТРАКТЫ</button>
+      <button class="tab" data-page="auctions">АУКЦИОН</button>
+      <button class="tab" data-page="contracts">ЗАДАНИЯ</button>
       <button class="tab" data-page="inventory">ИНВЕНТ.</button>
       <button class="tab" data-page="craft">КРАФТ</button>
       <button class="tab" data-page="profile">ПРОФИЛЬ</button>
@@ -52,38 +49,27 @@
 
   <script>
     (function(){
-      var L = document.getElementById('ld-line');
-      var btn = document.getElementById('enter');
-      var loader = document.getElementById('loader');
-      var app = document.getElementById('app');
-      var gl = document.querySelector('.green-line');
-      var lines = ['СОЕДИНЕНИЕ...', 'ШИФРОВАНИЕ СЕССИИ...', 'УСТАНОВКА ЗАЩИЩЁННОГО КАНАЛА...'];
-      var i = 0;
+      var L=document.getElementById('ld-line'),btn=document.getElementById('enter'),
+          loader=document.getElementById('loader'),app=document.getElementById('app'),
+          gl=document.querySelector('.green-line'),
+          lines=['СОЕДИНЕНИЕ...','ШИФРОВАНИЕ СЕССИИ...','УСТАНОВКА ЗАЩИЩЁННОГО КАНАЛА...'],i=0;
       function nx(){
-        if(i < lines.length){
-          if(L) L.textContent = lines[i++];
-          setTimeout(nx, 700);
-        } else {
-          if(L) L.textContent = 'КАНАЛ ГОТОВ';
-          if(btn) btn.style.display = 'inline-block';
-        }
+        if(i<lines.length){if(L)L.textContent=lines[i++];setTimeout(nx,700)}
+        else{if(L)L.textContent='КАНАЛ ГОТОВ';if(btn)btn.style.display='inline-block'}
       }
-      setTimeout(nx, 500);
-      setTimeout(function(){
-        if(btn && btn.style.display !== 'inline-block') btn.style.display = 'inline-block';
-      }, 3500);
-      btn.addEventListener('click', function(){
-        if(loader) loader.style.opacity = '0';
+      setTimeout(nx,500);
+      setTimeout(function(){if(btn&&btn.style.display!=='inline-block')btn.style.display='inline-block'},3500);
+      btn.addEventListener('click',function(){
+        if(loader)loader.style.opacity='0';
         setTimeout(function(){
-          if(loader) loader.remove();
-          if(gl) gl.remove();
-          if(app) app.classList.remove('hidden');
-          if(window.enterGame) window.enterGame();
-        }, 600);
+          if(loader)loader.remove();
+          if(gl)gl.remove();
+          if(app)app.classList.remove('hidden');
+          if(window.enterGame)window.enterGame();
+        },600);
       });
     })();
   </script>
-
   <script src="js/app.js"></script>
 </body>
 </html>
