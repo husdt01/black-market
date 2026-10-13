@@ -700,65 +700,33 @@ setInterval(()=>{
 },1000);
 
 function boot(){
-  const lines=['СОЕДИНЕНИЕ...','ШИФРОВАНИЕ СЕССИИ...','УСТАНОВКА ЗАЩИЩЁННОГО КАНАЛА...'];
-  const L=document.getElementById('ld-line');
-  let i=0;
-  (function nx(){
-    if(i<lines.length){
-      if(L) L.textContent=lines[i++];
-      setTimeout(nx,700);
-    }else{
-      if(L) L.textContent='КАНАЛ ГОТОВ';
-      const btn=document.getElementById('enter');
-      if(btn) btn.classList.add('show');
-    }
-  })();
-  
-  setTimeout(()=>{
-    const btn=document.getElementById('enter');
-    if(btn && !btn.classList.contains('show')) btn.classList.add('show');
-  }, 3000);
-  
-  try{
-    Promise.all([
-      loadState().catch(()=>{}),
-      loadMarket().catch(()=>{}),
-      loadAuctions().catch(()=>{}),
-      loadContracts().catch(()=>{}),
-      loadRuneContracts().catch(()=>{})
-    ]).then(()=>{ if(entered) render(); }).catch(()=>{});
-  }catch(e){}
-  
-  const btn=document.getElementById('enter');
-  if(btn){
-    btn.addEventListener('click',()=>{
-      entered=true;
-      const loader=document.getElementById('loader');
-      if(loader) loader.style.opacity='0';
-      setTimeout(()=>{
-        if(loader) loader.remove();
-        const gl=document.querySelector('.green-line');
-        if(gl) gl.remove();
-        const app=document.getElementById('app');
-        if(app) app.classList.remove('hidden');
-        try{ render(); }catch(e){}
-        try{ showNotification('ДОБРО ПОЖАЛОВАТЬ','Сессия открыта'); }catch(e){}
-        setInterval(async()=>{
-          const ae=document.activeElement;
-          if(!ui.open&&!(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'))){
-            await Promise.all([
-              loadMarket().catch(()=>{}),
-              loadAuctions().catch(()=>{}),
-              loadContracts().catch(()=>{}),
-              loadRuneContracts().catch(()=>{}),
-              loadState().catch(()=>{})
-            ]);
-            try{ render(); }catch(e){}
-          }else{ try{ hdr(); }catch(e){} }
-        },5000);
-      },800);
-    });
-  }
+  window.enterGame = function(){
+    entered = true;
+    try{ render(); }catch(e){ console.error(e); }
+    try{ showNotification('ДОБРО ПОЖАЛОВАТЬ','Сессия открыта'); }catch(e){}
+    setInterval(async()=>{
+      try{
+        const ae=document.activeElement;
+        if(!ui.open&&!(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'))){
+          await Promise.all([
+            loadMarket().catch(()=>{}),
+            loadAuctions().catch(()=>{}),
+            loadContracts().catch(()=>{}),
+            loadRuneContracts().catch(()=>{}),
+            loadState().catch(()=>{})
+          ]);
+          render();
+        }else{ hdr(); }
+      }catch(e){}
+    },5000);
+  };
+  Promise.all([
+    loadState().catch(()=>{}),
+    loadMarket().catch(()=>{}),
+    loadAuctions().catch(()=>{}),
+    loadContracts().catch(()=>{}),
+    loadRuneContracts().catch(()=>{})
+  ]).then(()=>{ if(entered) render(); }).catch(()=>{});
 }
 
 (function(){
