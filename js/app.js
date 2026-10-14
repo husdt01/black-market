@@ -1,4 +1,17 @@
 'use strict';
+
+// === ЗВУКИ (ИСПРАВЛЕНИЕ ОШИБКИ ReferenceError) ===
+const SND = {
+    _enabled: true,
+    play: function(name) {
+        if (!this._enabled) return;
+        console.log('🔊 Sound:', name);
+    },
+    on: function() { return this._enabled; },
+    set: function(state) { this._enabled = state; }
+};
+// ================================================
+
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const fmt=n=>'₽ '+Math.round(n).toLocaleString('ru-RU');
@@ -74,6 +87,21 @@ function raidCheck(){
   raidWas=r.active;
   const el=$('#raid');if(el){el.classList.toggle('on',r.active)}
 }
+
+// === ТИКАЮЩИЙ ТАЙМЕР ДЛЯ АУКЦИОНОВ ===
+setInterval(() => {
+  if (ui.page !== 'auctions' || ui.open) return;
+  const cards = $$('[data-auc]');
+  cards.forEach(card => {
+    const id = card.dataset.auc;
+    const a = AUCTIONS.find(x => x.id === id);
+    if (a) {
+      a.left = Math.max(0, a.left - 1);
+      const timerEl = card.querySelector('.row .dn');
+      if (timerEl) timerEl.textContent = left(a.left);
+    }
+  });
+}, 1000);
 
 async function buyProduct(p){
   const pr=Math.round(p.price);
