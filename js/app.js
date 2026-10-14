@@ -60,25 +60,36 @@ const GEAR=[
   {id:'M-09',cat:'MERC',rarity:'LEGENDARY',name:'ПОЗЫВНОЙ «БЕС»',price:150000,desc:'роль: фиксер · договаривается, решает, исчезает первым'}
 ];
 
-// ===== УЗЛЫ КОНВОЯ =====
+// ===== УЗЛЫ КОНВОЯ (top = экипаж, мин. 5 бойцов) =====
 const CV_SLOTS={
-  top:{label:'ВЕРХНИЙ УЗЕЛ',accept:'MERC',hint:'наёмник'},
+  top:{label:'ВЕРХНИЙ УЗЕЛ',accept:'MERC',hint:'экипаж'},
   left:{label:'ЛЕВЫЙ УЗЕЛ',accept:'WEAPON',hint:'оружие'},
   core:{label:'ЯДРО',accept:'VEHICLES',hint:'транспорт'},
   right:{label:'ПРАВЫЙ УЗЕЛ',accept:'AMMO',hint:'патроны'},
   bottom:{label:'НИЖНИЙ УЗЕЛ',accept:'ARMOR',hint:'броня'}
 };
-let CONVOY={core:null,left:null,right:null,top:null,bottom:null};
+const CREW_MIN=5;
+let CONVOY={core:null,left:null,right:null,bottom:null,top:[]};
 let cvLog='';
 function cvSave(){try{localStorage.setItem('bm_convoy_'+TG_ID,JSON.stringify(CONVOY))}catch(e){}}
 function cvLoad(){
   try{
     const d=JSON.parse(localStorage.getItem('bm_convoy_'+TG_ID)||'{}');
-    CONVOY=Object.assign({core:null,left:null,right:null,top:null,bottom:null},d);
-  }catch(e){CONVOY={core:null,left:null,right:null,top:null,bottom:null}}
+    CONVOY=Object.assign({core:null,left:null,right:null,bottom:null,top:[]},d);
+    if(!Array.isArray(CONVOY.top))CONVOY.top=CONVOY.top?[CONVOY.top]:[];
+  }catch(e){CONVOY={core:null,left:null,right:null,bottom:null,top:[]}}
 }
-function cvItem(slot){const uid=CONVOY[slot];if(!uid)return null;return S.inv.find(x=>x.uid===uid)||null}
-function cvUids(){return new Set(Object.values(CONVOY).filter(Boolean))}
+function cvCrew(){return (CONVOY.top||[]).map(uid=>S.inv.find(x=>x.uid===uid)).filter(Boolean)}
+function cvItem(slot){
+  if(slot==='top')return null;
+  const uid=CONVOY[slot];if(!uid)return null;
+  return S.inv.find(x=>x.uid===uid)||null;
+}
+function cvUids(){
+  const set=new Set([CONVOY.core,CONVOY.left,CONVOY.right,CONVOY.bottom].filter(Boolean));
+  (CONVOY.top||[]).forEach(u=>set.add(u));
+  return set;
+}
 
 let S={bal:100000,inv:[],tx:[],user:'ГОСТЬ',rep:0,promo:[]};
 let TG_ID='';
@@ -131,7 +142,14 @@ async function loadState(){
     S.bal=d.balance!=null?d.balance:100000;
     const st=d.state||{};S.inv=st.inv||[];S.tx=st.tx||[];S.rep=st.rep||0;S.promo=st.promo||[];
     if(d.username&&S.user==='ГОСТЬ')S.user=d.username;
-    Object.keys(CONVOY).forEach(k=>{if(CONVOY[k]&&!S.inv.some(x=>x.uid===CONVOY[k])){CONVOY[k]=null;cvSave()}});
+    let ch=false;
+    ['core','left','right','bottom'].forEach(k=>{
+      if(CONVOY[k]&&!S.inv.some(x=>x.uid===CONVOY[k])){CONVOY[k]=null;ch=true}
+    });
+    const before=(CONVOY.top||[]).length;
+    CONVOY.top=(CONVOY.top||[]).filter(uid=>S.inv.some(x=>x.uid===uid));
+    if(CONVOY.top.length!==before)ch=true;
+    if(ch)cvSave();
     if(stateReady){S.inv.forEach(x=>{if(!old.has(x.uid)){showNotification('ПОСТАВКА',x.name+' поступил в инвентарь','up');SND.play('ping')}})}
     stateReady=true;
   }
@@ -184,7 +202,7 @@ function fixHeader(){
 let rsT=null;
 window.addEventListener('resize',()=>{clearTimeout(rsT);rsT=setTimeout(fixHeader,150)});
 
-// запоминаем скролл ленты фильтров, чтобы не сбрасывался
+// запоминаем скролл ленты фильтров
 document.addEventListener('scroll',e=>{
   const t=e.target;
   if(t&&t.classList&&t.classList.contains('bar'))ui.barScroll=t.scrollLeft;
@@ -214,7 +232,7 @@ function render(){
   try{window.scrollTo(0,y)}catch(e){}
 }
 
-// === МЯГКОЕ ОБНОВЛЕНИЕ (без пересоздания DOM = без скачков) ===
+// === МЯГКОЕ ОБНОВЛЕНИЕ (без пересоздания DOM) ===
 function marketList(){
   if(ui.cat==='WEAPON'||ui.cat==='ARMOR'||ui.cat==='AMMO'||ui.cat==='MERC')return GEAR.filter(x=>x.cat===ui.cat);
   let a=MARKET.products||[];
@@ -328,7 +346,7 @@ function watchdog(){
   },ms));
 }
 
-// === ПОЛЛИНГ (теперь мягкий) ===
+// === ПОЛЛИНГ (мягкий) ===
 function startPoll(){
   if(pollStarted)return;pollStarted=true;
   setInterval(async()=>{
@@ -355,7 +373,7 @@ async function buyProduct(p){
   }else{showNotification('ОШИБКА',r.msg||'Покупка не удалась','dn');SND.play('err')}
 }
 
-// ===== ПОКУПКА СНАРЯЖЕНИЯ С КОЛИЧЕСТВОМ (наёмники — штучно) =====
+// ===== ПОКУПКА СНАРЯЖЕНИЯ (наёмники — штучно) =====
 async function buyGear(g,qty){
   if(g.cat==='MERC')qty=1;
   qty=Math.max(1,Math.min(99,Math.round(qty)||1));
@@ -755,7 +773,7 @@ function renderCraft(){
     '<div class="empty" style="margin-top:12px">Материалы добываются на рынке и аукционах</div>';
 }
 
-// ===== КОНВОЙ / НОВЫЙ АНГАР =====
+// ===== КОНВОЙ / АНГАР С ЭКИПАЖЕМ =====
 function ensureCvCSS(){
   if($('#cv-css'))return;
   const s=document.createElement('style');
@@ -778,6 +796,16 @@ function ensureCvCSS(){
 }
 function cvSlotHTML(slot){
   const m=CV_SLOTS[slot];
+  if(slot==='top'){
+    const crew=cvCrew();
+    const names=crew.slice(0,3).map(c=>c.name.replace('ПОЗЫВНОЙ ','')).join(', ')+(crew.length>3?' +'+(crew.length-3):'');
+    return '<div class="cv-slot cv-top'+(crew.length?' filled':'')+'">'+
+      '<small class="cv-label">'+m.label+' // ЭКИПАЖ (МИН. '+CREW_MIN+')</small>'+
+      '<b class="cv-name">'+(crew.length?crew.length+' / '+CREW_MIN+' бойцов':'— пусто —')+'</b>'+
+      '<span class="cv-desc">'+(crew.length?names:'набери минимум '+CREW_MIN+' бойцов для выхода')+'</span>'+
+      '<div class="cv-acts">'+(crew.length?'<button class="btn danger" data-cv-drop="top">ВЫГРУЗИТЬ</button>':'')+'<button class="btn pri" data-cv-pick="top">ДОБАВИТЬ</button></div>'+
+      '</div>';
+  }
   const it=cvItem(slot);
   return '<div class="cv-slot cv-'+slot+(it?' filled':'')+'">'+
     '<small class="cv-label">'+m.label+' // '+m.hint.toUpperCase()+'</small>'+
@@ -788,10 +816,14 @@ function cvSlotHTML(slot){
 }
 function renderConvoy(){
   ensureCvCSS();
-  const keys=Object.keys(CV_SLOTS);
-  const ready=keys.filter(s=>cvItem(s)).length;
-  const worth=keys.reduce((s,k)=>{const it=cvItem(k);return s+(it?(it.val||it.bought||0):0)},0);
-  const def=ready===5?'> конвой собран. ожидает приказа на выход.':'> загружено узлов: '+ready+'/5. модули ограбления неактивны.';
+  const crew=cvCrew();
+  const ready=(cvItem('core')?1:0)+(cvItem('left')?1:0)+(cvItem('right')?1:0)+(cvItem('bottom')?1:0)+(crew.length>=CREW_MIN?1:0);
+  const worth=[cvItem('core'),cvItem('left'),cvItem('right'),cvItem('bottom')].reduce((s,it)=>s+(it?(it.val||it.bought||0):0),0)+
+    crew.reduce((s,it)=>s+(it.val||it.bought||0),0);
+  let def;
+  if(ready===5)def='> конвой собран. ожидает приказа на выход.';
+  else if(crew.length>0&&crew.length<CREW_MIN)def='> внимание: для выхода нужен экипаж не менее '+CREW_MIN+' бойцов (сейчас '+crew.length+').';
+  else def='> загружено узлов: '+ready+'/5. модули ограбления неактивны.';
   $('#view').innerHTML=
     '<div class="convoy-top">'+
       '<button class="btn back-btn" data-convoy-back="1">← НАЗАД</button>'+
@@ -812,29 +844,54 @@ function convoyPick(slot){
   const used=cvUids();
   const pool=S.inv.filter(x=>x.cat===m.accept&&!used.has(x.uid));
   if(!pool.length)return showNotification('НЕТ ГРУЗА','В инвентаре нет: '+m.hint+'. Купи на рынке.','dn'),SND.play('err');
+  const multi=slot==='top';
   ui.open='cvpick';
-  modal('<h4>ЗАГРУЗКА // '+m.label+'</h4>'+
-    '<div class="line"><span>ТИП УЗЛА</span><b>'+m.hint.toUpperCase()+'</b></div>'+
-    '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">ВЫБЕРИ ИЗ ИНВЕНТАРЯ:</span>'+
+  modal('<h4>'+(multi?'НАБОР ЭКИПАЖА // ':'ЗАГРУЗКА // ')+m.label+'</h4>'+
+    '<div class="line"><span>ТИП УЗЛА</span><b>'+m.hint.toUpperCase()+(multi?' · МИН. '+CREW_MIN:'')+'</b></div>'+
+    (multi?'<div class="line"><span>УЖЕ В ЭКИПАЖЕ</span><b>'+cvCrew().length+' / '+CREW_MIN+'</b></div>':'')+
+    '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">'+(multi?'ОТМЕТЬ БОЙЦОВ (МОЖНО НЕСКОЛЬКИХ):':'ВЫБЕРИ ИЗ ИНВЕНТАРЯ:')+'</span>'+
     pool.map(x=>'<div class="sel-row" data-uid="'+x.uid+'"><b>'+x.name+'</b><span>'+(x.desc||fmt(x.val||x.bought))+'</span></div>').join('')+
-    '<div class="acts"><button class="btn" id="m-no">ОТМЕНА</button><button class="btn pri" id="m-yes" disabled>ЗАГРУЗИТЬ</button></div>');
-  let sel=null;
+    '<div class="acts"><button class="btn" id="m-no">ОТМЕНА</button><button class="btn pri" id="m-yes" disabled>'+(multi?'ДОБАВИТЬ':'ЗАГРУЗИТЬ')+'</button></div>');
+  let sel=multi?[]:null;
   $$('.sel-row').forEach(el=>el.onclick=()=>{
-    $$('.sel-row').forEach(o=>o.classList.remove('on'));
-    el.classList.add('on');sel=+el.dataset.uid;
-    $('#m-yes').disabled=false;SND.play('click');
+    if(multi){
+      el.classList.toggle('on');
+      sel=$$('.sel-row.on').map(o=>+o.dataset.uid);
+      $('#m-yes').disabled=!sel.length;
+    }else{
+      $$('.sel-row').forEach(o=>o.classList.remove('on'));
+      el.classList.add('on');sel=+el.dataset.uid;
+      $('#m-yes').disabled=false;
+    }
+    SND.play('click');
   });
   $('#m-no').onclick=closeModal;
   $('#m-yes').onclick=()=>{
-    if(sel==null)return;
-    CONVOY[slot]=sel;cvSave();SND.play('ping');
-    const it=S.inv.find(x=>x.uid===sel);
-    cvLog='> узел «'+m.hint+'»: '+(it?it.name:'груз')+' закреплён за конвоем.';
-    showNotification('УЗЕЛ АКТИВЕН',(it?it.name:'Предмет')+' → '+m.hint,'up');
+    if(multi){
+      if(!sel||!sel.length)return;
+      CONVOY.top=(CONVOY.top||[]).concat(sel);cvSave();SND.play('ping');
+      const n=cvCrew().length;
+      cvLog='> экипаж пополнен: +'+sel.length+'. состав: '+n+'/'+CREW_MIN+'.';
+      if(n>=CREW_MIN)showNotification('ЭКИПАЖ СОБРАН',CREW_MIN+'+ бойцов готовы к выходу','up');
+      else showNotification('ЭКИПАЖ НЕ ПОЛОН','Нужно минимум '+CREW_MIN+', сейчас '+n,'dn');
+    }else{
+      if(sel==null)return;
+      CONVOY[slot]=sel;cvSave();SND.play('ping');
+      const it=S.inv.find(x=>x.uid===sel);
+      cvLog='> узел «'+m.hint+'»: '+(it?it.name:'груз')+' закреплён за конвоем.';
+      showNotification('УЗЕЛ АКТИВЕН',(it?it.name:'Предмет')+' → '+m.hint,'up');
+    }
     closeModal();render();
   };
 }
 function convoyDrop(slot){
+  if(slot==='top'){
+    const n=cvCrew().length;
+    CONVOY.top=[];cvSave();SND.play('close');
+    cvLog='> экипаж распущен ('+n+' бойцов возвращены в инвентарь).';
+    showNotification('ЭКИПАЖ РАСПУЩЕН',n+' бойцов возвращены в инвентарь');
+    render();return;
+  }
   const it=cvItem(slot);
   CONVOY[slot]=null;cvSave();SND.play('close');
   cvLog='> узел «'+CV_SLOTS[slot].hint+'» разгружен.'+(it?' груз возвращён в инвентарь.':'');
@@ -880,7 +937,13 @@ document.addEventListener('click',e=>{
   const tab=e.target.closest('.tab');
   if(tab){ui.page=tab.dataset.page;ui.convoy=false;render();return}
   const cat=e.target.closest('[data-cat]');
-  if(cat){ui.cat=cat.dataset.cat;renderGrid();const b=$('#view .bar');if(b)b.scrollLeft=ui.barScroll;return}
+  if(cat){
+    ui.cat=cat.dataset.cat;
+    $$('.chip').forEach(ch=>ch.classList.toggle('on',ch.dataset.cat===ui.cat));
+    renderGrid();
+    const b=$('#view .bar');if(b)b.scrollLeft=ui.barScroll;
+    return;
+  }
   const buy=e.target.closest('[data-buy]');
   if(buy){const p=MARKET.products.find(x=>x.id===buy.dataset.buy);if(p)confirmBuy(p);return}
   const view=e.target.closest('[data-view]');
@@ -941,7 +1004,7 @@ setInterval(()=>{
     a.left=Math.max(0,(a.left||0)-1);
     const rows=cardEl.querySelectorAll('.row');
     const last=rows[rows.length-1];
-    if(last){const b=last.querySelector('b');if(b)b.textContent=left(a.left)}
+    if(last){const b=last.querySelector('b');if(last)b.textContent=left(a.left)}
   });
 },1000);
 
