@@ -6,10 +6,41 @@ const fmt=n=>'₽ '+Math.round(n).toLocaleString('ru-RU');
 const pct=c=>(c>=0?'+':'')+c.toFixed(2)+'%';
 const left=s=>{s=Math.max(0,Math.floor(s));if(s>3600)return Math.floor(s/3600)+'ч '+Math.floor(s%3600/60)+'м';return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
 const RAR_RU={COMMON:'ОБЫЧНЫЙ',UNCOMMON:'НЕОБЫЧНЫЙ',RARE:'РЕДКИЙ',EPIC:'ЭПИЧЕСКИЙ',LEGENDARY:'ЛЕГЕНДАРНЫЙ',UNKNOWN:'НЕИЗВЕСТНО',RUNE:'РУНА'};
-const CATS=[['ALL','ВСЕ'],['TECH','ТЕХНИКА'],['ARTIFACTS','АРТЕФАКТЫ'],['COLLECTIBLES','КОЛЛЕКЦИЯ'],['VEHICLES','ТРАНСПОРТ'],['DEVICES','УСТРОЙСТВА'],['UNKNOWN','НЕИЗВЕСТНОЕ']];
+const CATS=[['ALL','ВСЕ'],['TECH','ТЕХНИКА'],['ARTIFACTS','АРТЕФАКТЫ'],['COLLECTIBLES','КОЛЛЕКЦИЯ'],['VEHICLES','ТРАНСПОРТ'],['DEVICES','УСТРОЙСТВА'],['WEAPON','ОРУЖИЕ'],['ARMOR','БРОНЯ'],['AMMO','ПАТРОНЫ'],['UNKNOWN','НЕИЗВЕСТНОЕ']];
 const RCP={c3:{need:3,from:'COMMON',to:'UNCOMMON',chance:'85%',title:'3 × ОБЫЧНЫЙ → НЕОБЫЧНЫЙ'},e2:{need:2,from:'EPIC',to:'LEGENDARY',chance:'22%',title:'2 × ЭПИЧЕСКИЙ → ЛЕГЕНДАРНЫЙ'}};
 const CASES={c50:{price:50000,name:'СТАЛЬНОЙ',t:1},c100:{price:100000,name:'ТЕНЕВОЙ',t:2},c150:{price:150000,name:'ОМЕГА',t:3},c500:{price:500000,name:'РУНА',t:4}};
 const STAR_PKGS={p10:{stars:10,bal:50000},p25:{stars:25,bal:140000},p50:{stars:50,bal:300000},p100:{stars:100,bal:650000}};
+
+// ===== КАТАЛОГ: ОРУЖИЕ / БРОНЯ / ПАТРОНЫ (фикс-цены, вне биржи) =====
+const GEAR=[
+  // ОРУЖИЕ
+  {id:'W-01',cat:'WEAPON',rarity:'COMMON',name:'ПМ МАКАРОВА',price:18000,desc:'9×18 ПМ · 32 выстр/мин · магазин 8 · дальность 50 м'},
+  {id:'W-02',cat:'WEAPON',rarity:'UNCOMMON',name:'АПС СТЕЧКИНА',price:26000,desc:'9×18 ПМ · 700 выстр/мин · магазин 20 · дальность 100 м'},
+  {id:'W-03',cat:'WEAPON',rarity:'RARE',name:'АК-74М',price:45000,desc:'5.45×39 · 650 выстр/мин · магазин 30 · дальность 500 м'},
+  {id:'W-04',cat:'WEAPON',rarity:'RARE',name:'КАРАБИН АК-104',price:52000,desc:'7.62×39 · 600 выстр/мин · магазин 30 · дальность 400 м'},
+  {id:'W-05',cat:'WEAPON',rarity:'UNCOMMON',name:'САЙГА-12',price:35000,desc:'12/76 · 40 выстр/мин · магазин 8 · дальность 80 м'},
+  {id:'W-06',cat:'WEAPON',rarity:'RARE',name:'ПП-19 ВИТЯЗЬ',price:55000,desc:'9×19 · 700 выстр/мин · магазин 30 · дальность 200 м'},
+  {id:'W-07',cat:'WEAPON',rarity:'EPIC',name:'ВСС ВИНТОРЕЗ',price:120000,desc:'9×39 · 600 выстр/мин · магазин 20 · дальность 400 м · бесшумный'},
+  {id:'W-08',cat:'WEAPON',rarity:'EPIC',name:'СВ-98',price:150000,desc:'7.62×54R · болт · магазин 10 · дальность 1000 м'},
+  {id:'W-09',cat:'WEAPON',rarity:'LEGENDARY',name:'ПКМ ПЕЧЕНЕГ',price:220000,desc:'7.62×54R · 650 выстр/мин · лента 100 · дальность 1500 м'},
+  // БРОНЯ
+  {id:'A-01',cat:'ARMOR',rarity:'COMMON',name:'БАЛАКЛАВА «МАСКА-2»',price:6000,desc:'арамид · защита от осколков · обзор 90%'},
+  {id:'A-02',cat:'ARMOR',rarity:'UNCOMMON',name:'ШЛЕМ 6Б47',price:30000,desc:'класс 2 · 1.0 кг · арамид · осколочный'},
+  {id:'A-03',cat:'ARMOR',rarity:'UNCOMMON',name:'ВИЗОР «ЗАБРАЛО-6Ш»',price:22000,desc:'класс 2 · поликарбонат · противоосколочный'},
+  {id:'A-04',cat:'ARMOR',rarity:'RARE',name:'БРОНЕЖИЛЕТ 6Б45',price:65000,desc:'класс 6 · 12 кг · керамика+арамид · полная защита'},
+  {id:'A-05',cat:'ARMOR',rarity:'RARE',name:'БРОНЕЖИЛЕТ «КОРУНД-ВМ»',price:48000,desc:'класс 5 · 7.5 кг · стальные пластины · грудь+спина'},
+  {id:'A-06',cat:'ARMOR',rarity:'EPIC',name:'ШЛЕМ «АЛТЫН»',price:95000,desc:'класс 3 · 3.5 кг · сталь + визор · штурмовой'},
+  {id:'A-07',cat:'ARMOR',rarity:'RARE',name:'ПЛАСТИНА «ГРАНИТ-4»',price:18000,desc:'класс 6 · керамика · усиленный нагрудник'},
+  {id:'A-08',cat:'ARMOR',rarity:'EPIC',name:'ЩИТ «ВАНТ-ВМ»',price:75000,desc:'класс 5 · 5.5 кг · смотровое окно · штурмовой'},
+  // ПАТРОНЫ (ящиками)
+  {id:'P-01',cat:'AMMO',rarity:'COMMON',name:'ЯЩИК 9×18 ПМ (250 шт)',price:6000,desc:'патроны ПМ/АПС · ящик 250 штук'},
+  {id:'P-02',cat:'AMMO',rarity:'COMMON',name:'ЯЩИК 9×19 PARA (300 шт)',price:9000,desc:'патроны ВИТЯЗЬ · ящик 300 штук'},
+  {id:'P-03',cat:'AMMO',rarity:'UNCOMMON',name:'ЯЩИК 5.45×39 ПС (240 шт)',price:12000,desc:'патроны АК-74 · ящик 240 штук'},
+  {id:'P-04',cat:'AMMO',rarity:'UNCOMMON',name:'ЯЩИК 7.62×39 (200 шт)',price:14000,desc:'патроны АК-104/САЙГА · ящик 200 штук'},
+  {id:'P-05',cat:'AMMO',rarity:'RARE',name:'ЯЩИК 7.62×54R (100 шт)',price:16000,desc:'патроны СВ-98/ПКМ · ящик 100 штук'},
+  {id:'P-06',cat:'AMMO',rarity:'RARE',name:'ЯЩИК 9×39 СП-6 (60 шт)',price:21000,desc:'патроны ВСС · бронебойные · ящик 60 штук'},
+  {id:'P-07',cat:'AMMO',rarity:'COMMON',name:'ЯЩИК 12/70 КАРТЕЧЬ (50 шт)',price:7000,desc:'патроны САЙГА-12 · картечь · ящик 50 штук'}
+];
 
 let S={bal:100000,inv:[],tx:[],user:'ГОСТЬ',rep:0,promo:[]};
 let TG_ID='';
@@ -171,6 +202,55 @@ async function buyProduct(p){
     closeModal();await loadState();render();
   }else{showNotification('ОШИБКА',r.msg||'Покупка не удалась','dn');SND.play('err')}
 }
+
+// ===== ПОКУПКА СНАРЯЖЕНИЯ С КОЛИЧЕСТВОМ =====
+async function buyGear(g,qty){
+  qty=Math.max(1,Math.min(99,Math.round(qty)||1));
+  const total=g.price*qty;
+  if(S.bal<total)return showNotification('НЕДОСТАТОЧНО СРЕДСТВ','Нужно '+fmt(total),'dn'),SND.play('err');
+  const r=await api('/api/action','POST',{action:'buy',price:total,qty:qty,item:{name:g.name,rarity:g.rarity,cat:g.cat,hue:Math.floor(Math.random()*360),desc:g.desc,gear:true}});
+  if(r.ok){
+    showNotification('ПОКУПКА ЗАВЕРШЕНА',g.name+' ×'+qty+' в инвентаре','up');
+    SND.play(qty>1?'rare':'buy');
+    closeModal();await loadState();render();
+  }else{showNotification('ОШИБКА',r.msg||'Покупка не удалась','dn');SND.play('err')}
+}
+function confirmBuyGear(g){
+  ui.open='gear';
+  modal('<h4>ЗАКУПКА · '+g.name+'</h4>'+
+    '<div class="line"><span>ТИП</span><b>'+(RAR_RU[g.rarity]||g.rarity)+'</b></div>'+
+    '<div class="line"><span>ХАРАКТЕРИСТИКИ</span><b style="text-align:right;font-size:10px">'+g.desc+'</b></div>'+
+    '<div class="line"><span>ЦЕНА ЗА 1 ШТ</span><b>'+fmt(g.price)+'</b></div>'+
+    '<div class="line"><span>БАЛАНС</span><b>'+fmt(S.bal)+'</b></div>'+
+    '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">КОЛИЧЕСТВО (1–99)</span>'+
+    '<input class="inp" id="qty" type="number" min="1" max="99" value="1">'+
+    '<div class="line" style="margin-top:10px"><span>ИТОГО</span><b id="qty-total" style="color:var(--grn)">'+fmt(g.price)+'</b></div>'+
+    '<div class="acts"><button class="btn" id="m-no">ОТМЕНА</button><button class="btn pri" id="m-yes">КУПИТЬ</button></div>');
+  const q=$('#qty');
+  const upd=()=>{
+    const n=Math.max(1,Math.min(99,+q.value||1));
+    const t=$('#qty-total');if(t)t.textContent=fmt(g.price*n);
+    const y=$('#m-yes');if(y)y.disabled=S.bal<g.price*n;
+  };
+  q.oninput=upd;upd();
+  $('#m-no').onclick=closeModal;
+  $('#m-yes').onclick=()=>buyGear(g,+q.value);
+}
+function openGear(id){
+  const g=GEAR.find(x=>x.id===id);
+  if(!g)return;
+  ui.open=id;
+  modal('<h4>'+g.name+'</h4>'+
+    '<div class="line"><span>ID</span><b>'+g.id+'</b></div>'+
+    '<div class="line"><span>ТИП</span><b>'+(RAR_RU[g.rarity]||g.rarity)+'</b></div>'+
+    '<div class="line"><span>ХАРАКТЕРИСТИКИ</span><b style="text-align:right;font-size:10px">'+g.desc+'</b></div>'+
+    '<div class="line"><span>ЦЕНА</span><b style="color:var(--grn)">'+fmt(g.price)+'</b></div>'+
+    '<div class="line"><span>ЗАКУПКА</span><b>партиями 1–99 шт</b></div>'+
+    '<div class="acts"><button class="btn" id="m-no">ЗАКРЫТЬ</button><button class="btn pri" id="m-yes">КУПИТЬ</button></div>');
+  $('#m-no').onclick=closeModal;
+  $('#m-yes').onclick=()=>confirmBuyGear(g);
+}
+
 async function sellProduct(uid,price){
   price=Math.round(price);
   if(!(price>0))return showNotification('НЕВЕРНАЯ ЦЕНА','Введите цену','dn'),SND.play('err');
@@ -273,7 +353,7 @@ async function ctDrop(id){
 
 function craftModal(rid){
   const r=RCP[rid];
-  const pool=S.inv.filter(x=>x.rarity===r.from);
+  const pool=S.inv.filter(x=>x.rarity===r.from&&!x.gear);
   if(pool.length<r.need)return showNotification('НЕ ХВАТАЕТ ПРЕДМЕТОВ','Нужно '+r.need+' шт. «'+RAR_RU[r.from]+'», у вас '+pool.length,'dn'),SND.play('err');
   ui.open='craft';
   const pre=pool.slice(0,r.need).map(x=>x.uid);
@@ -402,8 +482,24 @@ function card(p){
     '<div class="ft"><button class="btn pri" data-buy="'+p.id+'">КУПИТЬ</button><button class="btn" data-view="'+p.id+'">ДЕТАЛИ</button></div>'+
     '</article>';
 }
+function gearCard(g){
+  return '<article class="card r-'+g.rarity+'">'+
+    '<div class="art"><i></i></div>'+
+    '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut)"><span>'+(RAR_RU[g.rarity]||g.rarity)+'</span><span>'+g.id+'</span></div>'+
+    '<h3>'+g.name+'</h3>'+
+    '<div style="font-size:10px;color:var(--mut);font-family:var(--mono);letter-spacing:.05em;margin:2px 0 8px;line-height:1.5">'+g.desc+'</div>'+
+    '<div class="row"><span>Цена за шт</span><b style="color:var(--grn)">'+fmt(g.price)+'</b></div>'+
+    '<div class="row"><span>Закупка</span><b>партиями 1–99</b></div>'+
+    '<div class="ft"><button class="btn pri" data-gbuy="'+g.id+'">КУПИТЬ</button><button class="btn" data-gview="'+g.id+'">ДЕТАЛИ</button></div>'+
+    '</article>';
+}
 function renderGrid(){
   const g=$('#grid');if(!g)return;
+  if(ui.cat==='WEAPON'||ui.cat==='ARMOR'||ui.cat==='AMMO'){
+    const list=GEAR.filter(x=>x.cat===ui.cat);
+    g.innerHTML=list.length?list.map(gearCard).join(''):'<div class="empty">НЕТ ЛОТОВ</div>';
+    return;
+  }
   let a=MARKET.products||[];
   if(ui.cat!=='ALL')a=a.filter(p=>p.cat===ui.cat);
   g.innerHTML=a.length?a.map(card).join(''):'<div class="empty">НЕТ ЛОТОВ</div>';
@@ -471,6 +567,7 @@ function renderInventory(){
       const d=(i.val||i.bought)-(i.bought||0);
       return '<article class="card r-'+i.rarity+'"><div class="art"><i></i></div>'+
         '<h3>'+i.name+'</h3>'+
+        (i.desc?'<div style="font-size:10px;color:var(--mut);font-family:var(--mono);letter-spacing:.05em;margin:-4px 0 8px;line-height:1.5">'+i.desc+'</div>':'')+
         '<div class="row"><span>Редкость</span><b>'+(RAR_RU[i.rarity]||i.rarity)+'</b></div>'+
         '<div class="row"><span>Куплено</span><b>'+fmt(i.bought||0)+'</b></div>'+
         '<div class="row"><span>Сейчас</span><b>'+fmt(i.val||i.bought||0)+'</b></div>'+
@@ -482,7 +579,7 @@ function renderCraft(){
   $('#view').innerHTML='<h2 class="pt">КРАФТ · СИНТЕЗ ПРЕДМЕТОВ</h2>'+
     Object.keys(RCP).map(k=>{
       const r=RCP[k];
-      const have=S.inv.filter(x=>x.rarity===r.from).length;
+      const have=S.inv.filter(x=>x.rarity===r.from&&!x.gear).length;
       return '<div class="card" style="margin-bottom:12px">'+
         '<h3>'+r.title+'</h3>'+
         '<div class="row"><span>Шанс успеха</span><b class="up">'+r.chance+'</b></div>'+
@@ -560,11 +657,15 @@ document.addEventListener('click',e=>{
   const tab=e.target.closest('.tab');
   if(tab){ui.page=tab.dataset.page;ui.convoy=false;render();return}
   const cat=e.target.closest('[data-cat]');
-  if(cat){ui.cat=cat.dataset.cat;renderMarket();return}
+  if(cat){ui.cat=cat.dataset.cat;renderGrid();return}
   const buy=e.target.closest('[data-buy]');
   if(buy){const p=MARKET.products.find(x=>x.id===buy.dataset.buy);if(p)confirmBuy(p);return}
   const view=e.target.closest('[data-view]');
   if(view){openProduct(view.dataset.view);return}
+  const gb=e.target.closest('[data-gbuy]');
+  if(gb){const g=GEAR.find(x=>x.id===gb.dataset.gbuy);if(g)confirmBuyGear(g);return}
+  const gv=e.target.closest('[data-gview]');
+  if(gv){openGear(gv.dataset.gview);return}
   const auc=e.target.closest('[data-auc]');
   if(auc){const a=AUCTIONS.find(x=>x.id===auc.dataset.auc);if(a)openAuction(a);return}
   const sell=e.target.closest('[data-sell]');
