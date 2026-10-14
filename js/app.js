@@ -1,16 +1,12 @@
 'use strict';
 
-// === ЗВУКИ (ИСПРАВЛЕНИЕ ОШИБКИ ReferenceError) ===
-const SND = {
-    _enabled: true,
-    play: function(name) {
-        if (!this._enabled) return;
-        console.log('🔊 Sound:', name);
-    },
-    on: function() { return this._enabled; },
-    set: function(state) { this._enabled = state; }
+// === ЗВУКИ ===
+const SND={
+  _enabled:true,
+  play:function(name){if(!this._enabled)return;console.log('🔊',name);},
+  on:function(){return this._enabled},
+  set:function(v){this._enabled=v}
 };
-// ================================================
 
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
@@ -18,7 +14,7 @@ const fmt=n=>'₽ '+Math.round(n).toLocaleString('ru-RU');
 const pct=c=>(c>=0?'+':'')+c.toFixed(2)+'%';
 const left=s=>{s=Math.max(0,Math.floor(s));if(s>3600)return Math.floor(s/3600)+'ч '+Math.floor(s%3600/60)+'м';return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')};
 const RAR_RU={COMMON:'ОБЫЧНЫЙ',UNCOMMON:'НЕОБЫЧНЫЙ',RARE:'РЕДКИЙ',EPIC:'ЭПИЧЕСКИЙ',LEGENDARY:'ЛЕГЕНДАРНЫЙ',UNKNOWN:'НЕИЗВЕСТНО',RUNE:'РУНА'};
-const CATS=[['ALL','ВСЕ'],['TECH','ТЕХНИКА'],['ARTIFACTS','АРТЕФАКТЫ'],['COLLECTIBLES','КОЛЛЕКЦИЯ'],['VEHICLES','ТРАНСПОРТ'],['DEVICES','УСТРОЙСТВА'],['UNKNOWN','НЕИЗВЕСТНОЕ']];
+const CATS=[['ALL','ВСЕ'],['TECH','ТЕХНИКА'],['ARTIFACTS','АРТЕФАКТЫ'],['COLLECTIBLES','КОЛЛЕКЦИЯ'],['VEHICLES','ТРАНСПОРТ'],['DEVICES':'УСТРОЙСТВА'],['UNKNOWN','НЕИЗВЕСТНОЕ']];
 const RCP={c3:{need:3,from:'COMMON',to:'UNCOMMON',chance:'85%',title:'3 × ОБЫЧНЫЙ → НЕОБЫЧНЫЙ'},e2:{need:2,from:'EPIC',to:'LEGENDARY',chance:'22%',title:'2 × ЭПИЧЕСКИЙ → ЛЕГЕНДАРНЫЙ'}};
 const CASES={c50:{price:50000,name:'СТАЛЬНОЙ',t:1},c100:{price:100000,name:'ТЕНЕВОЙ',t:2},c150:{price:150000,name:'ОМЕГА',t:3},c500:{price:500000,name:'РУНА',t:4}};
 const STAR_PKGS={p10:{stars:10,bal:50000},p25:{stars:25,bal:140000},p50:{stars:50,bal:300000},p100:{stars:100,bal:650000}};
@@ -30,6 +26,7 @@ let notes=[],unread=0,entered=false;
 let MARKET={products:[],tick:0,raid:{active:false,left:0}};
 let AUCTIONS=[],CONTRACTS=[];
 let raidWas=false,stateReady=false,promoDraft='';
+let pollStarted=false;
 
 async function api(path,method,body){
   const ctl=new AbortController();
@@ -47,10 +44,11 @@ async function api(path,method,body){
 function badge(){const b=$('#badge');if(b){b.hidden=!unread;b.textContent=unread}}
 function showNotification(t,m,k){
   notes.unshift({title:t,msg:m,t:Date.now()});unread++;badge();
+  const box=$('#toasts');if(!box)return;
   const d=document.createElement('div');d.className='toast '+(k||'');
   d.innerHTML='<b>'+t+'</b><span>'+m+'</span>';
-  $('#toasts').prepend(d);
-  while($('#toasts').children.length>4)$('#toasts').lastChild.remove();
+  box.prepend(d);
+  while(box.children.length>4)box.lastChild.remove();
   setTimeout(()=>{d.style.opacity='0';setTimeout(()=>d.remove(),300)},4000);
 }
 function modal(html){
@@ -79,6 +77,9 @@ async function loadState(){
 async function loadMarket(){const d=await api('/api/market');if(d&&d.products){MARKET=d;raidCheck()}}
 async function loadAuctions(){const d=await api('/api/auctions');if(d&&d.auctions)AUCTIONS=d.auctions}
 async function loadContracts(){const d=await api('/api/contracts');if(d&&d.contracts)CONTRACTS=d.contracts}
+async function refreshAll(){
+  await Promise.all([loadMarket().catch(()=>{}),loadAuctions().catch(()=>{}),loadContracts().catch(()=>{}),loadState().catch(()=>{})]);
+}
 
 function raidCheck(){
   const r=MARKET.raid||{active:false,left:0};
@@ -88,20 +89,84 @@ function raidCheck(){
   const el=$('#raid');if(el){el.classList.toggle('on',r.active)}
 }
 
-// === ТИКАЮЩИЙ ТАЙМЕР ДЛЯ АУКЦИОНОВ ===
-setInterval(() => {
-  if (ui.page !== 'auctions' || ui.open) return;
-  const cards = $$('[data-auc]');
-  cards.forEach(card => {
-    const id = card.dataset.auc;
-    const a = AUCTIONS.find(x => x.id === id);
-    if (a) {
-      a.left = Math.max(0, a.left - 1);
-      const timerEl = card.querySelector('.row .dn');
-      if (timerEl) timerEl.textContent = left(a.left);
-    }
-  });
-}, 1000);
+// === ФИКС ШАПКИ НА МОБИЛЬНЫХ ===
+function fixHeader(){
+  try{
+    const bal=$('#bal');if(!bal)return;
+    const bell=$('#bell');
+    bal.style.whiteSpace='nowrap';
+    let row=bal.parentElement;
+    while(row&&row!==document.body&&!(bell?row.contains(bell):false))row=row.parentElement;
+    if(!row||row===document.body)row=bal.parentElement.parentElement||bal.parentElement;
+    if(!row)return;
+    row.style.display='flex';row.style.alignItems='center';row.style.justifyContent='space-between';
+    row.style.flexWrap='nowrap';row.style.gap='10px';
+    const narrow=window.innerWidth<430;
+    [...row.children].forEach((k,i)=>{
+      k.style.minWidth='0';
+      if(k.contains(bal)){
+        k.style.flex='0 0 auto';k.style.whiteSpace='nowrap';k.style.textAlign='right';
+        if(narrow){bal.style.fontSize='13px';const sb=k.querySelector('small');if(sb)sb.style.fontSize='8px'}
+      }else if(bell&&k.contains(bell)){
+        k.style.flex='0 0 auto';
+      }else if(i===0){
+        k.style.flex='0 1 auto';k.style.whiteSpace='nowrap';k.style.overflow='hidden';k.style.textOverflow='ellipsis';
+        if(narrow){k.style.fontSize='12px';k.style.letterSpacing='.12em'}
+      }else{
+        k.style.flex='0 0 auto';k.style.whiteSpace='nowrap';
+        if(narrow){k.style.fontSize='9px';k.style.letterSpacing='.1em'}
+      }
+    });
+  }catch(e){}
+}
+let rsT=null;
+window.addEventListener('resize',()=>{clearTimeout(rsT);rsT=setTimeout(fixHeader,150)});
+
+// === БЕЗОПАСНАЯ ОТРИСОВКА + WATCHDOG ОТ ЧЁРНОГО ЭКРАНА ===
+function render(){
+  const y=window.scrollY||0;
+  try{
+    $$('.tab').forEach(t=>t.classList.toggle('on',t.dataset.page===ui.page));
+    if(ui.page==='market')renderMarket();
+    else if(ui.page==='auctions')renderAuctions();
+    else if(ui.page==='contracts')renderContracts();
+    else if(ui.page==='inventory')renderInventory();
+    else if(ui.page==='craft')renderCraft();
+    else renderProfile();
+    hdr();
+  }catch(e){
+    console.error('RENDER FAIL',e);
+    showNotification('СБОЙ ИНТЕРФЕЙСА',String(e&&e.message||e),'dn');
+  }
+  try{window.scrollTo(0,y)}catch(e){}
+}
+function watchdog(){
+  [400,1200,3000,6000].forEach(ms=>setTimeout(()=>{
+    if(!entered)return;
+    const app=$('#app');
+    if(app){app.classList.remove('hidden');if(app.style.display==='none')app.style.display=''}
+    const ld=$('#loader');
+    if(ld&&ms>=3000){try{ld.remove()}catch(e){}}
+    const v=$('#view');
+    if(v&&!v.innerHTML.trim())render();
+  },ms));
+}
+
+// === ПОЛЛИНГ ЦЕН: СТАРТУЕТ СРАЗУ, НЕ ЗАВИСИТ ОТ КНОПКИ ВХОДА ===
+function startPoll(){
+  if(pollStarted)return;pollStarted=true;
+  setInterval(async()=>{
+    if(!entered)return;
+    const ae=document.activeElement;
+    const busy=ui.open||(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'));
+    if(!busy){await refreshAll();render()}
+    else hdr();
+  },5000);
+}
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible'&&entered){refreshAll().then(()=>render())}
+});
+window.addEventListener('pageshow',()=>{if(entered)render()});
 
 async function buyProduct(p){
   const pr=Math.round(p.price);
@@ -319,11 +384,8 @@ async function redeemPromo(){
       if(n>code.length)clearInterval(scr);
     },40);
     SND.play('rare');
-    if(r.item){
-      showNotification('ДОСТУП РАЗРЕШЁН','Получен артефакт: '+r.item,'up');
-    }else{
-      showNotification('ДОСТУП РАЗРЕШЁН','Ключ принят: +'+fmt(r.reward),'up');
-    }
+    if(r.item){showNotification('ДОСТУП РАЗРЕШЁН','Получен артефакт: '+r.item,'up')}
+    else{showNotification('ДОСТУП РАЗРЕШЁН','Ключ принят: +'+fmt(r.reward),'up')}
     promoDraft='';
     await loadState();
     render();
@@ -334,16 +396,7 @@ async function redeemPromo(){
 }
 
 function hdr(){const b=$('#bal');if(b)b.textContent=fmt(S.bal)}
-function render(){
-  $$('.tab').forEach(t=>t.classList.toggle('on',t.dataset.page===ui.page));
-  if(ui.page==='market')renderMarket();
-  else if(ui.page==='auctions')renderAuctions();
-  else if(ui.page==='contracts')renderContracts();
-  else if(ui.page==='inventory')renderInventory();
-  else if(ui.page==='craft')renderCraft();
-  else renderProfile();
-  hdr();
-}
+
 function card(p){
   const c=((p.price/p.base)-1)*100;
   return '<article class="card r-'+p.rarity+'">'+
@@ -514,42 +567,54 @@ document.addEventListener('click',e=>{
 });
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
 
+// тик рейд-полосы
 setInterval(()=>{
   const r=MARKET.raid||{active:false,left:0};
   const t=$('#rd-t'),bar=$('#rd-i');
   if(r.active){
-    if(t)t.textContent='торги приостановлены · осталось '+r.left+' с';
+    if(t)t.textContent='торги приостановлены · осталось '+Math.max(0,Math.floor(r.left))+' с';
     if(bar)bar.style.width=Math.max(0,Math.min(100,r.left/60*100))+'%';
   }
 },1000);
+
+// тик таймеров аукционов
+setInterval(()=>{
+  if(ui.page!=='auctions'||ui.open)return;
+  $$('[data-auc]').forEach(cardEl=>{
+    const a=AUCTIONS.find(x=>x.id===cardEl.dataset.auc);
+    if(!a)return;
+    a.left=Math.max(0,(a.left||0)-1);
+    const rows=cardEl.querySelectorAll('.row');
+    const last=rows[rows.length-1];
+    if(last){const b=last.querySelector('b');if(b)b.textContent=left(a.left)}
+  });
+},1000);
+
+function enterApp(){
+  if(entered)return;
+  entered=true;
+  const ld=$('#loader');
+  if(ld){ld.style.opacity='0';ld.style.pointerEvents='none';setTimeout(()=>{try{ld.remove()}catch(e){}},800)}
+  const app=$('#app');
+  if(app){app.classList.remove('hidden');app.style.display=''}
+  fixHeader();
+  render();
+  showNotification('ДОБРО ПОЖАЛОВАТЬ','Сессия открыта');
+  watchdog();
+}
 
 function boot(){
   const lines=['СОЕДИНЕНИЕ...','ШИФРОВАНИЕ СЕССИИ...','УСТАНОВКА ЗАЩИЩЁННОГО КАНАЛА...'];
   const L=$('#ld-line');let i=0;
   (function nx(){
-    if(i<lines.length){L.textContent=lines[i++];setTimeout(nx,700)}
-    else{L.textContent='КАНАЛ ГОТОВ';$('#enter').hidden=false}
+    if(L&&i<lines.length){L.textContent=lines[i++];setTimeout(nx,700)}
+    else{if(L)L.textContent='КАНАЛ ГОТОВ';const e=$('#enter');if(e)e.hidden=false;else setTimeout(enterApp,300)}
   })();
-  Promise.all([loadState().catch(()=>{}),loadMarket().catch(()=>{}),loadAuctions().catch(()=>{}),loadContracts().catch(()=>{})]).then(()=>{if(entered)render()});
-  $('#enter').addEventListener('click',()=>{
-    entered=true;
-    $('#loader').style.opacity='0';
-    setTimeout(()=>{
-      $('#loader').remove();
-      $('#app').classList.remove('hidden');
-      render();
-      showNotification('ДОБРО ПОЖАЛОВАТЬ','Сессия открыта');
-      setInterval(async()=>{
-        const ae=document.activeElement;
-        if(!ui.open&&!(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'))){
-          await Promise.all([loadMarket().catch(()=>{}),loadAuctions().catch(()=>{}),loadContracts().catch(()=>{}),loadState().catch(()=>{})]);
-          render();
-        }else{
-          hdr();
-        }
-      },5000);
-    },800);
-  });
+  refreshAll().then(()=>{if(entered)render()});
+  const eb=$('#enter');
+  if(eb)eb.addEventListener('click',enterApp);
+  fixHeader();
+  startPoll();
 }
 
 (function(){
