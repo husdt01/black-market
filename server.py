@@ -486,8 +486,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 item = data.get('item', {})
                 if balance >= price:
                     balance -= price
-                    inv.append({**item, 'uid': int(now*1000), 'bought': price, 'val': price, 'date': now})
-                    tx.insert(0, {'t': now, 'type': 'ПОКУПКА', 'item': item.get('name', ''), 'amount': -price})
+                    qty = data.get('qty', 1)
+                    try:
+                        qty = max(1, min(99, int(qty)))
+                    except Exception:
+                        qty = 1
+                    unit = round(price / qty)
+                    for q in range(qty):
+                        inv.append({**item, 'uid': int(now*1000) + q, 'bought': unit, 'val': unit, 'date': now})
+                    tx.insert(0, {'t': now, 'type': 'ПОКУПКА', 'item': item.get('name', '') + (' x' + str(qty) if qty > 1 else ''), 'amount': -price})
                     tx = tx[:100]
                     resp = {'ok': True, 'balance': balance}
                 else: resp = {'ok': False, 'msg': 'Недостаточно средств'}
