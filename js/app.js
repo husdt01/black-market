@@ -13,7 +13,7 @@ const STAR_PKGS={p10:{stars:10,bal:50000},p25:{stars:25,bal:140000},p50:{stars:5
 
 let S={bal:100000,inv:[],tx:[],user:'ГОСТЬ',rep:0,promo:[]};
 let TG_ID='';
-let ui={page:'market',cat:'ALL',open:null};
+let ui={page:'market',cat:'ALL',open:null,convoy:false};
 let notes=[],unread=0,entered=false;
 let MARKET={products:[],tick:0,raid:{active:false,left:0}};
 let AUCTIONS=[],CONTRACTS=[];
@@ -114,12 +114,13 @@ function fixHeader(){
 let rsT=null;
 window.addEventListener('resize',()=>{clearTimeout(rsT);rsT=setTimeout(fixHeader,150)});
 
-// === БЕЗОПАСНАЯ ОТРИСОВКА + WATCHDOG ОТ ЧЁРНОГО ЭКРАНА ===
+// === БЕЗОПАСНАЯ ОТРИСОВКА + WATCHDOG ===
 function render(){
   const y=window.scrollY||0;
   try{
     $$('.tab').forEach(t=>t.classList.toggle('on',t.dataset.page===ui.page));
-    if(ui.page==='market')renderMarket();
+    if(ui.convoy)renderConvoy();
+    else if(ui.page==='market')renderMarket();
     else if(ui.page==='auctions')renderAuctions();
     else if(ui.page==='contracts')renderContracts();
     else if(ui.page==='inventory')renderInventory();
@@ -144,7 +145,7 @@ function watchdog(){
   },ms));
 }
 
-// === ПОЛЛИНГ ЦЕН: СТАРТУЕТ СРАЗУ, НЕ ЗАВИСИТ ОТ КНОПКИ ВХОДА ===
+// === ПОЛЛИНГ ===
 function startPoll(){
   if(pollStarted)return;pollStarted=true;
   setInterval(async()=>{
@@ -351,7 +352,7 @@ async function buyStars(pkg){
   if(!r.ok)return showNotification('ОШИБКА',r.msg||'Не удалось создать счёт','dn');
   window.Telegram.WebApp.openInvoice(r.link,async(st)=>{
     if(st==='paid'){
-      SND.play('rare');
+      SND.play('stars');
       showNotification('ОПЛАТА ПРИНЯТА','Зачисление...','up');
       for(let i=0;i<4;i++){await new Promise(res=>setTimeout(res,1500));await loadState()}
       hdr();render();
@@ -408,7 +409,8 @@ function renderGrid(){
   g.innerHTML=a.length?a.map(card).join(''):'<div class="empty">НЕТ ЛОТОВ</div>';
 }
 function renderMarket(){
-  $('#view').innerHTML='<h2 class="pt">КОНТЕЙНЕРЫ</h2>'+
+  $('#view').innerHTML='<div class="convoy-bar"><button class="btn convoy-btn" data-convoy="open">⬢ КОНВОЙ</button><span class="convoy-hint">// защищённый транспорт</span></div>'+
+    '<h2 class="pt">КОНТЕЙНЕРЫ</h2>'+
     '<div class="case-row">'+Object.keys(CASES).map(k=>{const c=CASES[k];
       return '<div class="case-card t'+c.t+'" data-case="'+k+'"><div class="case-ico"><i></i><b></b></div><h5>'+c.name+'</h5><small>мульти-дроп до 3</small><b class="cp">'+fmt(c.price)+'</b></div>';
     }).join('')+'</div>'+
@@ -491,6 +493,35 @@ function renderCraft(){
     }).join('')+
     '<div class="empty" style="margin-top:12px">Материалы добываются на рынке и аукционах</div>';
 }
+
+// ===== КОНВОЙ / АНГАР =====
+function renderConvoy(){
+  $('#view').innerHTML=
+    '<div class="convoy-top">'+
+      '<button class="btn back-btn" data-convoy-back="1">← НАЗАД</button>'+
+      '<b class="convoy-title">КОНВОЙ // АНГАР</b>'+
+      '<span class="convoy-status">СТАТУС: ОЖИДАНИЕ</span>'+
+    '</div>'+
+    '<div class="hangar">'+
+      '<div class="hangar-floor"></div>'+
+      '<div class="hangar-grid">'+
+        '<button class="slot s-top" data-cslot="top"><i></i><b>СЛОТ 01</b><small>верхний узел</small></button>'+
+        '<button class="slot s-left" data-cslot="left"><i></i><b>СЛОТ 02</b><small>левый узел</small></button>'+
+        '<button class="slot core" data-cslot="core"><i></i><b>ЯДРО</b><small>центральный узел</small></button>'+
+        '<button class="slot s-right" data-cslot="right"><i></i><b>СЛОТ 03</b><small>правый узел</small></button>'+
+        '<button class="slot s-bottom" data-cslot="bottom"><i></i><b>СЛОТ 04</b><small>нижний узел</small></button>'+
+      '</div>'+
+      '<div class="hangar-log" id="hangar-log">&gt; ангар законсервирован. модули не установлены.</div>'+
+    '</div>';
+  $$('.slot').forEach(el=>el.onclick=()=>{SND.play('click');convoySlot(el.dataset.cslot)});
+}
+function convoySlot(id){
+  const names={top:'ВЕРХНИЙ УЗЕЛ',left:'ЛЕВЫЙ УЗЕЛ',right:'ПРАВЫЙ УЗЕЛ',bottom:'НИЖНИЙ УЗЕЛ',core:'ЯДРО КОНВОЯ'};
+  const lg=$('#hangar-log');
+  if(lg)lg.textContent='> запрос к узлу «'+(names[id]||id)+'»... отклонено: модуль не установлен.';
+  showNotification('СЛОТ НЕ АКТИВЕН','Модуль «'+(names[id]||id)+'» появится в следующих обновлениях');
+}
+
 function renderProfile(){
   const worth=S.bal+S.inv.reduce((s,i)=>s+(i.val||i.bought||0),0);
   const profit=worth-100000;
@@ -527,7 +558,7 @@ function renderProfile(){
 
 document.addEventListener('click',e=>{
   const tab=e.target.closest('.tab');
-  if(tab){ui.page=tab.dataset.page;render();return}
+  if(tab){ui.page=tab.dataset.page;ui.convoy=false;render();return}
   const cat=e.target.closest('[data-cat]');
   if(cat){ui.cat=cat.dataset.cat;renderMarket();return}
   const buy=e.target.closest('[data-buy]');
@@ -552,6 +583,10 @@ document.addEventListener('click',e=>{
   if(stb){buyStars(stb.dataset.stars);return}
   const pm=e.target.closest('[data-promo]');
   if(pm){redeemPromo();return}
+  const cv=e.target.closest('[data-convoy]');
+  if(cv){ui.convoy=true;SND.play('open');render();return}
+  const bk=e.target.closest('[data-convoy-back]');
+  if(bk){ui.convoy=false;SND.play('close');render();return}
   if(e.target.closest('#bell')){
     unread=0;badge();
     modal('<h4>УВЕДОМЛЕНИЯ</h4>'+(notes.slice(0,10).map(x=>'<div class="line"><span>'+x.title+'</span><b style="font-size:11px">'+x.msg+'</b></div>').join('')||'<div class="empty">ПУСТО</div>'));
@@ -571,7 +606,7 @@ setInterval(()=>{
 
 // тик таймеров аукционов
 setInterval(()=>{
-  if(ui.page!=='auctions'||ui.open)return;
+  if(ui.page!=='auctions'||ui.open||ui.convoy)return;
   $$('[data-auc]').forEach(cardEl=>{
     const a=AUCTIONS.find(x=>x.id===cardEl.dataset.auc);
     if(!a)return;
@@ -596,11 +631,18 @@ function enterApp(){
 }
 
 function boot(){
-  const lines=['СОЕДИНЕНИЕ...','ШИФРОВАНИЕ СЕССИИ...','УСТАНОВКА ЗАЩИЩЁННОГО КАНАЛА...'];
+  const lines=[
+    'ИНИЦИАЛИЗАЦИЯ ТЕРМИНАЛА v2.7.1 ... [ OK ]',
+    'ПОИСК ЗАЩИЩЁННОГО КАНАЛА ... [ OK ]',
+    'РУКОПОЖАТИЕ AES-256 ... [ OK ]',
+    'ПОДМЕНА DNS-УЗЛА ... [ OK ]',
+    'АВТОРИЗАЦИЯ ПО ТОКЕНУ КАНАЛА ... [ OK ]',
+    'ЗАГРУЗКА ТОРГОВЫХ МОДУЛЕЙ ... [ OK ]'
+  ];
   const L=$('#ld-line');let i=0;
   (function nx(){
-    if(L&&i<lines.length){L.textContent=lines[i++];setTimeout(nx,700)}
-    else{if(L)L.textContent='КАНАЛ ГОТОВ';const e=$('#enter');if(e)e.hidden=false;else setTimeout(enterApp,300)}
+    if(L&&i<lines.length){L.innerHTML=(L.innerHTML?L.innerHTML+'<br>':'')+'<span>&gt; '+lines[i++]+'</span>';setTimeout(nx,430)}
+    else{if(L)L.innerHTML=(L.innerHTML?L.innerHTML+'<br>':'')+'<span class="ok">&gt; КАНАЛ ГОТОВ. ДОБРО ПОЖАЛОВАТЬ В ТЕНЬ.</span>';const e=$('#enter');if(e)e.hidden=false;else setTimeout(enterApp,300)}
   })();
   refreshAll().then(()=>{if(entered)render()});
   const eb=$('#enter');
