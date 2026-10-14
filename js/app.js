@@ -1,13 +1,5 @@
 'use strict';
 
-// === ЗВУКИ ===
-const SND={
-  _enabled:true,
-  play:function(name){if(!this._enabled)return;console.log('🔊',name);},
-  on:function(){return this._enabled},
-  set:function(v){this._enabled=v}
-};
-
 const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const fmt=n=>'₽ '+Math.round(n).toLocaleString('ru-RU');
