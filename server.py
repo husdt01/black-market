@@ -6,9 +6,7 @@ BOT_TOKEN = os.environ.get('BOT_TOKEN', '')
 DB = 'data.db'
 K = 10
 APP_URL = os.environ.get('APP_URL', 'https://black-market-5bno.onrender.com')
-
 PROMOS = {'DEVELOPER': 1000000}
-
 PACKAGES = {
     'p10': {'stars': 10, 'bal': 50000, 'title': '50 000 на баланс'},
     'p25': {'stars': 25, 'bal': 140000, 'title': '140 000 на баланс'},
@@ -36,13 +34,11 @@ CASES = {
     'c500': {'price': 500000, 'name': 'РУНА', 'runes': True, 'multi': (8, 2)},
 }
 
-
 def db():
     conn = sqlite3.connect(DB, timeout=10)
     conn.row_factory = sqlite3.Row
     conn.execute('PRAGMA busy_timeout=5000')
     return conn
-
 
 def init_db():
     conn = db()
@@ -59,7 +55,6 @@ def init_db():
         stars INTEGER, bal INTEGER, status TEXT DEFAULT 'pending', created REAL DEFAULT 0)''')
     conn.commit()
     conn.close()
-
 
 ITEMS = [
     ['КВАНТОВЫЙ ЧИП', 'TECH', 'RARE', 12480], ['ЧЁРНЫЙ СИГНАЛ', 'TECH', 'EPIC', 48200],
@@ -82,17 +77,16 @@ ITEMS = [
     ['ОКО БУРИ', 'ARTIFACTS', 'EPIC', 44700], ['ЗАПЕЧАТАННАЯ КАПСУЛА', 'UNKNOWN', 'UNKNOWN', 28000],
     ['КАРТА МЁРТВЫХ', 'COLLECTIBLES', 'EPIC', 37300], ['ОПТИЧЕСКИЙ КАМУФЛЯЖ', 'TECH', 'UNCOMMON', 6200]
 ]
+
 VOL = {'COMMON': .012, 'UNCOMMON': .015, 'RARE': .02, 'EPIC': .026, 'LEGENDARY': .03, 'UNKNOWN': .04}
 NPCS = ['ZERO', 'NEXUS', 'BLACKBOX', 'MERCURY', 'VOID_21', 'RAVEN', 'ORBIT', 'GHOST']
 REPR = {'COMMON': 4, 'UNCOMMON': 7, 'RARE': 12, 'EPIC': 20, 'LEGENDARY': 35}
 RCP = {'c3': {'need': 3, 'from': 'COMMON', 'to': 'UNCOMMON', 'p': .85},
        'e2': {'need': 2, 'from': 'EPIC', 'to': 'LEGENDARY', 'p': .22}}
 
-
 def roll_case(case_id):
     c = CASES.get(case_id)
-    if not c:
-        return None
+    if not c: return None
     r = random.randint(1, 100)
     count = 3 if r <= c['multi'][1] else (2 if r <= c['multi'][0] + c['multi'][1] else 1)
     drops = []
@@ -104,9 +98,7 @@ def roll_case(case_id):
             pick = RUNES[0]
             for rn in RUNES:
                 acc += rn[2]
-                if x <= acc:
-                    pick = rn
-                    break
+                if x <= acc: pick = rn; break
             drops.append({'name': pick[0], 'cat': 'RUNE', 'rarity': pick[3], 'mult': 1, 'rune': True, 'val': pick[1]})
         return drops
     for _ in range(count):
@@ -116,25 +108,20 @@ def roll_case(case_id):
         mult = c['mults'][0][0]
         for m, p in c['mults']:
             acc += p
-            if x <= acc:
-                mult = m
-                break
+            if x <= acc: mult = m; break
         target = c['price'] * mult
-        pool = [i for i in ITEMS if i[2] != 'UNKNOWN' and target * 0.7 <= i[3] <= target * 1.3]
+        pool = [i for i in ITEMS if i[2] != 'UNKNOWN' and target*0.7 <= i[3] <= target*1.3]
         if not pool:
             pool = [min((i for i in ITEMS if i[2] != 'UNKNOWN'), key=lambda i: abs(i[3] - target))]
         it = random.choice(pool)
         drops.append({'name': it[0], 'cat': it[1], 'rarity': it[2], 'mult': mult})
     return drops
 
-
 def seeded_random(seed_str):
     h = int(hashlib.md5(seed_str.encode()).hexdigest(), 16)
     return (h % 10000) / 10000.0
 
-
 RAID = {'until': 0, 'next': time.time() + random.randint(180, 420), 'frozen': None, 'mult': {}}
-
 
 def raid_check(now, tick):
     if RAID['frozen'] is None and now >= RAID['next']:
@@ -145,16 +132,14 @@ def raid_check(now, tick):
         m = {}
         for it in ITEMS:
             r = seeded_random(seed + it[0])
-            m[it[0]] = round(1.06 + r * 0.16, 3) if seeded_random(seed + it[0] + 'd') < 0.65 else round(0.86 + r * 0.10, 3)
+            m[it[0]] = round(1.06 + r*0.16, 3) if seeded_random(seed + it[0] + 'd') < 0.65 else round(0.86 + r*0.10, 3)
         RAID['mult'] = m
         RAID['frozen'] = None
         RAID['next'] = now + random.randint(300, 720)
 
-
 def raid_info(now):
     return {'active': RAID['frozen'] is not None,
             'left': max(0, RAID['until'] - now) if RAID['frozen'] is not None else 0}
-
 
 def item_price(item, ft):
     name, cat, rarity, base = item
@@ -162,22 +147,19 @@ def item_price(item, ft):
     mult = RAID['mult'].get(name, 1)
     tr = 0.0
     for i in range(K):
-        tr += seeded_random(f"{ft - i}_{name}_p") - 0.5
+        tr += seeded_random(f"{ft-i}_{name}_p") - 0.5
     tr /= K
     change = tr * 2 * vol * 8
-    return round(max(base * 0.4, min(base * 2.2, base * (1 + change) * mult)))
-
+    return round(max(base*0.4, min(base*2.2, base * (1 + change) * mult)))
 
 def market_price(name):
     it = next((i for i in ITEMS if i[0] == name), None)
-    if not it:
-        return None
+    if not it: return None
     now = int(time.time())
     tick = now // 10
     raid_check(now, tick)
     ft = RAID['frozen'] if RAID['frozen'] is not None else tick
     return item_price(it, ft)
-
 
 def get_market():
     now = int(time.time())
@@ -189,27 +171,26 @@ def get_market():
         name, cat, rarity, base = item
         vol = VOL.get(rarity, .02)
         mult = RAID['mult'].get(name, 1)
-        ns = [seeded_random(f"{t}_{name}_p") - 0.5 for t in range(ft - 69, ft + 1)]
+        ns = [seeded_random(f"{t}_{name}_p") - 0.5 for t in range(ft-69, ft+1)]
         w = sum(ns[0:K]) + ns[K] - ns[0]
         hist = []
         for i in range(60):
             if i > 0:
-                w += ns[i + K] - ns[i]
+                w += ns[i+K] - ns[i]
             tr = w / K
             change = tr * 2 * vol * 8
-            hist.append(round(max(base * 0.4, min(base * 2.2, base * (1 + change) * mult))))
+            hist.append(round(max(base*0.4, min(base*2.2, base * (1 + change) * mult))))
         r2 = seeded_random(f"{ft}_{name}_d")
         products.append({
-            'id': f'VM-{10000 + idx * 7 + ft % 100}',
+            'id': f'VM-{10000 + idx*7 + ft%100}',
             'name': name, 'cat': cat, 'rarity': rarity,
             'price': hist[-1], 'base': base,
             'seller': NPCS[idx % len(NPCS)],
-            'hist': hist, 'views': int(r2 * 900) + 20,
+            'hist': hist, 'views': int(r2*900) + 20,
             'sup': int(seeded_random(f"{ft}_{name}_s") * 11) + 1,
             'exp': now + int(seeded_random(f"{ft}_{name}_e") * 3600) + 600
         })
     return {'tick': ft, 'time': now, 'products': products, 'raid': raid_info(now)}
-
 
 def get_auctions():
     conn = db()
@@ -225,22 +206,22 @@ def get_auctions():
                     st = json.loads(u['state'] or '{}')
                     inv = st.get('inv', [])
                     tx = st.get('tx', [])
-                    inv.append({'uid': int(now * 1000), 'name': r['name'], 'rarity': r['rarity'],
-                                'cat': r['cat'], 'hue': 200, 'bought': r['current_bid'],
-                                'val': r['current_bid'], 'date': now})
+                    inv.append({'uid': int(now*1000), 'name': r['name'], 'rarity': r['rarity'],
+                        'cat': r['cat'], 'hue': 200, 'bought': r['current_bid'],
+                        'val': r['current_bid'], 'date': now})
                     tx.insert(0, {'t': now, 'type': 'АУКЦИОН', 'item': r['name'], 'amount': 0})
                     st['inv'] = inv
                     st['tx'] = tx[:100]
                     conn.execute("UPDATE users SET state=? WHERE tg_id=?", (json.dumps(st, ensure_ascii=False), wid))
-    conn.execute("UPDATE auctions SET status='finished' WHERE end_time < ? AND status='active'", (now,))
+        conn.execute("UPDATE auctions SET status='finished' WHERE end_time < ? AND status='active'", (now,))
     active = conn.execute("SELECT COUNT(*) FROM auctions WHERE status='active'").fetchone()[0]
     if active < 5:
         for i in range(5 - active):
             item = random.choice(ITEMS)
-            aid = f"AU-{int(now * 1000)}-{i}"
+            aid = f"AU-{int(now*1000)}-{i}"
             conn.execute("INSERT OR IGNORE INTO auctions(id,name,cat,rarity,start_price,current_bid,leader,end_time) VALUES(?,?,?,?,?,?,?,?)",
-                         (aid, item[0], item[1], item[2], round(item[3] * 0.5), round(item[3] * 0.5), None,
-                          now + random.randint(120, 600)))
+                (aid, item[0], item[1], item[2], round(item[3] * 0.5), round(item[3] * 0.5), None,
+                    now + random.randint(120, 600)))
     conn.commit()
     rows = conn.execute("SELECT * FROM auctions WHERE status='active' ORDER BY end_time").fetchall()
     conn.close()
@@ -248,11 +229,10 @@ def get_auctions():
     for r in rows:
         bids = json.loads(r['bids'] or '[]')
         out.append({'id': r['id'], 'name': r['name'], 'cat': r['cat'], 'rarity': r['rarity'],
-                    'start': r['start_price'], 'bid': r['current_bid'], 'leader': r['leader'],
-                    'bids': bids[-10:], 'end': r['end_time'],
-                    'left': max(0, int(r['end_time'] - now)), 'n': len(bids)})
+            'start': r['start_price'], 'bid': r['current_bid'], 'leader': r['leader'],
+            'bids': bids[-10:], 'end': r['end_time'],
+            'left': max(0, int(r['end_time'] - now)), 'n': len(bids)})
     return out
-
 
 def place_bid(auction_id, amount, tg_id, username):
     conn = db()
@@ -278,11 +258,10 @@ def place_bid(auction_id, amount, tg_id, username):
             conn.execute("UPDATE users SET balance = balance + ? WHERE tg_id=?", (row['current_bid'], prev_id))
     bids.append({'who': username or tg_id, 'id': tg_id, 'amt': amount, 't': time.time()})
     conn.execute("UPDATE auctions SET current_bid=?, leader=?, bids=? WHERE id=?",
-                 (amount, username or tg_id, json.dumps(bids[-20:]), auction_id))
+        (amount, username or tg_id, json.dumps(bids[-20:]), auction_id))
     conn.commit()
     conn.close()
     return {'ok': True, 'bid': amount, 'leader': username or tg_id}
-
 
 def get_contracts(tg_id):
     conn = db()
@@ -292,11 +271,11 @@ def get_contracts(tg_id):
     open_n = conn.execute("SELECT COUNT(*) c FROM contracts WHERE st='open'").fetchone()['c']
     while open_n < 3:
         item = random.choice([i for i in ITEMS if i[2] != 'UNKNOWN'])
-        cid = f"CT-{int(now * 1000)}-{random.randint(100, 999)}"
+        cid = f"CT-{int(now*1000)}-{random.randint(100, 999)}"
         mult = round(random.uniform(1.1, 1.35), 2)
         conn.execute("INSERT INTO contracts(id,npc,name,cat,rarity,reward,rep,exp) VALUES(?,?,?,?,?,?,?,?)",
-                     (cid, random.choice(NPCS), item[0], item[1], item[2],
-                      round(item[3] * mult), REPR.get(item[2], 5), now + random.randint(300, 900)))
+            (cid, random.choice(NPCS), item[0], item[1], item[2],
+             round(item[3] * mult), REPR.get(item[2], 5), now + random.randint(300, 900)))
         open_n += 1
     conn.commit()
     rows = conn.execute("SELECT * FROM contracts WHERE st='open' OR (st='acc' AND tg_id=?) ORDER BY st DESC", (tg_id,)).fetchall()
@@ -308,7 +287,6 @@ def get_contracts(tg_id):
         out.append(d)
     return out
 
-
 def tg_api(method, params=None):
     url = 'https://api.telegram.org/bot' + BOT_TOKEN + '/' + method
     data = json.dumps(params or {}).encode('utf-8')
@@ -319,11 +297,9 @@ def tg_api(method, params=None):
     except Exception as e:
         return {'ok': False, 'description': str(e)}
 
-
 def credit_stars(tg_id, pkg, nonce, stars):
     p = PACKAGES.get(pkg)
-    if not p or p['stars'] != stars:
-        return False
+    if not p or p['stars'] != stars: return False
     conn = db()
     row = conn.execute("SELECT * FROM star_orders WHERE nonce=?", (nonce,)).fetchone()
     if not row or row['status'] != 'pending':
@@ -341,16 +317,15 @@ def credit_stars(tg_id, pkg, nonce, stars):
     tx.insert(0, {'t': time.time(), 'type': 'ЗВЁЗДЫ', 'item': p['title'], 'amount': p['bal']})
     state['tx'] = tx[:100]
     conn.execute("UPDATE users SET balance=?, state=? WHERE tg_id=?",
-                 (balance, json.dumps(state, ensure_ascii=False), tg_id))
+        (balance, json.dumps(state, ensure_ascii=False), tg_id))
     conn.commit()
     conn.close()
     return True
 
-
 class Handler(http.server.SimpleHTTPRequestHandler):
     extensions_map = {**http.server.SimpleHTTPRequestHandler.extensions_map,
-                      '.css': 'text/css', '.js': 'application/javascript',
-                      '.html': 'text/html; charset=utf-8', '.json': 'application/json'}
+        '.css': 'text/css', '.js': 'application/javascript',
+        '.html': 'text/html; charset=utf-8', '.json': 'application/json'}
     timeout = 30
     protocol_version = 'HTTP/1.1'
 
@@ -361,8 +336,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         self.send_header('Access-Control-Allow-Headers', 'Content-Type, X-TG-ID')
         super().end_headers()
 
-    def log_message(self, *a):
-        pass
+    def log_message(self, *a): pass
 
     def do_OPTIONS(self):
         self.send_response(200)
@@ -381,25 +355,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         return json.loads(self.rfile.read(length).decode('utf-8')) if length else {}
 
     def do_GET(self):
-        try:
-            self._get()
-        except Exception as e:
-            self.send_json({'error': 'SERVER: ' + str(e)}, 500)
+        try: self._get()
+        except Exception as e: self.send_json({'error': 'SERVER: '+str(e)}, 500)
 
     def _get(self):
         tg_id = self.headers.get('X-TG-ID', '')
-        if self.path == '/api/market':
-            self.send_json(get_market())
-        elif self.path == '/api/auctions':
-            self.send_json({'auctions': get_auctions()})
-        elif self.path == '/api/contracts':
-            self.send_json({'contracts': get_contracts(tg_id)})
+        if self.path == '/api/market': self.send_json(get_market())
+        elif self.path == '/api/auctions': self.send_json({'auctions': get_auctions()})
+        elif self.path == '/api/contracts': self.send_json({'contracts': get_contracts(tg_id)})
         elif self.path.startswith('/api/price'):
             q = parse_qs(self.path.split('?', 1)[1] if '?' in self.path else '')
             self.send_json({'price': market_price(q.get('name', [''])[0])})
         elif self.path.startswith('/api/state'):
-            if not tg_id:
-                return self.send_json({'error': 'no tg_id'}, 403)
+            if not tg_id: return self.send_json({'error': 'no tg_id'}, 403)
             conn = db()
             row = conn.execute("SELECT * FROM users WHERE tg_id=?", (tg_id,)).fetchone()
             if row:
@@ -412,8 +380,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         ch = True
                 if ch:
                     conn.execute("UPDATE users SET state=? WHERE tg_id=?",
-                                 (json.dumps(st, ensure_ascii=False), tg_id))
-                    conn.commit()
+                        (json.dumps(st, ensure_ascii=False), tg_id))
+                conn.commit()
                 self.send_json({'balance': row['balance'], 'state': st, 'username': row['username']})
             else:
                 self.send_json({'balance': 100000, 'state': {}, 'username': ''})
@@ -422,25 +390,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             super().do_GET()
 
     def do_POST(self):
-        try:
-            self._post()
-        except Exception as e:
-            self.send_json({'ok': False, 'valid': False, 'msg': 'SERVER: ' + str(e)}, 500)
+        try: self._post()
+        except Exception as e: self.send_json({'ok': False, 'valid': False, 'msg': 'SERVER: '+str(e)}, 500)
 
     def _post(self):
-        if self.path == '/api/tg/webhook':
-            self._webhook()
-        elif self.path == '/api/tg/validate':
-            self._validate()
+        if self.path == '/api/tg/webhook': self._webhook()
+        elif self.path == '/api/tg/validate': self._validate()
         elif self.path == '/api/stars/order':
             tg_id = self.headers.get('X-TG-ID', '')
-            if not tg_id:
-                return self.send_json({'ok': False, 'msg': 'no auth'}, 403)
+            if not tg_id: return self.send_json({'ok': False, 'msg': 'no auth'}, 403)
             self._stars_order(tg_id)
-        elif self.path == '/api/action':
-            self._action()
-        else:
-            self.send_json({'error': 'not found'}, 404)
+        elif self.path == '/api/action': self._action()
+        else: self.send_json({'error': 'not found'}, 404)
 
     def _webhook(self):
         up = self.read_body()
@@ -454,8 +415,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             pcq = up.get('pre_checkout_query')
             if pcq:
                 tg_api('answerPrecheckoutQuery', {'pre_checkout_query_id': pcq.get('id'), 'ok': True})
-        except Exception:
-            pass
+        except Exception: pass
         self.send_json({'ok': True})
 
     def _validate(self):
@@ -484,33 +444,27 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         data = self.read_body()
         pkg = data.get('pkg', '')
         p = PACKAGES.get(pkg)
-        if not p:
-            return self.send_json({'ok': False, 'msg': 'Неизвестный пакет'})
+        if not p: return self.send_json({'ok': False, 'msg': 'Неизвестный пакет'})
         nonce = str(random.randint(100000, 999999)) + str(int(time.time()))
         conn = db()
         conn.execute("INSERT OR REPLACE INTO star_orders(nonce,tg_id,pkg,stars,bal,status,created) VALUES(?,?,?,?,?,'pending',?)",
-                     (nonce, tg_id, pkg, p['stars'], p['bal'], time.time()))
+            (nonce, tg_id, pkg, p['stars'], p['bal'], time.time()))
         conn.commit()
         conn.close()
         payload = '|'.join([tg_id, pkg, nonce])
         r = tg_api('createInvoiceLink', {
             'title': 'BLACK MARKET · ' + p['title'],
             'description': 'Пополнение игрового баланса',
-            'payload': payload,
-            'provider_token': '',
-            'currency': 'XTR',
+            'payload': payload, 'provider_token': '', 'currency': 'XTR',
             'prices': [{'label': p['title'], 'amount': p['stars']}],
         })
-        if r.get('ok'):
-            self.send_json({'ok': True, 'link': r.get('result')})
-        else:
-            self.send_json({'ok': False, 'msg': str(r.get('description'))})
+        if r.get('ok'): self.send_json({'ok': True, 'link': r.get('result')})
+        else: self.send_json({'ok': False, 'msg': str(r.get('description'))})
 
     def _action(self):
         data = self.read_body()
         tg_id = self.headers.get('X-TG-ID', '')
-        if not tg_id:
-            return self.send_json({'ok': False, 'msg': 'no auth'}, 403)
+        if not tg_id: return self.send_json({'ok': False, 'msg': 'no auth'}, 403)
         action = data.get('action', '')
         conn = db()
         user = conn.execute("SELECT * FROM users WHERE tg_id=?", (tg_id,)).fetchone()
@@ -526,19 +480,18 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         resp = {'ok': False, 'msg': 'unknown action'}
 
         if action == 'buy':
-            if RAID['frozen'] is not None:
-                resp = {'ok': False, 'msg': 'Торги приостановлены: идёт рейд'}
+            if RAID['frozen'] is not None: resp = {'ok': False, 'msg': 'Торги приостановлены: идёт рейд'}
             else:
                 price = data.get('price', 0)
                 item = data.get('item', {})
                 if balance >= price:
                     balance -= price
-                    inv.append({**item, 'uid': int(now * 1000), 'bought': price, 'val': price, 'date': now})
+                    inv.append({**item, 'uid': int(now*1000), 'bought': price, 'val': price, 'date': now})
                     tx.insert(0, {'t': now, 'type': 'ПОКУПКА', 'item': item.get('name', ''), 'amount': -price})
                     tx = tx[:100]
                     resp = {'ok': True, 'balance': balance}
-                else:
-                    resp = {'ok': False, 'msg': 'Недостаточно средств'}
+                else: resp = {'ok': False, 'msg': 'Недостаточно средств'}
+
         elif action == 'sell':
             uid = data.get('uid', 0)
             price = data.get('price', 0)
@@ -547,73 +500,64 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 item = inv[idx]
                 if item.get('rune'):
                     fixed = item.get('val', 0)
-                    if price != fixed:
-                        resp = {'ok': False, 'msg': 'РУНЫ ПРОДАЮТСЯ ТОЛЬКО ПО ФИКС-ЦЕНЕ: ' + str(fixed)}
+                    if price != fixed: resp = {'ok': False, 'msg': 'РУНЫ ПРОДАЮТСЯ ТОЛЬКО ПО ФИКС-ЦЕНЕ: '+str(fixed)}
                     else:
-                        inv.pop(idx)
-                        balance += price
+                        inv.pop(idx); balance += price
                         tx.insert(0, {'t': now, 'type': 'ПРОДАЖА', 'item': item.get('name', ''), 'amount': price})
                         tx = tx[:100]
                         resp = {'ok': True, 'balance': balance}
                 else:
                     cur = market_price(item.get('name', '')) or item.get('val', 0) or price
-                    if price > cur * 1.15:
-                        resp = {'ok': False, 'msg': 'НЕТ ПОКУПАТЕЛЯ: рынок сейчас ' + str(cur) + ', максимум ' + str(round(cur * 1.15))}
-                    elif price < cur * 0.3:
-                        resp = {'ok': False, 'msg': 'Слишком дёшево: рынок сейчас ' + str(cur) + ', минимум ' + str(round(cur * 0.3))}
+                    if price > cur * 1.15: resp = {'ok': False, 'msg': 'НЕТ ПОКУПАТЕЛЯ: рынок сейчас '+str(cur)+', максимум '+str(round(cur*1.15))}
+                    elif price < cur * 0.3: resp = {'ok': False, 'msg': 'Слишком дёшево: рынок сейчас '+str(cur)+', минимум '+str(round(cur*0.3))}
                     else:
-                        inv.pop(idx)
-                        balance += price
+                        inv.pop(idx); balance += price
                         tx.insert(0, {'t': now, 'type': 'ПРОДАЖА', 'item': item.get('name', ''), 'amount': price})
                         tx = tx[:100]
                         resp = {'ok': True, 'balance': balance}
-            else:
-                resp = {'ok': False, 'msg': 'Ошибка продажи'}
+            else: resp = {'ok': False, 'msg': 'Ошибка продажи'}
+
         elif action == 'bid':
-            if RAID['frozen'] is not None:
-                resp = {'ok': False, 'msg': 'Торги приостановлены: идёт рейд'}
+            if RAID['frozen'] is not None: resp = {'ok': False, 'msg': 'Торги приостановлены: идёт рейд'}
             else:
                 resp = place_bid(data.get('auction_id'), data.get('amount', 0), tg_id, user['username'])
                 if resp.get('ok'):
                     balance -= data.get('amount', 0)
                     resp['balance'] = balance
+
         elif action == 'open_case':
             cid = data.get('case', '')
             c = CASES.get(cid)
-            if not c:
-                resp = {'ok': False, 'msg': 'Неизвестный контейнер'}
-            elif balance < c['price']:
-                resp = {'ok': False, 'msg': 'Недостаточно средств'}
+            if not c: resp = {'ok': False, 'msg': 'Неизвестный контейнер'}
+            elif balance < c['price']: resp = {'ok': False, 'msg': 'Недостаточно средств'}
             else:
                 balance -= c['price']
                 drops = roll_case(cid)
                 for d in drops:
                     mp = d.get('val') or market_price(d['name']) or 0
-                    inv.append({'uid': int(now * 1000) + len(inv), 'name': d['name'], 'rarity': d['rarity'],
-                                'cat': d['cat'], 'hue': random.randint(0, 360), 'bought': mp, 'val': mp,
-                                'rune': bool(d.get('rune')), 'date': now})
+                    inv.append({'uid': int(now*1000) + len(inv), 'name': d['name'], 'rarity': d['rarity'],
+                        'cat': d['cat'], 'hue': random.randint(0, 360), 'bought': mp, 'val': mp,
+                        'rune': bool(d.get('rune')), 'date': now})
                 tx.insert(0, {'t': now, 'type': 'КОНТЕЙНЕР', 'item': c['name'], 'amount': -c['price']})
                 tx = tx[:100]
                 resp = {'ok': True, 'balance': balance, 'drops': drops}
+
         elif action == 'promo':
             code = (data.get('code') or '').strip().upper()
             used = state.get('promo', [])
             if code == 'ZERO':
-                if 'ZERO' in used:
-                    resp = {'ok': False, 'msg': 'Ключ уже активирован этим каналом'}
+                if 'ZERO' in used: resp = {'ok': False, 'msg': 'Ключ уже активирован этим каналом'}
                 else:
-                    inv.append({'uid': int(now * 1000), 'name': 'РУНА ПЕРВОИСТОКА', 'rarity': 'RUNE',
-                                'cat': 'RUNE', 'hue': random.randint(0, 360), 'bought': 4000000, 'val': 4000000,
-                                'rune': True, 'date': now})
+                    inv.append({'uid': int(now*1000), 'name': 'РУНА ПЕРВОИСТОКА', 'rarity': 'RUNE',
+                        'cat': 'RUNE', 'hue': random.randint(0, 360), 'bought': 4000000, 'val': 4000000,
+                        'rune': True, 'date': now})
                     used.append('ZERO')
                     state['promo'] = used
                     tx.insert(0, {'t': now, 'type': 'КЛЮЧ', 'item': 'ZERO', 'amount': 0})
                     tx = tx[:100]
                     resp = {'ok': True, 'balance': balance, 'reward': 0, 'item': 'РУНА ПЕРВОИСТОКА'}
-            elif code not in PROMOS:
-                resp = {'ok': False, 'msg': 'Ключ не распознан: нет доступа'}
-            elif code in used:
-                resp = {'ok': False, 'msg': 'Ключ уже активирован этим каналом'}
+            elif code not in PROMOS: resp = {'ok': False, 'msg': 'Ключ не распознан: нет доступа'}
+            elif code in used: resp = {'ok': False, 'msg': 'Ключ уже активирован этим каналом'}
             else:
                 balance += PROMOS[code]
                 used.append(code)
@@ -621,23 +565,22 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 tx.insert(0, {'t': now, 'type': 'КЛЮЧ', 'item': code, 'amount': PROMOS[code]})
                 tx = tx[:100]
                 resp = {'ok': True, 'balance': balance, 'reward': PROMOS[code]}
+
         elif action == 'ct-accept':
             cid = data.get('id', '')
             cur = conn.execute("SELECT * FROM contracts WHERE id=? AND st='open'", (cid,)).fetchone()
             if cur:
-                conn.execute("UPDATE contracts SET st='acc', tg_id=?, end_task=? WHERE id=?", (tg_id, now + 600, cid))
+                conn.execute("UPDATE contracts SET st='acc', tg_id=?, end_task=? WHERE id=?", (tg_id, now+600, cid))
                 resp = {'ok': True}
-            else:
-                resp = {'ok': False, 'msg': 'Контракт недоступен'}
+            else: resp = {'ok': False, 'msg': 'Контракт недоступен'}
+
         elif action == 'ct-done':
             cid = data.get('id', '')
             cur = conn.execute("SELECT * FROM contracts WHERE id=? AND st='acc' AND tg_id=?", (cid, tg_id)).fetchone()
-            if not cur:
-                resp = {'ok': False, 'msg': 'Контракт не найден'}
+            if not cur: resp = {'ok': False, 'msg': 'Контракт не найден'}
             else:
                 idx = next((i for i, x in enumerate(inv) if x.get('name') == cur['name']), None)
-                if idx is None:
-                    resp = {'ok': False, 'msg': 'Нет предмета: ' + cur['name']}
+                if idx is None: resp = {'ok': False, 'msg': 'Нет предмета: '+cur['name']}
                 else:
                     inv.pop(idx)
                     balance += cur['reward']
@@ -646,26 +589,26 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     tx = tx[:100]
                     conn.execute("DELETE FROM contracts WHERE id=?", (cid,))
                     resp = {'ok': True, 'balance': balance, 'reward': cur['reward'], 'rep': cur['rep']}
+
         elif action == 'ct-drop':
             conn.execute("DELETE FROM contracts WHERE id=? AND st='acc' AND tg_id=?", (data.get('id', ''), tg_id))
             resp = {'ok': True}
+
         elif action == 'craft':
             rid = data.get('recipe', '')
             uids = data.get('uids', [])
             r = RCP.get(rid)
-            if not r or len(uids) != r['need']:
-                resp = {'ok': False, 'msg': 'Неверный рецепт'}
+            if not r or len(uids) != r['need']: resp = {'ok': False, 'msg': 'Неверный рецепт'}
             else:
                 its = [x for x in inv if x.get('uid') in uids and x.get('rarity') == r['from']]
-                if len(its) != r['need']:
-                    resp = {'ok': False, 'msg': 'Не хватает предметов'}
+                if len(its) != r['need']: resp = {'ok': False, 'msg': 'Не хватает предметов'}
                 else:
                     inv = [x for x in inv if x not in its]
                     basis = sum(x.get('bought', 0) for x in its)
                     if random.random() < r['p']:
                         tpl = random.choice([i for i in ITEMS if i[2] == r['to']])
-                        res = {'uid': int(now * 1000), 'name': tpl[0], 'rarity': tpl[2], 'cat': tpl[1],
-                               'hue': random.randint(0, 360), 'bought': basis, 'val': tpl[3], 'date': now}
+                        res = {'uid': int(now*1000), 'name': tpl[0], 'rarity': tpl[2], 'cat': tpl[1],
+                            'hue': random.randint(0, 360), 'bought': basis, 'val': tpl[3], 'date': now}
                         inv.append(res)
                         tx.insert(0, {'t': now, 'type': 'КРАФТ', 'item': res['name'], 'amount': 0})
                         tx = tx[:100]
@@ -674,28 +617,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         tx.insert(0, {'t': now, 'type': 'КРАФТ', 'item': 'ПРОВАЛ', 'amount': 0})
                         tx = tx[:100]
                         resp = {'ok': True, 'res': None}
-        elif action == 'save':
-            resp = {'ok': True}
 
+        # ИСПРАВЛЕНО: СОХРАНЕНИЕ СОСТОЯНИЯ ДЛЯ ВСЕХ ЭКШЕНОВ!
         state['inv'] = inv
         state['tx'] = tx
         conn.execute("UPDATE users SET balance=?, state=?, updated=? WHERE tg_id=?",
-                     (balance, json.dumps(state, ensure_ascii=False), now, tg_id))
+            (balance, json.dumps(state, ensure_ascii=False), now, tg_id))
         conn.commit()
         conn.close()
-        self.send_json(resp)
 
+        self.send_json(resp)
 
 if __name__ == '__main__':
     init_db()
     PORT = int(os.environ.get('PORT', 8765))
-    if BOT_TOKEN:
-        tg_api('setWebhook', {'url': APP_URL + '/api/tg/webhook'})
-
+    if BOT_TOKEN: tg_api('setWebhook', {'url': APP_URL + '/api/tg/webhook'})
     class Server(http.server.ThreadingHTTPServer):
         daemon_threads = True
         allow_reuse_address = True
-
     httpd = Server(('0.0.0.0', PORT), Handler)
     print('Server on port', PORT)
     httpd.serve_forever()
