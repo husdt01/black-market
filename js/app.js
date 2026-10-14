@@ -41,21 +41,21 @@ const GEAR=[
   {id:'P-06',cat:'AMMO',rarity:'RARE',name:'ЯЩИК 9×39 СП-6 (60 шт)',price:21000,desc:'патроны ВСС · бронебойные · ящик 60 штук'},
   {id:'P-07',cat:'AMMO',rarity:'COMMON',name:'ЯЩИК 12/70 КАРТЕЧЬ (50 шт)',price:7000,desc:'патроны САЙГА-12 · картечь · ящик 50 штук'},
   // ТРАНСПОРТ (бронированный и utility)
-  {id:'V-01',cat:'VEHICLES',rarity:'RARE',name:'«ТИГР» ГАЗ-233036',price:180000,desc:'броневик · класс 3 · 8 мест · 220 км/ч · решетка стёкол'},
+  {id:'V-01',cat:'VEHICLES',rarity:'RARE',name:'«ТИГР» ГАЗ-233036',price:180000,desc:'броневик · класс 3 · 8 мест · 220 км/ч · решётки на стёклах'},
   {id:'V-02',cat:'VEHICLES',rarity:'EPIC',name:'БТР-80 «ВЕКТОР»',price:320000,desc:'БТР · класс 5 · десант 8 · амфибия · термодым'},
-  {id:'V-03',cat:'VEHICLES',rarity:'EPIC',name:'КАМАЗ «ТАЙФУН»',price:260000,desc:'бронегрузовик · класс 4 · кузов 14 паллет · run-flat'},
+  {id:'V-03',cat:'VEHICLES',rarity:'EPIC',name:'КАМАЗ «ТАЙФУН»',price:260000,desc:'бронегрузовик · класс 4 · кузов 14 паллет · усиленные шины'},
   {id:'V-04',cat:'VEHICLES',rarity:'LEGENDARY',name:'БМП-2 «ГРОМ»',price:450000,desc:'БМП · класс 6 · 30 мм · десантный отсек на 8'},
   {id:'V-05',cat:'VEHICLES',rarity:'RARE',name:'УРАЛ-ВВ «ПЕРИМЕТР»',price:210000,desc:'бронегрузовик · класс 4 · 10 мест · усиленная кабина'},
   {id:'V-06',cat:'VEHICLES',rarity:'UNCOMMON',name:'ФУРГОН «ФЕРМЕР»',price:22000,desc:'грузовой фургон · без брони · 12 м³ · документы чистые'},
   {id:'V-07',cat:'VEHICLES',rarity:'UNCOMMON',name:'УАЗ «БУХАНКА»',price:30000,desc:'укреплённый · внедорожный · 4 места · кузов переварен'},
-  // НАЁМНИКИ (позывные, роли под ограбления)
+  // НАЁМНИКИ (позывные, роли под ограбления) — штучный товар
   {id:'M-01',cat:'MERC',rarity:'RARE',name:'ПОЗЫВНОЙ «ГРИФ»',price:65000,desc:'роль: штурмовик · входит первым · 12 выходов · вопросов не задаёт'},
   {id:'M-02',cat:'MERC',rarity:'EPIC',name:'ПОЗЫВНОЙ «КОЩЕЙ»',price:120000,desc:'роль: взломщик · замки и сейфы · стаж 14 лет · без следов'},
   {id:'M-03',cat:'MERC',rarity:'UNCOMMON',name:'ПОЗЫВНОЙ «РТУТЬ»',price:40000,desc:'роль: водитель · уход с точки · водит всё что ездит'},
   {id:'M-04',cat:'MERC',rarity:'RARE',name:'ПОЗЫВНОЙ «ШУМ»',price:70000,desc:'роль: тяжёлый · подавление · держит голову под огнём'},
   {id:'M-05',cat:'MERC',rarity:'UNCOMMON',name:'ПОЗЫВНОЙ «ФЕЛИН»',price:45000,desc:'роль: разведка · маршруты и графики · остаётся незамеченным'},
   {id:'M-06',cat:'MERC',rarity:'RARE',name:'ПОЗЫВНОЙ «ВОРОН»',price:60000,desc:'роль: дроновод · глаза сверху · радиус 3 км'},
-  {id:'M-07',cat:'MERC',rarity:'UNCOMMON',name:'ПОЗЫВНОЙ «СОМА»',price:38000,desc:'роль: медик · полевая хирургия · держит crew на ходу'},
+  {id:'M-07',cat:'MERC',rarity:'UNCOMMON',name:'ПОЗЫВНОЙ «СОМА»',price:38000,desc:'роль: медик · полевая хирургия · держит отряд на ходу'},
   {id:'M-08',cat:'MERC',rarity:'EPIC',name:'ПОЗЫВНОЙ «КАПКАН»',price:85000,desc:'роль: периметр · ловушки и датчики · никто не зайдёт со спины'},
   {id:'M-09',cat:'MERC',rarity:'LEGENDARY',name:'ПОЗЫВНОЙ «БЕС»',price:150000,desc:'роль: фиксер · договаривается, решает, исчезает первым'}
 ];
@@ -82,7 +82,7 @@ function cvUids(){return new Set(Object.values(CONVOY).filter(Boolean))}
 
 let S={bal:100000,inv:[],tx:[],user:'ГОСТЬ',rep:0,promo:[]};
 let TG_ID='';
-let ui={page:'market',cat:'ALL',open:null,convoy:false};
+let ui={page:'market',cat:'ALL',open:null,convoy:false,barScroll:0};
 let notes=[],unread=0,entered=false;
 let MARKET={products:[],tick:0,raid:{active:false,left:0}};
 let AUCTIONS=[],CONTRACTS=[];
@@ -184,7 +184,17 @@ function fixHeader(){
 let rsT=null;
 window.addEventListener('resize',()=>{clearTimeout(rsT);rsT=setTimeout(fixHeader,150)});
 
-// === БЕЗОПАСНАЯ ОТРИСОВКА + WATCHDOG ===
+// запоминаем скролл ленты фильтров, чтобы не сбрасывался
+document.addEventListener('scroll',e=>{
+  const t=e.target;
+  if(t&&t.classList&&t.classList.contains('bar'))ui.barScroll=t.scrollLeft;
+},true);
+
+// === СИГНАТУРЫ СОСТАВА (для мягкого обновления) ===
+function setSig(sig){const v=$('#view');if(v)v.dataset.sig=ui.page+'|'+sig}
+function getSig(){const v=$('#view');return v?v.dataset.sig||'':''}
+
+// === ПОЛНАЯ ОТРИСОВКА + WATCHDOG ===
 function render(){
   const y=window.scrollY||0;
   try{
@@ -203,6 +213,109 @@ function render(){
   }
   try{window.scrollTo(0,y)}catch(e){}
 }
+
+// === МЯГКОЕ ОБНОВЛЕНИЕ (без пересоздания DOM = без скачков) ===
+function marketList(){
+  if(ui.cat==='WEAPON'||ui.cat==='ARMOR'||ui.cat==='AMMO'||ui.cat==='MERC')return GEAR.filter(x=>x.cat===ui.cat);
+  let a=MARKET.products||[];
+  if(ui.cat==='VEHICLES'){a=a.filter(p=>p.cat==='VEHICLES').concat(GEAR.filter(x=>x.cat==='VEHICLES'))}
+  else if(ui.cat!=='ALL'){a=a.filter(p=>p.cat===ui.cat)}
+  return a;
+}
+function listSig(list){return list.map(x=>x.id).join(',')}
+function softMarket(){
+  const list=marketList();
+  const sig='m|'+ui.cat+'|'+listSig(list);
+  if(getSig()!==sig){renderMarket();return}
+  const st=$$('#view .stats .stat b');
+  if(st.length>=4){
+    st[0].textContent=(MARKET.products||[]).length;
+    st[1].textContent=fmt(S.bal);
+    st[2].textContent='#'+(MARKET.tick||0);
+    st[3].textContent=S.inv.length;
+  }
+  const g=$('#grid');if(!g)return;
+  list.forEach(x=>{
+    if(x.desc)return;
+    const el=g.querySelector('[data-pid="'+x.id+'"]');if(!el)return;
+    const c=((x.price/x.base)-1)*100;
+    const rows=el.querySelectorAll('.row');
+    if(rows[1])rows[1].querySelector('b').textContent=fmt(x.price);
+    if(rows[2]){const b=rows[2].querySelector('b');b.textContent=pct(c);b.className=c>=0?'up':'dn'}
+    const sv=el.querySelector('svg');
+    if(sv){const tmp=document.createElement('div');tmp.innerHTML=spark(x.hist,c>=0);const ns=tmp.firstChild;if(ns)sv.replaceWith(ns)}
+  });
+}
+function softAuctions(){
+  const sig='a|'+AUCTIONS.map(a=>a.id).join(',');
+  if(getSig()!==sig){renderAuctions();return}
+  const h=$('#view .pt');if(h)h.textContent='АУКЦИОНЫ · '+AUCTIONS.length+' АКТИВНЫХ';
+  AUCTIONS.forEach(a=>{
+    const el=$('#view [data-auc="'+a.id+'"]');if(!el)return;
+    const rows=el.querySelectorAll('.row');
+    if(rows[1])rows[1].querySelector('b').textContent=fmt(a.bid);
+    if(rows[2])rows[2].querySelector('b').textContent=a.leader||'—';
+    if(rows[3])rows[3].querySelector('b').textContent=a.n;
+    if(rows[4])rows[4].querySelector('b').textContent=left(a.left);
+  });
+}
+function softInventory(){
+  const sig='i|'+S.inv.map(i=>i.uid).join(',');
+  if(getSig()!==sig){renderInventory();return}
+  S.inv.forEach(i=>{
+    const el=$('#view [data-uid="'+i.uid+'"]');if(!el)return;
+    const rows=el.querySelectorAll('.row');
+    const d=(i.val||i.bought)-(i.bought||0);
+    if(rows[2])rows[2].querySelector('b').textContent=fmt(i.val||i.bought||0);
+    if(rows[3]){const b=rows[3].querySelector('b');b.textContent=(d>=0?'+':'')+fmt(d);b.className=d>=0?'up':'dn'}
+  });
+}
+function softContracts(){
+  const sig='c|'+CONTRACTS.map(c=>c.id+c.st).join(',');
+  if(getSig()!==sig){renderContracts();return}
+  CONTRACTS.forEach(c=>{
+    const el=$('#view [data-ctid="'+c.id+'"]');if(!el)return;
+    const rows=el.querySelectorAll('.row');
+    if(rows[2])rows[2].querySelector('b').textContent=left(c.left);
+    if(c.st==='acc'&&rows[3]){
+      const has=S.inv.some(x=>x.name===c.name);
+      const b=rows[3].querySelector('b');b.textContent=has?'ДА':'НЕТ';b.className=has?'up':'dn';
+      const btn=el.querySelector('[data-ct-done]');if(btn)btn.disabled=!has;
+    }
+  });
+}
+function softProfile(){
+  const st=$$('#view .stats .stat b');
+  if(st.length>=4){
+    const worth=S.bal+S.inv.reduce((s,i)=>s+(i.val||i.bought||0),0);
+    const profit=worth-100000;
+    st[0].textContent=fmt(worth);
+    st[1].textContent=(profit>=0?'+':'')+fmt(profit);st[1].className=profit>=0?'up':'dn';
+    st[2].textContent=S.tx.length;
+    st[3].textContent=S.inv.length;
+  }
+}
+function softCraft(){
+  const cards=$$('#view .card');
+  Object.keys(RCP).forEach((k,idx)=>{
+    const r=RCP[k];
+    const have=S.inv.filter(x=>x.rarity===r.from&&!x.gear).length;
+    const c=cards[idx];if(!c)return;
+    const rows=c.querySelectorAll('.row');
+    if(rows[1])rows[1].querySelector('b').textContent=have+' / '+r.need;
+    const btn=c.querySelector('[data-craft]');if(btn)btn.disabled=have<r.need;
+  });
+}
+function softRender(){
+  hdr();
+  if(ui.convoy||ui.open)return;
+  if(ui.page==='market')softMarket();
+  else if(ui.page==='auctions')softAuctions();
+  else if(ui.page==='inventory')softInventory();
+  else if(ui.page==='contracts')softContracts();
+  else if(ui.page==='profile')softProfile();
+  else if(ui.page==='craft')softCraft();
+}
 function watchdog(){
   [400,1200,3000,6000].forEach(ms=>setTimeout(()=>{
     if(!entered)return;
@@ -215,19 +328,19 @@ function watchdog(){
   },ms));
 }
 
-// === ПОЛЛИНГ ===
+// === ПОЛЛИНГ (теперь мягкий) ===
 function startPoll(){
   if(pollStarted)return;pollStarted=true;
   setInterval(async()=>{
     if(!entered)return;
     const ae=document.activeElement;
     const busy=ui.open||(ae&&(ae.tagName==='INPUT'||ae.tagName==='TEXTAREA'));
-    if(!busy){await refreshAll();render()}
+    if(!busy){await refreshAll();softRender()}
     else hdr();
   },5000);
 }
 document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState==='visible'&&entered){refreshAll().then(()=>render())}
+  if(document.visibilityState==='visible'&&entered){refreshAll().then(()=>softRender())}
 });
 window.addEventListener('pageshow',()=>{if(entered)render()});
 
@@ -242,38 +355,48 @@ async function buyProduct(p){
   }else{showNotification('ОШИБКА',r.msg||'Покупка не удалась','dn');SND.play('err')}
 }
 
-// ===== ПОКУПКА СНАРЯЖЕНИЯ С КОЛИЧЕСТВОМ =====
+// ===== ПОКУПКА СНАРЯЖЕНИЯ С КОЛИЧЕСТВОМ (наёмники — штучно) =====
 async function buyGear(g,qty){
+  if(g.cat==='MERC')qty=1;
   qty=Math.max(1,Math.min(99,Math.round(qty)||1));
   const total=g.price*qty;
   if(S.bal<total)return showNotification('НЕДОСТАТОЧНО СРЕДСТВ','Нужно '+fmt(total),'dn'),SND.play('err');
   const r=await api('/api/action','POST',{action:'buy',price:total,qty:qty,item:{name:g.name,rarity:g.rarity,cat:g.cat,hue:Math.floor(Math.random()*360),desc:g.desc,gear:true}});
   if(r.ok){
-    showNotification('ПОКУПКА ЗАВЕРШЕНА',g.name+' ×'+qty+' в инвентаре','up');
+    showNotification('ПОКУПКА ЗАВЕРШЕНА',g.name+(qty>1?' ×'+qty:'')+' в инвентаре','up');
     SND.play(qty>1?'rare':'buy');
     closeModal();await loadState();render();
   }else{showNotification('ОШИБКА',r.msg||'Покупка не удалась','dn');SND.play('err')}
 }
 function confirmBuyGear(g){
+  const batch=g.cat!=='MERC';
   ui.open='gear';
   modal('<h4>ЗАКУПКА · '+g.name+'</h4>'+
     '<div class="line"><span>ТИП</span><b>'+(RAR_RU[g.rarity]||g.rarity)+'</b></div>'+
     '<div class="line"><span>ХАРАКТЕРИСТИКИ</span><b style="text-align:right;font-size:10px">'+g.desc+'</b></div>'+
-    '<div class="line"><span>ЦЕНА ЗА 1 ШТ</span><b>'+fmt(g.price)+'</b></div>'+
+    '<div class="line"><span>ЦЕНА</span><b>'+fmt(g.price)+'</b></div>'+
     '<div class="line"><span>БАЛАНС</span><b>'+fmt(S.bal)+'</b></div>'+
-    '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">КОЛИЧЕСТВО (1–99)</span>'+
-    '<input class="inp" id="qty" type="number" min="1" max="99" value="1">'+
-    '<div class="line" style="margin-top:10px"><span>ИТОГО</span><b id="qty-total" style="color:var(--grn)">'+fmt(g.price)+'</b></div>'+
+    (batch
+      ? '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">КОЛИЧЕСТВО (1–99)</span>'+
+        '<input class="inp" id="qty" type="number" min="1" max="99" value="1">'+
+        '<div class="line" style="margin-top:10px"><span>ИТОГО</span><b id="qty-total" style="color:var(--grn)">'+fmt(g.price)+'</b></div>'
+      : '<div class="line" style="margin-top:10px"><span>КОЛИЧЕСТВО</span><b>1 шт · штучный товар</b></div>'+
+        '<div class="line"><span>ИТОГО</span><b style="color:var(--grn)">'+fmt(g.price)+'</b></div>')+
     '<div class="acts"><button class="btn" id="m-no">ОТМЕНА</button><button class="btn pri" id="m-yes">КУПИТЬ</button></div>');
-  const q=$('#qty');
-  const upd=()=>{
-    const n=Math.max(1,Math.min(99,+q.value||1));
-    const t=$('#qty-total');if(t)t.textContent=fmt(g.price*n);
-    const y=$('#m-yes');if(y)y.disabled=S.bal<g.price*n;
-  };
-  q.oninput=upd;upd();
-  $('#m-no').onclick=closeModal;
-  $('#m-yes').onclick=()=>buyGear(g,+q.value);
+  if(batch){
+    const q=$('#qty');
+    const upd=()=>{
+      const n=Math.max(1,Math.min(99,+q.value||1));
+      const t=$('#qty-total');if(t)t.textContent=fmt(g.price*n);
+      const y=$('#m-yes');if(y)y.disabled=S.bal<g.price*n;
+    };
+    q.oninput=upd;upd();
+    $('#m-no').onclick=closeModal;
+    $('#m-yes').onclick=()=>buyGear(g,+q.value);
+  }else{
+    $('#m-no').onclick=closeModal;
+    $('#m-yes').onclick=()=>buyGear(g,1);
+  }
 }
 function openGear(id){
   const g=GEAR.find(x=>x.id===id);
@@ -284,7 +407,7 @@ function openGear(id){
     '<div class="line"><span>ТИП</span><b>'+(RAR_RU[g.rarity]||g.rarity)+'</b></div>'+
     '<div class="line"><span>ХАРАКТЕРИСТИКИ</span><b style="text-align:right;font-size:10px">'+g.desc+'</b></div>'+
     '<div class="line"><span>ЦЕНА</span><b style="color:var(--grn)">'+fmt(g.price)+'</b></div>'+
-    '<div class="line"><span>ЗАКУПКА</span><b>партиями 1–99 шт</b></div>'+
+    '<div class="line"><span>ЗАКУПКА</span><b>'+(g.cat==='MERC'?'штучно, 1 в одни руки':'партиями 1–99 шт')+'</b></div>'+
     '<div class="acts"><button class="btn" id="m-no">ЗАКРЫТЬ</button><button class="btn pri" id="m-yes">КУПИТЬ</button></div>');
   $('#m-no').onclick=closeModal;
   $('#m-yes').onclick=()=>confirmBuyGear(g);
@@ -300,7 +423,7 @@ async function sellProduct(uid,price){
 async function sellModal(uid){
   const i=S.inv.find(x=>x.uid==uid);
   if(!i)return showNotification('ОШИБКА','Предмета нет','dn');
-  if(cvUids().has(i.uid))return showNotification(' ПРЕДМЕТ В КОНВОЕ','Сначала выгрузи его из узла конвоя','dn'),SND.play('err');
+  if(cvUids().has(i.uid))return showNotification('ПРЕДМЕТ В КОНВОЕ','Сначала выгрузи его из узла конвоя','dn'),SND.play('err');
   ui.open='sell';
   if(i.rune){
     const val=i.val||i.bought||0;
@@ -512,7 +635,7 @@ function hdr(){const b=$('#bal');if(b)b.textContent=fmt(S.bal)}
 
 function card(p){
   const c=((p.price/p.base)-1)*100;
-  return '<article class="card r-'+p.rarity+'">'+
+  return '<article class="card r-'+p.rarity+'" data-pid="'+p.id+'">'+
     '<div class="art"><i></i></div>'+
     '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut)"><span>'+(RAR_RU[p.rarity]||p.rarity)+'</span><span>'+p.id+'</span></div>'+
     '<h3>'+p.name+'</h3>'+spark(p.hist,c>=0)+
@@ -523,27 +646,21 @@ function card(p){
     '</article>';
 }
 function gearCard(g){
-  return '<article class="card r-'+g.rarity+'">'+
+  return '<article class="card r-'+g.rarity+'" data-gid="'+g.id+'">'+
     '<div class="art"><i></i></div>'+
     '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut)"><span>'+(RAR_RU[g.rarity]||g.rarity)+'</span><span>'+g.id+'</span></div>'+
     '<h3>'+g.name+'</h3>'+
     '<div style="font-size:10px;color:var(--mut);font-family:var(--mono);letter-spacing:.05em;margin:2px 0 8px;line-height:1.5">'+g.desc+'</div>'+
     '<div class="row"><span>Цена за шт</span><b style="color:var(--grn)">'+fmt(g.price)+'</b></div>'+
-    '<div class="row"><span>Закупка</span><b>партиями 1–99</b></div>'+
+    '<div class="row"><span>Закупка</span><b>'+(g.cat==='MERC'?'штучно':'партиями 1–99')+'</b></div>'+
     '<div class="ft"><button class="btn pri" data-gbuy="'+g.id+'">КУПИТЬ</button><button class="btn" data-gview="'+g.id+'">ДЕТАЛИ</button></div>'+
     '</article>';
 }
 function renderGrid(){
   const g=$('#grid');if(!g)return;
-  if(ui.cat==='WEAPON'||ui.cat==='ARMOR'||ui.cat==='AMMO'||ui.cat==='MERC'){
-    const list=GEAR.filter(x=>x.cat===ui.cat);
-    g.innerHTML=list.length?list.map(gearCard).join(''):'<div class="empty">НЕТ ЛОТОВ</div>';
-    return;
-  }
-  let a=MARKET.products||[];
-  if(ui.cat==='VEHICLES'){a=a.filter(p=>p.cat==='VEHICLES').concat(GEAR.filter(x=>x.cat==='VEHICLES'))}
-  else if(ui.cat!=='ALL'){a=a.filter(p=>p.cat===ui.cat)}
-  g.innerHTML=a.length?a.map(x=>x.desc?gearCard(x):card(x)).join(''):'<div class="empty">НЕТ ЛОТОВ</div>';
+  const list=marketList();
+  g.innerHTML=list.length?list.map(x=>x.desc?gearCard(x):card(x)).join(''):'<div class="empty">НЕТ ЛОТОВ</div>';
+  setSig('m|'+ui.cat+'|'+listSig(list));
 }
 function renderMarket(){
   $('#view').innerHTML='<div class="convoy-bar"><button class="btn convoy-btn" data-convoy="open">⬢ КОНВОЙ</button><span class="convoy-hint">// защищённый транспорт</span></div>'+
@@ -559,6 +676,7 @@ function renderMarket(){
     '<div class="bar">'+CATS.map(c=>'<button class="chip '+(c[0]===ui.cat?'on':'')+'" data-cat="'+c[0]+'">'+c[1]+'</button>').join('')+'</div>'+
     '<div id="grid" class="grid"></div>';
   renderGrid();
+  const b=$('#view .bar');if(b&&ui.barScroll)b.scrollLeft=ui.barScroll;
 }
 function renderAuctions(){
   $('#view').innerHTML='<h2 class="pt">АУКЦИОНЫ · '+AUCTIONS.length+' АКТИВНЫХ</h2>'+
@@ -571,6 +689,7 @@ function renderAuctions(){
         '<div class="row"><span>Ставок</span><b>'+a.n+'</b></div>'+
         '<div class="row"><span>Осталось</span><b class="dn">'+left(a.left)+'</b></div></article>';
     }).join(''):'<div class="empty">АУКЦИОНОВ НЕТ</div>')+'</div>';
+  setSig('a|'+AUCTIONS.map(a=>a.id).join(','));
 }
 function renderContracts(){
   const open=CONTRACTS.filter(c=>c.st==='open');
@@ -578,7 +697,7 @@ function renderContracts(){
   $('#view').innerHTML='<h2 class="pt">МОИ КОНТРАКТЫ · '+mine.length+'</h2>'+
     '<div class="grid">'+(mine.length?mine.map(c=>{
       const has=S.inv.some(x=>x.name===c.name);
-      return '<article class="card r-'+c.rarity+'">'+
+      return '<article class="card r-'+c.rarity+'" data-ctid="'+c.id+'">'+
         '<div class="art"><i></i></div>'+
         '<div style="font-size:10px;color:var(--amb);letter-spacing:.15em">ЗАКАЗЧИК: '+c.npc+'</div>'+
         '<h3>'+c.name+'</h3>'+
@@ -591,7 +710,7 @@ function renderContracts(){
     }).join(''):'<div class="empty">НЕТ АКТИВНЫХ КОНТРАКТОВ</div>')+'</div>'+
     '<h2 class="pt">ДОСТУПНЫЕ ЗАКАЗЫ · '+open.length+'</h2>'+
     '<div class="grid">'+(open.length?open.map(c=>{
-      return '<article class="card r-'+c.rarity+'">'+
+      return '<article class="card r-'+c.rarity+'" data-ctid="'+c.id+'">'+
         '<div class="art"><i></i></div>'+
         '<div style="font-size:10px;color:var(--amb);letter-spacing:.15em">ЗАКАЗЧИК: '+c.npc+'</div>'+
         '<h3>'+c.name+'</h3>'+
@@ -601,13 +720,14 @@ function renderContracts(){
         '<div class="ft"><button class="btn pri" data-ct-accept="'+c.id+'">ПРИНЯТЬ</button></div>'+
         '</article>';
     }).join(''):'<div class="empty">ЗАКАЗОВ НЕТ</div>')+'</div>';
+  setSig('c|'+CONTRACTS.map(c=>c.id+c.st).join(','));
 }
 function renderInventory(){
   const used=cvUids();
   $('#view').innerHTML='<h2 class="pt">МОЙ ИНВЕНТАРЬ · '+S.inv.length+'</h2><div class="grid">'+
     (S.inv.length?S.inv.map(i=>{
       const d=(i.val||i.bought)-(i.bought||0);
-      return '<article class="card r-'+i.rarity+'"><div class="art"><i></i></div>'+
+      return '<article class="card r-'+i.rarity+'" data-uid="'+i.uid+'"><div class="art"><i></i></div>'+
         '<h3>'+i.name+'</h3>'+
         (i.desc?'<div style="font-size:10px;color:var(--mut);font-family:var(--mono);letter-spacing:.05em;margin:-4px 0 8px;line-height:1.5">'+i.desc+'</div>':'')+
         '<div class="row"><span>Редкость</span><b>'+(RAR_RU[i.rarity]||i.rarity)+'</b></div>'+
@@ -617,6 +737,7 @@ function renderInventory(){
         (used.has(i.uid)?'<div class="row"><span>Статус</span><b style="color:var(--amb)">В КОНВОЕ</b></div>':'')+
         '<div class="ft"><button class="btn pri" data-sell="'+i.uid+'">ПРОДАТЬ</button></div></article>';
     }).join(''):'<div class="empty">ИНВЕНТАРЬ ПУСТ</div>')+'</div>';
+  setSig('i|'+S.inv.map(i=>i.uid).join(','));
 }
 function renderCraft(){
   $('#view').innerHTML='<h2 class="pt">КРАФТ · СИНТЕЗ ПРЕДМЕТОВ</h2>'+
@@ -759,7 +880,7 @@ document.addEventListener('click',e=>{
   const tab=e.target.closest('.tab');
   if(tab){ui.page=tab.dataset.page;ui.convoy=false;render();return}
   const cat=e.target.closest('[data-cat]');
-  if(cat){ui.cat=cat.dataset.cat;renderGrid();return}
+  if(cat){ui.cat=cat.dataset.cat;renderGrid();const b=$('#view .bar');if(b)b.scrollLeft=ui.barScroll;return}
   const buy=e.target.closest('[data-buy]');
   if(buy){const p=MARKET.products.find(x=>x.id===buy.dataset.buy);if(p)confirmBuy(p);return}
   const view=e.target.closest('[data-view]');
