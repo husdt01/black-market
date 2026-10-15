@@ -208,9 +208,10 @@ document.addEventListener('scroll',e=>{
   if(t&&t.classList&&t.classList.contains('bar'))ui.barScroll=t.scrollLeft;
 },true);
 
-// === СИГНАТУРЫ СОСТАВА (для мягкого обновления) ===
+// === СИГНАТУРЫ СОСТАВА (ключ = НАЗВАНИЕ, оно стабильно в отличие от ID лотов) ===
 function setSig(sig){const v=$('#view');if(v)v.dataset.sig=ui.page+'|'+sig}
 function getSig(){const v=$('#view');return v?v.dataset.sig||'':''}
+function keyOf(x){return String(x.name).replace(/"/g,'')}
 
 // === ПОЛНАЯ ОТРИСОВКА + WATCHDOG ===
 function render(){
@@ -240,7 +241,7 @@ function marketList(){
   else if(ui.cat!=='ALL'){a=a.filter(p=>p.cat===ui.cat)}
   return a;
 }
-function listSig(list){return list.map(x=>x.id).join(',')}
+function listSig(list){return list.map(x=>keyOf(x)).join(',')}
 function softMarket(){
   const list=marketList();
   const sig='m|'+ui.cat+'|'+listSig(list);
@@ -255,7 +256,7 @@ function softMarket(){
   const g=$('#grid');if(!g)return;
   list.forEach(x=>{
     if(x.desc)return;
-    const el=g.querySelector('[data-pid="'+x.id+'"]');if(!el)return;
+    const el=g.querySelector('[data-key="'+keyOf(x)+'"]');if(!el)return;
     const c=((x.price/x.base)-1)*100;
     const rows=el.querySelectorAll('.row');
     if(rows[1])rows[1].querySelector('b').textContent=fmt(x.price);
@@ -500,10 +501,10 @@ function openAuction(a){
   $('#m-no').onclick=closeModal;
   $('#m-yes').onclick=()=>placeBid(a,+$('#bid-amt').value);
 }
-function openProduct(id){
-  const p=MARKET.products.find(x=>x.id===id);
+function openProduct(name){
+  const p=MARKET.products.find(x=>x.name===name);
   if(!p)return;
-  ui.open=id;
+  ui.open=keyOf(p);
   const c=((p.price/p.base)-1)*100;
   modal('<h4>'+p.name+'</h4>'+spark(p.hist,c>=0)+
     '<div class="line"><span>ID</span><b>'+p.id+'</b></div>'+
@@ -653,18 +654,20 @@ function hdr(){const b=$('#bal');if(b)b.textContent=fmt(S.bal)}
 
 function card(p){
   const c=((p.price/p.base)-1)*100;
-  return '<article class="card r-'+p.rarity+'" data-pid="'+p.id+'">'+
+  const key=keyOf(p);
+  return '<article class="card r-'+p.rarity+'" data-key="'+key+'">'+
     '<div class="art"><i></i></div>'+
     '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut)"><span>'+(RAR_RU[p.rarity]||p.rarity)+'</span><span>'+p.id+'</span></div>'+
     '<h3>'+p.name+'</h3>'+spark(p.hist,c>=0)+
     '<div class="row"><span>Продавец</span><b>'+p.seller+'</b></div>'+
     '<div class="row"><span>Цена</span><b style="color:var(--grn)">'+fmt(p.price)+'</b></div>'+
     '<div class="row"><span>Изменение</span><b class="'+(c>=0?'up':'dn')+'">'+pct(c)+'</b></div>'+
-    '<div class="ft"><button class="btn pri" data-buy="'+p.id+'">КУПИТЬ</button><button class="btn" data-view="'+p.id+'">ДЕТАЛИ</button></div>'+
+    '<div class="ft"><button class="btn pri" data-buy="'+key+'">КУПИТЬ</button><button class="btn" data-view="'+key+'">ДЕТАЛИ</button></div>'+
     '</article>';
 }
 function gearCard(g){
-  return '<article class="card r-'+g.rarity+'" data-gid="'+g.id+'">'+
+  const key=keyOf(g);
+  return '<article class="card r-'+g.rarity+'" data-key="'+key+'">'+
     '<div class="art"><i></i></div>'+
     '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut)"><span>'+(RAR_RU[g.rarity]||g.rarity)+'</span><span>'+g.id+'</span></div>'+
     '<h3>'+g.name+'</h3>'+
@@ -945,7 +948,7 @@ document.addEventListener('click',e=>{
     return;
   }
   const buy=e.target.closest('[data-buy]');
-  if(buy){const p=MARKET.products.find(x=>x.id===buy.dataset.buy);if(p)confirmBuy(p);return}
+  if(buy){const p=MARKET.products.find(x=>x.name===buy.dataset.buy);if(p)confirmBuy(p);return}
   const view=e.target.closest('[data-view]');
   if(view){openProduct(view.dataset.view);return}
   const gb=e.target.closest('[data-gbuy]');
@@ -1004,7 +1007,7 @@ setInterval(()=>{
     a.left=Math.max(0,(a.left||0)-1);
     const rows=cardEl.querySelectorAll('.row');
     const last=rows[rows.length-1];
-    if(last){const b=last.querySelector('b');if(last)b.textContent=left(a.left)}
+    if(last){const b=last.querySelector('b');if(b)b.textContent=left(a.left)}
   });
 },1000);
 
