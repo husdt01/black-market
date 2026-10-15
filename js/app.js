@@ -32,7 +32,7 @@ const GEAR=[
   {id:'A-06',cat:'ARMOR',rarity:'EPIC',name:'ШЛЕМ «АЛТЫН»',price:95000,desc:'класс 3 · 3.5 кг · сталь + визор · штурмовой'},
   {id:'A-07',cat:'ARMOR',rarity:'RARE',name:'ПЛАСТИНА «ГРАНИТ-4»',price:18000,desc:'класс 6 · керамика · усиленный нагрудник'},
   {id:'A-08',cat:'ARMOR',rarity:'EPIC',name:'ЩИТ «ВАНТ-ВМ»',price:75000,desc:'класс 5 · 5.5 кг · смотровое окно · штурмовой'},
-  // ПАТРОНЫ (ящиками, rounds = штук в ящике)
+  // ПАТРОНЫ (ящиками)
   {id:'P-01',cat:'AMMO',rarity:'COMMON',name:'ЯЩИК 9×18 ПМ (250 шт)',price:6000,rounds:250,desc:'патроны ПМ/АПС · ящик 250 штук'},
   {id:'P-02',cat:'AMMO',rarity:'COMMON',name:'ЯЩИК 9×19 PARA (300 шт)',price:9000,rounds:300,desc:'патроны ВИТЯЗЬ · ящик 300 штук'},
   {id:'P-03',cat:'AMMO',rarity:'UNCOMMON',name:'ЯЩИК 5.45×39 ПС (240 шт)',price:12000,rounds:240,desc:'патроны АК-74 · ящик 240 штук'},
@@ -48,80 +48,97 @@ const GEAR=[
   {id:'V-05',cat:'VEHICLES',rarity:'RARE',name:'УРАЛ-ВВ «ПЕРИМЕТР»',price:210000,desc:'бронегрузовик · класс 4 · 10 мест · усиленная кабина'},
   {id:'V-06',cat:'VEHICLES',rarity:'UNCOMMON',name:'ФУРГОН «ФЕРМЕР»',price:22000,desc:'грузовой фургон · без брони · 12 м³ · документы чистые'},
   {id:'V-07',cat:'VEHICLES',rarity:'UNCOMMON',name:'УАЗ «БУХАНКА»',price:30000,desc:'укреплённый · внедорожный · 4 места · кузов переварен'},
-  // НАЁМНИКИ
-  {id:'M-01',cat:'MERC',rarity:'RARE',name:'ПОЗЫВНОЙ «ГРИФ»',price:65000,desc:'роль: штурмовик · входит первым · 12 выходов · вопросов не задаёт'},
-  {id:'M-02',cat:'MERC',rarity:'EPIC',name:'ПОЗЫВНОЙ «КОЩЕЙ»',price:120000,desc:'роль: взломщик · замки и сейфы · стаж 14 лет · без следов'},
-  {id:'M-03',cat:'MERC',rarity:'UNCOMMON',name:'ПОЗЫВНОЙ «РТУТЬ»',price:40000,desc:'роль: водитель · уход с точки · водит всё что ездит'},
-  {id:'M-04',cat:'MERC',rarity:'RARE',name:'ПОЗЫВНОЙ «ШУМ»',price:70000,desc:'роль: тяжёлый · подавление · держит голову под огнём'},
-  {id:'M-05',cat:'MERC',rarity:'UNCOMMON',name:'ПОЗЫВНОЙ «ФЕЛИН»',price:45000,desc:'роль: разведка · маршруты и графики · остаётся незамеченным'},
-  {id:'M-06',cat:'MERC',rarity:'RARE',name:'ПОЗЫВНОЙ «ВОРОН»',price:60000,desc:'роль: дроновод · глаза сверху · радиус 3 км'},
-  {id:'M-07',cat:'MERC',rarity:'UNCOMMON',name:'ПОЗЫВНОЙ «СОМА»',price:38000,desc:'роль: медик · полевая хирургия · держит отряд на ходу'},
-  {id:'M-08',cat:'MERC',rarity:'EPIC',name:'ПОЗЫВНОЙ «КАПКАН»',price:85000,desc:'роль: периметр · ловушки и датчики · никто не зайдёт со спины'},
-  {id:'M-09',cat:'MERC',rarity:'LEGENDARY',name:'ПОЗЫВНОЙ «БЕС»',price:150000,desc:'роль: фиксер · договаривается, решает, исчезает первым'}
+  // НАЁМНИКИ (15 бойцов, единственные экземпляры, контракт одноразовый)
+  {id:'M-01',cat:'MERC',rarity:'RARE',name:'ПОЗЫВНОЙ «ГРИФ»',price:65000,role:'ШТУРМ',desc:'роль: штурмовик · входит первым · 12 выходов · вопросов не задаёт'},
+  {id:'M-02',cat:'MERC',rarity:'EPIC',name:'ПОЗЫВНОЙ «КОЩЕЙ»',price:120000,role:'ВЗЛОМ',desc:'роль: взломщик · замки и сейфы · стаж 14 лет · без следов'},
+  {id:'M-03',cat:'MERC',rarity:'UNCOMMON',name:'ПОЗЫВНОЙ «РТУТЬ»',price:40000,role:'ВОДИТЕЛЬ',desc:'роль: водитель · уход с точки · водит всё что ездит'},
+  {id:'M-04',cat:'MERC',rarity:'RARE',name:'ПОЗЫВНОЙ «ШУМ»',price:70000,role:'ШТУРМ',desc:'роль: тяжёлый штурм · подавление · держит голову под огнём'},
+  {id:'M-05',cat:'MERC',rarity:'UNCOMMON',name:'ПОЗЫВНОЙ «ФЕЛИН»',price:45000,role:'РАЗВЕДКА',desc:'роль: разведка · маршруты и графики · остаётся незамеченным'},
+  {id:'M-06',cat:'MERC',rarity:'RARE',name:'ПОЗЫВНОЙ «ВОРОН»',price:60000,role:'ДРОН',desc:'роль: дроновод · глаза сверху · радиус 3 км'},
+  {id:'M-07',cat:'MERC',rarity:'UNCOMMON',name:'ПОЗЫВНОЙ «СОМА»',price:38000,role:'МЕДИК',desc:'роль: медик · полевая хирургия · держит отряд на ходу'},
+  {id:'M-08',cat:'MERC',rarity:'EPIC',name:'ПОЗЫВНОЙ «КАПКАН»',price:85000,role:'ПЕРИМЕТР',desc:'роль: периметр · ловушки и датчики · никто не зайдёт со спины'},
+  {id:'M-09',cat:'MERC',rarity:'LEGENDARY',name:'ПОЗЫВНОЙ «БЕС»',price:150000,role:'ФИКСЕР',desc:'роль: фиксер · договаривается, решает, исчезает первым'},
+  {id:'M-10',cat:'MERC',rarity:'RARE',name:'ПОЗЫВНОЙ «ШТЫК»',price:70000,role:'ШТУРМ',desc:'роль: штурмовик · работа в парах · холодная голова'},
+  {id:'M-11',cat:'MERC',rarity:'RARE',name:'ПОЗЫВНОЙ «РЕЗАК»',price:68000,role:'ШТУРМ',desc:'роль: штурм-взломщик · режет решётки и двери · 9 секунд на замок'},
+  {id:'M-12',cat:'MERC',rarity:'EPIC',name:'ПОЗЫВНОЙ «ОБУХ»',price:90000,role:'ШТУРМ',desc:'роль: тяжёлый штурм · ломает двери и сопротивление · без предупреждений'},
+  {id:'M-13',cat:'MERC',rarity:'UNCOMMON',name:'ПОЗЫВНОЙ «КОЛЕСО»',price:35000,role:'ВОДИТЕЛЬ',desc:'роль: водитель · городские уходы · знает все дворы'},
+  {id:'M-14',cat:'MERC',rarity:'RARE',name:'ПОЗЫВНОЙ «ПИЛОТ»',price:55000,role:'ВОДИТЕЛЬ',desc:'роль: водитель · вода и воздух · катер, дрон-платформа'},
+  {id:'M-15',cat:'MERC',rarity:'UNCOMMON',name:'ПОЗЫВНОЙ «ФАРА»',price:32000,role:'ВОДИТЕЛЬ',desc:'роль: водитель · ночные смены · светомаскировка'}
 ];
 
-// ===== УЗЛЫ КОНВОЯ =====
+// ===== УЗЛЫ КОНВОЯ (top/left/right/bottom — списки, core — один) =====
 const CV_SLOTS={
-  top:{label:'ВЕРХНИЙ УЗЕЛ',accept:'MERC',hint:'экипаж'},
-  left:{label:'ЛЕВЫЙ УЗЕЛ',accept:'WEAPON',hint:'оружие'},
-  core:{label:'ЯДРО',accept:'VEHICLES',hint:'транспорт'},
-  right:{label:'ПРАВЫЙ УЗЕЛ',accept:'AMMO',hint:'патроны'},
-  bottom:{label:'НИЖНИЙ УЗЕЛ',accept:'ARMOR',hint:'броня'}
+  top:{label:'ВЕРХНИЙ УЗЕЛ',accept:'MERC',hint:'экипаж',multi:true},
+  left:{label:'ЛЕВЫЙ УЗЕЛ',accept:'WEAPON',hint:'оружие',multi:true},
+  core:{label:'ЯДРО',accept:'VEHICLES',hint:'транспорт',multi:false},
+  right:{label:'ПРАВЫЙ УЗЕЛ',accept:'AMMO',hint:'патроны',multi:true},
+  bottom:{label:'НИЖНИЙ УЗЕЛ',accept:'ARMOR',hint:'броня',multi:true}
 };
 const CREW_MIN=5;
-let CONVOY={core:null,left:null,right:null,bottom:null,top:[]};
+let CONVOY={core:null,top:[],left:[],right:[],bottom:[]};
 let cvLog='';
 function cvSave(){try{localStorage.setItem('bm_convoy_'+TG_ID,JSON.stringify(CONVOY))}catch(e){}}
 function cvLoad(){
   try{
     const d=JSON.parse(localStorage.getItem('bm_convoy_'+TG_ID)||'{}');
-    CONVOY=Object.assign({core:null,left:null,right:null,bottom:null,top:[]},d);
-    if(!Array.isArray(CONVOY.top))CONVOY.top=CONVOY.top?[CONVOY.top]:[];
-  }catch(e){CONVOY={core:null,left:null,right:null,bottom:null,top:[]}}
+    CONVOY=Object.assign({core:null,top:[],left:[],right:[],bottom:[]},d);
+    ['top','left','right','bottom'].forEach(k=>{
+      if(!Array.isArray(CONVOY[k]))CONVOY[k]=CONVOY[k]?[CONVOY[k]]:[];
+    });
+  }catch(e){CONVOY={core:null,top:[],left:[],right:[],bottom:[]}}
 }
-function cvCrew(){return (CONVOY.top||[]).map(uid=>S.inv.find(x=>x.uid===uid)).filter(Boolean)}
+function cvList(slot){return (CONVOY[slot]||[]).map(uid=>S.inv.find(x=>x.uid===uid)).filter(Boolean)}
+function cvCrew(){return cvList('top')}
 function cvItem(slot){
-  if(slot==='top')return null;
-  const uid=CONVOY[slot];if(!uid)return null;
-  return S.inv.find(x=>x.uid===uid)||null;
+  if(slot==='core'){const uid=CONVOY.core;return uid?S.inv.find(x=>x.uid===uid)||null:null}
+  return null;
 }
 function cvUids(){
-  const set=new Set([CONVOY.core,CONVOY.left,CONVOY.right,CONVOY.bottom].filter(Boolean));
-  (CONVOY.top||[]).forEach(u=>set.add(u));
+  const set=new Set(CONVOY.core?[CONVOY.core]:[]);
+  ['top','left','right','bottom'].forEach(k=>(CONVOY[k]||[]).forEach(u=>set.add(u)));
   return set;
+}
+function equippedCount(){
+  return Math.min(cvCrew().length,cvList('left').length,cvList('bottom').length,cvList('right').length);
+}
+function convoyReady(){
+  const crew=cvCrew().length;
+  return !!(cvItem('core')&&crew>=CREW_MIN&&cvList('left').length>=crew&&cvList('bottom').length>=crew&&cvList('right').length>=crew);
 }
 
 // ===== ОГРАБЛЕНИЯ: СКЛАДЫ И ШАНСЫ =====
 const RW={COMMON:1,UNCOMMON:2,RARE:3,EPIC:4,LEGENDARY:5,RUNE:6,UNKNOWN:3};
-const MIN_SCORE=60,MAX_SCORE=180;
+const MIN_SCORE=120,MAX_SCORE=380;
 const WAREHOUSES=[
-  {id:'WH1',tier:1,name:'СКЛАД «ПАТРОННЫЙ»',type:'AMMO',timer:45,min:38,max:95,
+  {id:'WH1',tier:1,name:'СКЛАД «ПАТРОННЫЙ»',type:'AMMO',timer:45,min:60,max:95,
    desc:'тыловой склад боеприпасов · охрана 4 чел · слабые решётки · добыча: ящики патронов',
-   loot:{pool:'GEAR',cat:'AMMO',count:6}},
-  {id:'WH2',tier:2,name:'СКЛАД «БРОНЯ»',type:'ARMOR',timer:60,min:30,max:93,
+   loot:{pool:'GEAR',cat:'AMMO',count:10}},
+  {id:'WH2',tier:2,name:'СКЛАД «БРОНЯ»',type:'ARMOR',timer:60,min:50,max:95,
    desc:'склад средств защиты · охрана 6 чел · датчики движения · добыча: броня и шлемы',
-   loot:{pool:'GEAR',cat:'ARMOR',count:5}},
-  {id:'WH3',tier:3,name:'АРСЕНАЛ «ЧЁРНЫЙ»',type:'WEAPON',timer:75,min:22,max:90,
-   desc:'арсенал стволов · охрана 9 чел · вооружены · камеры по периметру · добыча: 7 из 9 стволов',
-   loot:{pool:'GEAR',cat:'WEAPON',count:7}},
-  {id:'WH4',tier:4,name:'ХРАНИЛИЩЕ «РЕЛИКТ»',type:'ARTIFACTS',timer:90,min:14,max:85,
-   desc:'частное хранилище артефактов · ЧОП · прямая сигнализация · добыча: 5 артефактов',
-   loot:{pool:'MARKET',cat:'ARTIFACTS',count:5}},
-  {id:'WH5',tier:5,name:'ВОЕННАЯ ЗОНА 51',type:'MILITARY',timer:150,min:0.0000001,max:9,
-   desc:'военный объект · гарнизон 120 чел · ПВО · протокол поражения без предупреждения · добыча: 10 позиций элиты',
-   loot:{pool:'ELITE',count:10}},
+   loot:{pool:'GEAR',cat:'ARMOR',count:8}},
+  {id:'WH3',tier:3,name:'АРСЕНАЛ «ЧЁРНЫЙ»',type:'WEAPON',timer:75,min:40,max:93,
+   desc:'арсенал стволов · охрана 9 чел · вооружены · камеры по периметру · добыча: стволы',
+   loot:{pool:'GEAR',cat:'WEAPON',count:9}},
+  {id:'WH4',tier:4,name:'ХРАНИЛИЩЕ «РЕЛИКТ»',type:'ARTIFACTS',timer:90,min:30,max:90,
+   desc:'частное хранилище артефактов · ЧОП · прямая сигнализация · добыча: артефакты',
+   loot:{pool:'MARKET',cat:'ARTIFACTS',count:8}},
+  {id:'WH5',tier:5,name:'ВОЕННАЯ ЗОНА 51',type:'MILITARY',timer:150,min:0.0000001,max:15,
+   desc:'военный объект · гарнизон 120 чел · ПВО · протокол поражения без предупреждения · добыча: элита',
+   loot:{pool:'ELITE',count:14}},
   {id:'WH6',tier:6,name:'АВТОБАЗА «ВЕКТОР»',type:'VEHICLES',locked:true,timer:0,min:0,max:0,
    desc:'стоянка бронетранспорта · периметр под током · МОДУЛЬ АВТОУГОНА В РАЗРАБОТКЕ',loot:null}
 ];
 function convoyScore(){
   const crew=cvCrew();
-  let sc=crew.length*3;
-  crew.forEach(m=>{sc+=(RW[m.rarity]||1)*2});
-  const v=cvItem('core'),w=cvItem('left'),a=cvItem('bottom'),am=cvItem('right');
+  const wep=cvList('left'),arm=cvList('bottom'),amr=cvList('right');
+  const eq=Math.min(crew.length,wep.length,arm.length,amr.length);
+  let sc=crew.length*3+eq*12;
+  crew.slice(0,eq).forEach(m=>{sc+=(RW[m.rarity]||1)});
+  wep.slice(0,eq).forEach(w=>{sc+=(RW[w.rarity]||1)*2});
+  arm.slice(0,eq).forEach(a=>{sc+=(RW[a.rarity]||1)*2});
+  amr.slice(0,eq).forEach(a=>{sc+=(RW[a.rarity]||1)});
+  const v=cvItem('core');
   if(v)sc+=(RW[v.rarity]||1)*8;
-  if(w)sc+=(RW[w.rarity]||1)*5;
-  if(a)sc+=(RW[a.rarity]||1)*4;
-  if(am)sc+=(RW[am.rarity]||1)*3;
   return sc;
 }
 function heistChance(wh){
@@ -135,9 +152,6 @@ function fmtChance(ch){
   if(ch<0.01)return ch.toExponential(1)+'%';
   if(ch<1)return ch.toFixed(4)+'%';
   return ch.toFixed(1)+'%';
-}
-function convoyReady(){
-  return !!(cvItem('core')&&cvItem('left')&&cvItem('right')&&cvItem('bottom')&&cvCrew().length>=CREW_MIN);
 }
 function sample(arr,n,allowDup){
   const out=[];const pool=arr.slice();
@@ -153,7 +167,7 @@ function sample(arr,n,allowDup){
 function rollLoot(wh){
   const L=wh.loot;
   let count=L.count;
-  if(Math.random()<0.1)count*=2;
+  if(Math.random()<0.15)count*=2;
   let src=[];
   if(L.pool==='GEAR')src=GEAR.filter(x=>x.cat===L.cat);
   else if(L.pool==='MARKET')src=(MARKET.products||[]).filter(p=>p.cat===L.cat);
@@ -167,7 +181,7 @@ function rollLoot(wh){
   }));
 }
 
-let S={bal:100000,inv:[],tx:[],user:'ГОСТЬ',rep:0,promo:[]};
+let S={bal:100000,inv:[],tx:[],user:'ГОСТЬ',rep:0,promo:[],mercs:[]};
 let TG_ID='';
 let ui={page:'market',cat:'ALL',open:null,convoy:false,heist:false,barScroll:0};
 let notes=[],unread=0,entered=false;
@@ -217,15 +231,15 @@ async function loadState(){
   if(d&&!d.error){
     const old=new Set(S.inv.map(x=>x.uid));
     S.bal=d.balance!=null?d.balance:100000;
-    const st=d.state||{};S.inv=st.inv||[];S.tx=st.tx||[];S.rep=st.rep||0;S.promo=st.promo||[];
+    const st=d.state||{};S.inv=st.inv||[];S.tx=st.tx||[];S.rep=st.rep||0;S.promo=st.promo||[];S.mercs=st.mercs||[];
     if(d.username&&S.user==='ГОСТЬ')S.user=d.username;
     let ch=false;
-    ['core','left','right','bottom'].forEach(k=>{
-      if(CONVOY[k]&&!S.inv.some(x=>x.uid===CONVOY[k])){CONVOY[k]=null;ch=true}
+    if(CONVOY.core&&!S.inv.some(x=>x.uid===CONVOY.core)){CONVOY.core=null;ch=true}
+    ['top','left','right','bottom'].forEach(k=>{
+      const before=(CONVOY[k]||[]).length;
+      CONVOY[k]=(CONVOY[k]||[]).filter(uid=>S.inv.some(x=>x.uid===uid));
+      if(CONVOY[k].length!==before)ch=true;
     });
-    const before=(CONVOY.top||[]).length;
-    CONVOY.top=(CONVOY.top||[]).filter(uid=>S.inv.some(x=>x.uid===uid));
-    if(CONVOY.top.length!==before)ch=true;
     if(ch)cvSave();
     if(stateReady){S.inv.forEach(x=>{if(!old.has(x.uid)){showNotification('ПОСТАВКА',x.name+' поступил в инвентарь','up');SND.play('ping')}})}
     stateReady=true;
@@ -446,33 +460,42 @@ async function buyProduct(p){
   }else{showNotification('ОШИБКА',r.msg||'Покупка не удалась','dn');SND.play('err')}
 }
 
+// ===== ЗАКУПКА / КОНТРАКТЫ С БОЙЦАМИ =====
 async function buyGear(g,qty){
-  if(g.cat==='MERC')qty=1;
+  if(g.cat==='MERC'){
+    if((S.mercs||[]).indexOf(g.id)>=0)return showNotification('КОНТРАКТ ЗАКЛЮЧЁН','Боец в единственном экземпляре','dn'),SND.play('err');
+    qty=1;
+  }
   qty=Math.max(1,Math.min(99,Math.round(qty)||1));
   const total=g.price*qty;
   if(S.bal<total)return showNotification('НЕДОСТАТОЧНО СРЕДСТВ','Нужно '+fmt(total),'dn'),SND.play('err');
-  const r=await api('/api/action','POST',{action:'buy',price:total,qty:qty,item:{name:g.name,rarity:g.rarity,cat:g.cat,hue:Math.floor(Math.random()*360),desc:g.desc,gear:true,rounds:g.rounds||0}});
+  const item={name:g.name,rarity:g.rarity,cat:g.cat,hue:Math.floor(Math.random()*360),desc:g.desc,gear:true,rounds:g.rounds||0};
+  if(g.cat==='MERC')item.merc_id=g.id;
+  const r=await api('/api/action','POST',{action:'buy',price:total,qty:qty,item:item});
   if(r.ok){
-    showNotification('ПОКУПКА ЗАВЕРШЕНА',g.name+(qty>1?' ×'+qty:'')+' в инвентаре','up');
+    if(g.cat==='MERC'){S.mercs=(S.mercs||[]).concat([g.id]);showNotification('КОНТРАКТ ПОДПИСАН',g.name+' присоединился к бригаде','up')}
+    else showNotification('ПОКУПКА ЗАВЕРШЕНА',g.name+(qty>1?' ×'+qty:'')+' в инвентаре','up');
     SND.play(qty>1?'rare':'buy');
     closeModal();await loadState();render();
-  }else{showNotification('ОШИБКА',r.msg||'Покупка не удалась','dn');SND.play('err')}
+  }else{showNotification('ОШИБКА',r.msg||'Операция не удалась','dn');SND.play('err')}
 }
 function confirmBuyGear(g){
-  const batch=g.cat!=='MERC';
+  const merc=g.cat==='MERC';
+  const contracted=merc&&(S.mercs||[]).indexOf(g.id)>=0;
+  if(contracted)return showNotification('КОНТРАКТ ЗАКЛЮЧЁН','Этот боец уже работает на тебя','dn'),SND.play('err');
+  const batch=!merc;
   ui.open='gear';
-  modal('<h4>ЗАКУПКА · '+g.name+'</h4>'+
-    '<div class="line"><span>ТИП</span><b>'+(RAR_RU[g.rarity]||g.rarity)+'</b></div>'+
+  modal('<h4>'+(merc?'КОНТРАКТ · ':'ЗАКУПКА · ')+g.name+'</h4>'+
+    '<div class="line"><span>ТИП</span><b>'+(RAR_RU[g.rarity]||g.rarity)+(merc?' · '+g.role:'')+'</b></div>'+
     '<div class="line"><span>ХАРАКТЕРИСТИКИ</span><b style="text-align:right;font-size:10px">'+g.desc+'</b></div>'+
-    '<div class="line"><span>ЦЕНА</span><b>'+fmt(g.price)+'</b></div>'+
+    '<div class="line"><span>'+(merc?'СТАВКА БОЙЦА':'ЦЕНА')+'</span><b>'+fmt(g.price)+'</b></div>'+
     '<div class="line"><span>БАЛАНС</span><b>'+fmt(S.bal)+'</b></div>'+
-    (batch
-      ? '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">КОЛИЧЕСТВО (1–99)</span>'+
+    (merc
+      ? '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">Боец в единственном экземпляре: контракт подписывается один раз. Повторно заключить нельзя даже после потери.</span>'
+      : '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">КОЛИЧЕСТВО (1–99)</span>'+
         '<input class="inp" id="qty" type="number" min="1" max="99" value="1">'+
-        '<div class="line" style="margin-top:10px"><span>ИТОГО</span><b id="qty-total" style="color:var(--grn)">'+fmt(g.price)+'</b></div>'
-      : '<div class="line" style="margin-top:10px"><span>КОЛИЧЕСТВО</span><b>1 шт · штучный товар</b></div>'+
-        '<div class="line"><span>ИТОГО</span><b style="color:var(--grn)">'+fmt(g.price)+'</b></div>')+
-    '<div class="acts"><button class="btn" id="m-no">ОТМЕНА</button><button class="btn pri" id="m-yes">КУПИТЬ</button></div>');
+        '<div class="line" style="margin-top:10px"><span>ИТОГО</span><b id="qty-total" style="color:var(--grn)">'+fmt(g.price)+'</b></div>')+
+    '<div class="acts"><button class="btn" id="m-no">ОТМЕНА</button><button class="btn pri" id="m-yes">'+(merc?'ПОДПИСАТЬ':'КУПИТЬ')+'</button></div>');
   if(batch){
     const q=$('#qty');
     const upd=()=>{
@@ -491,14 +514,16 @@ function confirmBuyGear(g){
 function openGear(id){
   const g=GEAR.find(x=>x.id===id);
   if(!g)return;
+  const merc=g.cat==='MERC';
+  const contracted=merc&&(S.mercs||[]).indexOf(g.id)>=0;
   ui.open=id;
   modal('<h4>'+g.name+'</h4>'+
     '<div class="line"><span>ID</span><b>'+g.id+'</b></div>'+
-    '<div class="line"><span>ТИП</span><b>'+(RAR_RU[g.rarity]||g.rarity)+'</b></div>'+
+    '<div class="line"><span>ТИП</span><b>'+(RAR_RU[g.rarity]||g.rarity)+(merc?' · '+g.role:'')+'</b></div>'+
     '<div class="line"><span>ХАРАКТЕРИСТИКИ</span><b style="text-align:right;font-size:10px">'+g.desc+'</b></div>'+
     '<div class="line"><span>ЦЕНА</span><b style="color:var(--grn)">'+fmt(g.price)+'</b></div>'+
-    '<div class="line"><span>ЗАКУПКА</span><b>'+(g.cat==='MERC'?'штучно, 1 в одни руки':'партиями 1–99 шт')+'</b></div>'+
-    '<div class="acts"><button class="btn" id="m-no">ЗАКРЫТЬ</button><button class="btn pri" id="m-yes">КУПИТЬ</button></div>');
+    '<div class="line"><span>ДОСТУП</span><b>'+(merc?(contracted?'контракт заключён':'единственный экземпляр'):'партии 1–99 шт')+'</b></div>'+
+    '<div class="acts"><button class="btn" id="m-no">ЗАКРЫТЬ</button><button class="btn pri" id="m-yes" '+(contracted?'disabled':'')+'>'+(merc?'КОНТРАКТ':'КУПИТЬ')+'</button></div>');
   $('#m-no').onclick=closeModal;
   $('#m-yes').onclick=()=>confirmBuyGear(g);
 }
@@ -738,14 +763,20 @@ function card(p){
 }
 function gearCard(g){
   const key=keyOf(g);
+  const merc=g.cat==='MERC';
+  const contracted=merc&&(S.mercs||[]).indexOf(g.id)>=0;
   return '<article class="card r-'+g.rarity+'" data-key="'+key+'">'+
     '<div class="art"><i></i></div>'+
-    '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut)"><span>'+(RAR_RU[g.rarity]||g.rarity)+'</span><span>'+g.id+'</span></div>'+
+    '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut)"><span>'+(RAR_RU[g.rarity]||g.rarity)+(merc?' · '+g.role:'')+'</span><span>'+g.id+'</span></div>'+
     '<h3>'+g.name+'</h3>'+
     '<div style="font-size:10px;color:var(--mut);font-family:var(--mono);letter-spacing:.05em;margin:2px 0 8px;line-height:1.5">'+g.desc+'</div>'+
-    '<div class="row"><span>Цена за шт</span><b style="color:var(--grn)">'+fmt(g.price)+'</b></div>'+
-    '<div class="row"><span>Закупка</span><b>'+(g.cat==='MERC'?'штучно':'партиями 1–99')+'</b></div>'+
-    '<div class="ft"><button class="btn pri" data-gbuy="'+g.id+'">КУПИТЬ</button><button class="btn" data-gview="'+g.id+'">ДЕТАЛИ</button></div>'+
+    '<div class="row"><span>'+(merc?'Ставка':'Цена за шт')+'</span><b style="color:var(--grn)">'+fmt(g.price)+'</b></div>'+
+    '<div class="row"><span>Доступ</span><b>'+(merc?(contracted?'контракт заключён':'единственный'):'партии 1–99')+'</b></div>'+
+    '<div class="ft">'+
+      (contracted
+        ? '<button class="btn" disabled>КОНТРАКТ ЗАКЛЮЧЁН</button>'
+        : '<button class="btn pri" data-gbuy="'+g.id+'">'+(merc?'КОНТРАКТ':'КУПИТЬ')+'</button>')+
+      '<button class="btn" data-gview="'+g.id+'">ДЕТАЛИ</button></div>'+
     '</article>';
 }
 function renderGrid(){
@@ -764,7 +795,7 @@ function renderMarket(){
     '<div class="stats"><div class="stat"><small>ЛОТЫ</small><b>'+(MARKET.products||[]).length+'</b></div>'+
     '<div class="stat"><small>БАЛАНС</small><b>'+fmt(S.bal)+'</b></div>'+
     '<div class="stat"><small>ТИК</small><b>#'+(MARKET.tick||0)+'</b></div>'+
-    '<div class="stat"><small>ИНВЕНТАРЬ</small><b>'+S.inv.length+'</b></div></stats>'.replace('</stats>','</div>')+
+    '<div class="stat"><small>ИНВЕНТАРЬ</small><b>'+S.inv.length+'</b></div></div>'+
     '<div class="bar">'+CATS.map(c=>'<button class="chip '+(c[0]===ui.cat?'on':'')+'" data-cat="'+c[0]+'">'+c[1]+'</button>').join('')+'</div>'+
     '<div id="grid" class="grid"></div>';
   renderGrid();
@@ -875,16 +906,20 @@ function ensureCvCSS(){
     '@media(max-width:430px){.cv-scheme{grid-template-columns:1fr 1fr}.cv-top{grid-column:1;grid-row:1}.cv-core{grid-column:2;grid-row:1;min-height:124px}.cv-left{grid-column:1;grid-row:2}.cv-right{grid-column:2;grid-row:2}.cv-bottom{grid-column:1/3;grid-row:3}}';
   document.head.appendChild(s);
 }
+function cvMultiNames(list,limit){
+  const n=list.slice(0,limit||3).map(x=>x.name.replace('ПОЗЫВНОЙ ','').replace('ЯЩИК ','')).join(', ');
+  return list.length>(limit||3)?n+' +'+(list.length-(limit||3)):n;
+}
 function cvSlotHTML(slot){
   const m=CV_SLOTS[slot];
-  if(slot==='top'){
-    const crew=cvCrew();
-    const names=crew.slice(0,3).map(c=>c.name.replace('ПОЗЫВНОЙ ','')).join(', ')+(crew.length>3?' +'+(crew.length-3):'');
-    return '<div class="cv-slot cv-top'+(crew.length?' filled':'')+'">'+
-      '<small class="cv-label">'+m.label+' // ЭКИПАЖ (МИН. '+CREW_MIN+')</small>'+
-      '<b class="cv-name">'+(crew.length?crew.length+' / '+CREW_MIN+' бойцов':'— пусто —')+'</b>'+
-      '<span class="cv-desc">'+(crew.length?names:'набери минимум '+CREW_MIN+' бойцов для выхода')+'</span>'+
-      '<div class="cv-acts">'+(crew.length?'<button class="btn danger" data-cv-drop="top">ВЫГРУЗИТЬ</button>':'')+'<button class="btn pri" data-cv-pick="top">ДОБАВИТЬ</button></div>'+
+  if(m.multi){
+    const list=cvList(slot);
+    const need=slot==='top'?CREW_MIN:cvCrew().length;
+    return '<div class="cv-slot cv-'+slot+(list.length?' filled':'')+'">'+
+      '<small class="cv-label">'+m.label+' // '+m.hint.toUpperCase()+(slot==='top'?' (МИН. '+CREW_MIN+')':' (1 НА БОЙЦА)')+'</small>'+
+      '<b class="cv-name">'+(list.length?list.length+(slot==='top'?' / '+Math.max(CREW_MIN,list.length)+' бойцов':' шт.'):'— пусто —')+'</b>'+
+      '<span class="cv-desc">'+(list.length?cvMultiNames(list):'нажми «ДОБАВИТЬ» и выбери из инвентаря')+'</span>'+
+      '<div class="cv-acts">'+(list.length?'<button class="btn danger" data-cv-drop="'+slot+'">ВЫГРУЗИТЬ</button>':'')+'<button class="btn pri" data-cv-pick="'+slot+'">ДОБАВИТЬ</button></div>'+
       '</div>';
   }
   const it=cvItem(slot);
@@ -898,18 +933,19 @@ function cvSlotHTML(slot){
 function renderConvoy(){
   ensureCvCSS();
   const crew=cvCrew();
-  const ready=(cvItem('core')?1:0)+(cvItem('left')?1:0)+(cvItem('right')?1:0)+(cvItem('bottom')?1:0)+(crew.length>=CREW_MIN?1:0);
-  const worth=[cvItem('core'),cvItem('left'),cvItem('right'),cvItem('bottom')].reduce((s,it)=>s+(it?(it.val||it.bought||0):0),0)+
-    crew.reduce((s,it)=>s+(it.val||it.bought||0),0);
+  const eq=equippedCount();
+  const ready=(cvItem('core')?1:0)+(crew.length>=CREW_MIN?1:0)+(eq>=crew.length&&crew.length>0?1:0);
+  const worth=(cvList('left').concat(cvList('right'),cvList('bottom'),crew)).reduce((s,it)=>s+(it.val||it.bought||0),0)+(cvItem('core')?(cvItem('core').val||cvItem('core').bought||0):0);
   let def;
-  if(ready===5)def='> конвой собран. ожидает приказа на выход.';
+  if(convoyReady())def='> конвой собран и экипирован. ожидает приказа на выход.';
   else if(crew.length>0&&crew.length<CREW_MIN)def='> внимание: для выхода нужен экипаж не менее '+CREW_MIN+' бойцов (сейчас '+crew.length+').';
-  else def='> загружено узлов: '+ready+'/5. модули ограбления неактивны.';
+  else if(crew.length>=CREW_MIN&&eq<crew.length)def='> экипаж не экипирован: на каждого бойца нужны 1 ствол, 1 броня и 1 ящик патронов ('+eq+'/'+crew.length+').';
+  else def='> загружено узлов: '+ready+'/3. модули ограбления неактивны.';
   $('#view').innerHTML=
     '<div class="convoy-top">'+
       '<button class="btn back-btn" data-convoy-back="1">← НАЗАД</button>'+
       '<b class="convoy-title">КОНВОЙ // АНГАР</b>'+
-      '<span class="convoy-status">ГОТОВНОСТЬ '+ready+'/5</span>'+
+      '<span class="convoy-status">ЭКИП '+eq+'/'+crew.length+'</span>'+
     '</div>'+
     '<div class="hangar">'+
       '<div class="hangar-floor"></div>'+
@@ -917,7 +953,8 @@ function renderConvoy(){
       '<div class="cv-scheme">'+
         cvSlotHTML('top')+cvSlotHTML('left')+cvSlotHTML('core')+cvSlotHTML('right')+cvSlotHTML('bottom')+
       '</div>'+
-      (convoyReady()?'<div class="ft" style="margin-top:14px"><button class="btn pri" data-heist="1">▶ ОТПРАВИТЬ КОНВОЙ</button></div>':'')+
+      '<div class="line" style="margin-top:12px"><span>ЭКИПИРОВАНО БОЙЦОВ</span><b class="'+(eq>=crew.length&&crew.length>=CREW_MIN?'up':'dn')+'">'+eq+' / '+crew.length+'</b></div>'+
+      (convoyReady()?'<div class="ft" style="margin-top:10px"><button class="btn pri" data-heist="1">▶ ОТПРАВИТЬ КОНВОЙ</button></div>':'')+
       '<div class="hangar-log" id="hangar-log">'+(cvLog||def)+'</div>'+
     '</div>';
 }
@@ -926,12 +963,12 @@ function convoyPick(slot){
   const used=cvUids();
   const pool=S.inv.filter(x=>x.cat===m.accept&&!used.has(x.uid));
   if(!pool.length)return showNotification('НЕТ ГРУЗА','В инвентаре нет: '+m.hint+'. Купи на рынке.','dn'),SND.play('err');
-  const multi=slot==='top';
+  const multi=!!m.multi;
   ui.open='cvpick';
-  modal('<h4>'+(multi?'НАБОР ЭКИПАЖА // ':'ЗАГРУЗКА // ')+m.label+'</h4>'+
-    '<div class="line"><span>ТИП УЗЛА</span><b>'+m.hint.toUpperCase()+(multi?' · МИН. '+CREW_MIN:'')+'</b></div>'+
-    (multi?'<div class="line"><span>УЖЕ В ЭКИПАЖЕ</span><b>'+cvCrew().length+' / '+CREW_MIN+'</b></div>':'')+
-    '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">'+(multi?'ОТМЕТЬ БОЙЦОВ (МОЖНО НЕСКОЛЬКИХ):':'ВЫБЕРИ ИЗ ИНВЕНТАРЯ:')+'</span>'+
+  modal('<h4>'+(multi?'ДОБАВИТЬ // ':'ЗАГРУЗКА // ')+m.label+'</h4>'+
+    '<div class="line"><span>ТИП УЗЛА</span><b>'+m.hint.toUpperCase()+(slot==='top'?' · МИН. '+CREW_MIN:multi?' · 1 НА БОЙЦА':'')+'</b></div>'+
+    (multi?'<div class="line"><span>УЖЕ В УЗЛЕ</span><b>'+cvList(slot).length+'</b></div>':'')+
+    '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">'+(multi?'ОТМЕТЬ ПРЕДМЕТЫ (МОЖНО НЕСКОЛЬКО):':'ВЫБЕРИ ИЗ ИНВЕНТАРЯ:')+'</span>'+
     pool.map(x=>'<div class="sel-row" data-uid="'+x.uid+'"><b>'+x.name+'</b><span>'+(x.desc||fmt(x.val||x.bought))+'</span></div>').join('')+
     '<div class="acts"><button class="btn" id="m-no">ОТМЕНА</button><button class="btn pri" id="m-yes" disabled>'+(multi?'ДОБАВИТЬ':'ЗАГРУЗИТЬ')+'</button></div>');
   let sel=multi?[]:null;
@@ -951,14 +988,12 @@ function convoyPick(slot){
   $('#m-yes').onclick=()=>{
     if(multi){
       if(!sel||!sel.length)return;
-      CONVOY.top=(CONVOY.top||[]).concat(sel);cvSave();SND.play('ping');
-      const n=cvCrew().length;
-      cvLog='> экипаж пополнен: +'+sel.length+'. состав: '+n+'/'+CREW_MIN+'.';
-      if(n>=CREW_MIN)showNotification('ЭКИПАЖ СОБРАН',CREW_MIN+'+ бойцов готовы к выходу','up');
-      else showNotification('ЭКИПАЖ НЕ ПОЛОН','Нужно минимум '+CREW_MIN+', сейчас '+n,'dn');
+      CONVOY[slot]=(CONVOY[slot]||[]).concat(sel);cvSave();SND.play('ping');
+      cvLog='> узел «'+m.hint+'»: +'+sel.length+'. всего в узле: '+CONVOY[slot].length+'.';
+      showNotification('УЗЕЛ ПОПОЛНЕН',m.hint.toUpperCase()+': '+CONVOY[slot].length,'up');
     }else{
       if(sel==null)return;
-      CONVOY[slot]=sel;cvSave();SND.play('ping');
+      CONVOY.core=sel;cvSave();SND.play('ping');
       const it=S.inv.find(x=>x.uid===sel);
       cvLog='> узел «'+m.hint+'»: '+(it?it.name:'груз')+' закреплён за конвоем.';
       showNotification('УЗЕЛ АКТИВЕН',(it?it.name:'Предмет')+' → '+m.hint,'up');
@@ -967,26 +1002,28 @@ function convoyPick(slot){
   };
 }
 function convoyDrop(slot){
-  if(slot==='top'){
-    const n=cvCrew().length;
-    CONVOY.top=[];cvSave();SND.play('close');
-    cvLog='> экипаж распущен ('+n+' бойцов возвращены в инвентарь).';
-    showNotification('ЭКИПАЖ РАСПУЩЕН',n+' бойцов возвращены в инвентарь');
+  const m=CV_SLOTS[slot];
+  if(m.multi){
+    const n=cvList(slot).length;
+    CONVOY[slot]=[];cvSave();SND.play('close');
+    cvLog='> узел «'+m.hint+'» разгружен ('+n+' поз. возвращены в инвентарь).';
+    showNotification('УЗЕЛ РАЗГРУЖЕН',n+' поз. возвращены в инвентарь');
     render();return;
   }
   const it=cvItem(slot);
-  CONVOY[slot]=null;cvSave();SND.play('close');
-  cvLog='> узел «'+CV_SLOTS[slot].hint+'» разгружен.'+(it?' груз возвращён в инвентарь.':'');
+  CONVOY.core=null;cvSave();SND.play('close');
+  cvLog='> узел «'+m.hint+'» разгружен.'+(it?' груз возвращён в инвентарь.':'');
   showNotification('УЗЕЛ РАЗГРУЖЕН',it?it.name+' возвращён в инвентарь':'Слот освобождён');
   render();
 }
 
-// ===== ОГРАБЛЕНИЕ: ВЫБОР ЦЕЛИ, ОПЕРАЦИЯ, ИСХОД =====
+// ===== ОГРАБЛЕНИЕ =====
 function heistSelect(){
-  if(!convoyReady())return showNotification('КОНВОЙ НЕ ГОТОВ','Загрузи все узлы и экипаж 5+','dn'),SND.play('err');
+  if(!convoyReady())return showNotification('КОНВОЙ НЕ ГОТОВ','Экипаж 5+ и полное снаряжение каждого бойца','dn'),SND.play('err');
   ui.open='heistpick';
   modal('<h4>ВЫБОР ЦЕЛИ // ОГРАБЛЕНИЕ</h4>'+
     '<div class="line"><span>МОЩНОСТЬ КОНВОЯ</span><b>'+convoyScore()+' / '+MAX_SCORE+'</b></div>'+
+    '<div class="line"><span>ЭКИПАЖ</span><b>'+cvCrew().length+' бойцов · экипировано '+equippedCount()+'</b></div>'+
     '<span style="font-size:11px;color:var(--mut);display:block;margin:10px 0 6px">ЧЕМ КРУПНЕЕ ОБЪЕКТ — ТЕМ НИЖЕ ШАНС И ВЫШЕ РИСК ПОТЕРИ</span>'+
     WAREHOUSES.map(w=>{
       const ch=heistChance(w);
@@ -1089,32 +1126,34 @@ async function finishHeist(){
   const roll=Math.random()*100;
   const ok=roll<HEIST.chance;
   const crew=cvCrew();
-  const loaded=[cvItem('core'),cvItem('left'),cvItem('right'),cvItem('bottom')].filter(Boolean).concat(crew);
+  const loaded=[cvItem('core')].filter(Boolean).concat(crew,cvList('left'),cvList('right'),cvList('bottom'));
   const ops={remove:[],update:[],add:[]};
   const report=[];
   let loot=null;
   if(ok){
-    const am=cvItem('right');
-    if(am&&am.rounds){
-      const leftR=Math.max(0,Math.round(am.rounds*(0.1+Math.random()*0.5)));
-      if(leftR<20){
-        ops.remove.push(am.uid);
-        report.push('боекомплект израсходован полностью');
-      }else{
-        ops.update.push({uid:am.uid,rounds:leftR,desc:am.desc.replace(/· остаток \d+ шт/,'')+' · остаток '+leftR+' шт',val:Math.max(1,Math.round((am.val||am.bought)*leftR/am.rounds))});
-        report.push('израсходовано '+(am.rounds-leftR)+' патронов');
+    cvList('right').forEach(am=>{
+      if(am.rounds){
+        const leftR=Math.max(0,Math.round(am.rounds*(0.1+Math.random()*0.5)));
+        if(leftR<20){
+          ops.remove.push(am.uid);
+          report.push(am.name+': израсходован полностью');
+        }else{
+          ops.update.push({uid:am.uid,rounds:leftR,desc:am.desc.replace(/· остаток \d+ шт/,'')+' · остаток '+leftR+' шт',val:Math.max(1,Math.round((am.val||am.bought)*leftR/am.rounds))});
+          report.push(am.name+': −'+(am.rounds-leftR)+' патронов');
+        }
       }
-    }
+    });
     loot=rollLoot(wh);
     loot.forEach(l=>ops.add.push(l));
     report.push('добыча: '+loot.length+' позиций погружено');
   }else{
     loaded.forEach(it=>ops.remove.push(it.uid));
     report.push('охрана сорвала операцию: конвой захвачен');
-    report.push('конфисковано: '+loaded.length+' позиций снаряжения и экипаж');
+    report.push('конфисковано: '+loaded.length+' позиций, включая экипаж и машину');
+    report.push('контракты бойцов расторгнуты без возврата (повторный найм невозможен)');
   }
   await api('/api/action','POST',{action:'heist',ops:ops,label:wh.name,amount:0});
-  if(!ok){CONVOY={core:null,left:null,right:null,bottom:null,top:[]};cvSave()}
+  if(!ok){CONVOY={core:null,top:[],left:[],right:[],bottom:[]};cvSave()}
   await loadState();
   ui.heist=false;HEIST=null;
   render();
