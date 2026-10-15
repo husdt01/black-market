@@ -378,13 +378,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     if mp and mp != i.get('val'):
                         i['val'] = mp
                         ch = True
+                pr = st.get('prison', {}) or {}
+                now0 = time.time()
+                pr2 = {k: v for k, v in pr.items() if v > now0}
+                if len(pr2) != len(pr):
+                    st['prison'] = pr2
+                    ch = True
                 if ch:
                     conn.execute("UPDATE users SET state=? WHERE tg_id=?",
                         (json.dumps(st, ensure_ascii=False), tg_id))
                 conn.commit()
-                self.send_json({'balance': row['balance'], 'state': st, 'username': row['username']})
+                self.send_json({'balance': row['balance'], 'state': st, 'username': row['username'], 'prison': st.get('prison', {})})
             else:
-                self.send_json({'balance': 100000, 'state': {}, 'username': ''})
+                self.send_json({'balance': 100000, 'state': {}, 'username': '', 'prison': {}})
             conn.close()
         else:
             super().do_GET()
@@ -480,8 +486,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         resp = {'ok': False, 'msg': 'unknown action'}
 
         if action == 'buy':
-            if RAID['frozen'] is not None:
-                resp = {'ok': False, 'msg': 'Торги приостановлены: идёт рейд'}
+            if RAID['frozen'] is not None: resp = {'ok': False, 'msg': 'Торги приостановлены: идёт рейд'}
             else:
                 price = data.get('price', 0)
                 item = data.get('item', {})
@@ -489,9 +494,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                 blocked = False
                 if mid:
                     mercs = state.get('mercs', [])
+                    pr = state.get('prison', {}) or {}
                     if mid in mercs:
                         blocked = True
                         resp = {'ok': False, 'msg': 'Контракт уже заключён: боец в единственном экземпляре'}
+                    elif mid in pr and pr[mid] > now:
+                        blocked = True
+                        resp = {'ok': False, 'msg': 'Боец в тюрьме: дождитесь выхода или внесите взятку'}
                     else:
                         mercs.append(mid)
                         state['mercs'] = mercs
@@ -513,8 +522,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         resp = {'ok': True, 'balance': balance}
                     else:
                         resp = {'ok': False, 'msg': 'Недостаточно средств'}
-                        
-        elif action == 'sell':           
+
+        elif action == 'sell':
             uid = data.get('uid', 0)
             price = data.get('price', 0)
             idx = next((i for i, x in enumerate(inv) if x.get('uid') == uid), None)
@@ -639,6 +648,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         tx.insert(0, {'t': now, 'type': 'КРАФТ', 'item': 'ПРОВАЛ', 'amount': 0})
                         tx = tx[:100]
                         resp = {'ok': True, 'res': None}
+
         elif action == 'heist':
             ops = data.get('ops', {}) or {}
             for u in ops.get('remove', []):
@@ -653,10 +663,35 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                             it[k] = up[k]
             for ad in ops.get('add', []):
                 inv.append({**ad, 'uid': int(now * 1000) + len(inv), 'date': now})
+            prison_ids = data.get('prison', []) or []
+            if prison_ids:
+                mercs = state.get('mercs', [])
+                pr = state.get('prison', {}) or {}
+                for midp in prison_ids:
+                    if midp in mercs:
+                        mercs.remove(midp)
+                    pr[midp] = now + 1800
+                state['mercs'] = mercs
+                state['prison'] = pr
             tx.insert(0, {'t': now, 'type': 'ОГРАБЛЕНИЕ', 'item': data.get('label', ''), 'amount': 0})
             tx = tx[:100]
             resp = {'ok': True, 'balance': balance}
-            
+
+        elif action == 'bribe':
+            mid = data.get('merc_id', '')
+            pr = state.get('prison', {}) or {}
+            if mid not in pr or pr[mid] <= now:
+                resp = {'ok': False, 'msg': 'Боец не в тюрьме или срок истёк'}
+            elif balance < 50000:
+                resp = {'ok': False, 'msg': 'Недостаточно средств на взятку'}
+            else:
+                balance -= 50000
+                pr.pop(mid, None)
+                state['prison'] = pr
+                tx.insert(0, {'t': now, 'type': 'ВЗЯТКА', 'item': mid, 'amount': -50000})
+                tx = tx[:100]
+                resp = {'ok': True, 'balance': balance}
+
         # ИСПРАВЛЕНО: СОХРАНЕНИЕ СОСТОЯНИЯ ДЛЯ ВСЕХ ЭКШЕНОВ!
         state['inv'] = inv
         state['tx'] = tx
