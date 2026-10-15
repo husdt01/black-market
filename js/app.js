@@ -11,7 +11,7 @@ const RCP={c3:{need:3,from:'COMMON',to:'UNCOMMON',chance:'85%',title:'3 × ОБ�
 const CASES={c50:{price:50000,name:'СТАЛЬНОЙ',t:1},c100:{price:100000,name:'ТЕНЕВОЙ',t:2},c150:{price:150000,name:'ОМЕГА',t:3},c500:{price:500000,name:'РУНА',t:4}};
 const STAR_PKGS={p10:{stars:10,bal:50000},p25:{stars:25,bal:140000},p50:{stars:50,bal:300000},p100:{stars:100,bal:650000}};
 
-// ===== КАТАЛОГ: ОРУЖИЕ / БРОНЯ / ПАТРОНЫ / ТРАНСПОРТ / НАЁМНИКИ =====
+// ===== КАТАЛОГ =====
 const GEAR=[
   // ОРУЖИЕ
   {id:'W-01',cat:'WEAPON',rarity:'COMMON',name:'ПМ МАКАРОВА',price:18000,desc:'9×18 ПМ · 32 выстр/мин · магазин 8 · дальность 50 м'},
@@ -32,15 +32,15 @@ const GEAR=[
   {id:'A-06',cat:'ARMOR',rarity:'EPIC',name:'ШЛЕМ «АЛТЫН»',price:95000,desc:'класс 3 · 3.5 кг · сталь + визор · штурмовой'},
   {id:'A-07',cat:'ARMOR',rarity:'RARE',name:'ПЛАСТИНА «ГРАНИТ-4»',price:18000,desc:'класс 6 · керамика · усиленный нагрудник'},
   {id:'A-08',cat:'ARMOR',rarity:'EPIC',name:'ЩИТ «ВАНТ-ВМ»',price:75000,desc:'класс 5 · 5.5 кг · смотровое окно · штурмовой'},
-  // ПАТРОНЫ (ящиками)
-  {id:'P-01',cat:'AMMO',rarity:'COMMON',name:'ЯЩИК 9×18 ПМ (250 шт)',price:6000,desc:'патроны ПМ/АПС · ящик 250 штук'},
-  {id:'P-02',cat:'AMMO',rarity:'COMMON',name:'ЯЩИК 9×19 PARA (300 шт)',price:9000,desc:'патроны ВИТЯЗЬ · ящик 300 штук'},
-  {id:'P-03',cat:'AMMO',rarity:'UNCOMMON',name:'ЯЩИК 5.45×39 ПС (240 шт)',price:12000,desc:'патроны АК-74 · ящик 240 штук'},
-  {id:'P-04',cat:'AMMO',rarity:'UNCOMMON',name:'ЯЩИК 7.62×39 (200 шт)',price:14000,desc:'патроны АК-104/САЙГА · ящик 200 штук'},
-  {id:'P-05',cat:'AMMO',rarity:'RARE',name:'ЯЩИК 7.62×54R (100 шт)',price:16000,desc:'патроны СВ-98/ПКМ · ящик 100 штук'},
-  {id:'P-06',cat:'AMMO',rarity:'RARE',name:'ЯЩИК 9×39 СП-6 (60 шт)',price:21000,desc:'патроны ВСС · бронебойные · ящик 60 штук'},
-  {id:'P-07',cat:'AMMO',rarity:'COMMON',name:'ЯЩИК 12/70 КАРТЕЧЬ (50 шт)',price:7000,desc:'патроны САЙГА-12 · картечь · ящик 50 штук'},
-  // ТРАНСПОРТ (бронированный и utility)
+  // ПАТРОНЫ (ящиками, rounds = штук в ящике)
+  {id:'P-01',cat:'AMMO',rarity:'COMMON',name:'ЯЩИК 9×18 ПМ (250 шт)',price:6000,rounds:250,desc:'патроны ПМ/АПС · ящик 250 штук'},
+  {id:'P-02',cat:'AMMO',rarity:'COMMON',name:'ЯЩИК 9×19 PARA (300 шт)',price:9000,rounds:300,desc:'патроны ВИТЯЗЬ · ящик 300 штук'},
+  {id:'P-03',cat:'AMMO',rarity:'UNCOMMON',name:'ЯЩИК 5.45×39 ПС (240 шт)',price:12000,rounds:240,desc:'патроны АК-74 · ящик 240 штук'},
+  {id:'P-04',cat:'AMMO',rarity:'UNCOMMON',name:'ЯЩИК 7.62×39 (200 шт)',price:14000,rounds:200,desc:'патроны АК-104/САЙГА · ящик 200 штук'},
+  {id:'P-05',cat:'AMMO',rarity:'RARE',name:'ЯЩИК 7.62×54R (100 шт)',price:16000,rounds:100,desc:'патроны СВ-98/ПКМ · ящик 100 штук'},
+  {id:'P-06',cat:'AMMO',rarity:'RARE',name:'ЯЩИК 9×39 СП-6 (60 шт)',price:21000,rounds:60,desc:'патроны ВСС · бронебойные · ящик 60 штук'},
+  {id:'P-07',cat:'AMMO',rarity:'COMMON',name:'ЯЩИК 12/70 КАРТЕЧЬ (50 шт)',price:7000,rounds:50,desc:'патроны САЙГА-12 · картечь · ящик 50 штук'},
+  // ТРАНСПОРТ
   {id:'V-01',cat:'VEHICLES',rarity:'RARE',name:'«ТИГР» ГАЗ-233036',price:180000,desc:'броневик · класс 3 · 8 мест · 220 км/ч · решётки на стёклах'},
   {id:'V-02',cat:'VEHICLES',rarity:'EPIC',name:'БТР-80 «ВЕКТОР»',price:320000,desc:'БТР · класс 5 · десант 8 · амфибия · термодым'},
   {id:'V-03',cat:'VEHICLES',rarity:'EPIC',name:'КАМАЗ «ТАЙФУН»',price:260000,desc:'бронегрузовик · класс 4 · кузов 14 паллет · усиленные шины'},
@@ -48,7 +48,7 @@ const GEAR=[
   {id:'V-05',cat:'VEHICLES',rarity:'RARE',name:'УРАЛ-ВВ «ПЕРИМЕТР»',price:210000,desc:'бронегрузовик · класс 4 · 10 мест · усиленная кабина'},
   {id:'V-06',cat:'VEHICLES',rarity:'UNCOMMON',name:'ФУРГОН «ФЕРМЕР»',price:22000,desc:'грузовой фургон · без брони · 12 м³ · документы чистые'},
   {id:'V-07',cat:'VEHICLES',rarity:'UNCOMMON',name:'УАЗ «БУХАНКА»',price:30000,desc:'укреплённый · внедорожный · 4 места · кузов переварен'},
-  // НАЁМНИКИ (позывные, роли под ограбления) — штучный товар
+  // НАЁМНИКИ
   {id:'M-01',cat:'MERC',rarity:'RARE',name:'ПОЗЫВНОЙ «ГРИФ»',price:65000,desc:'роль: штурмовик · входит первым · 12 выходов · вопросов не задаёт'},
   {id:'M-02',cat:'MERC',rarity:'EPIC',name:'ПОЗЫВНОЙ «КОЩЕЙ»',price:120000,desc:'роль: взломщик · замки и сейфы · стаж 14 лет · без следов'},
   {id:'M-03',cat:'MERC',rarity:'UNCOMMON',name:'ПОЗЫВНОЙ «РТУТЬ»',price:40000,desc:'роль: водитель · уход с точки · водит всё что ездит'},
@@ -60,7 +60,7 @@ const GEAR=[
   {id:'M-09',cat:'MERC',rarity:'LEGENDARY',name:'ПОЗЫВНОЙ «БЕС»',price:150000,desc:'роль: фиксер · договаривается, решает, исчезает первым'}
 ];
 
-// ===== УЗЛЫ КОНВОЯ (top = экипаж, мин. 5 бойцов) =====
+// ===== УЗЛЫ КОНВОЯ =====
 const CV_SLOTS={
   top:{label:'ВЕРХНИЙ УЗЕЛ',accept:'MERC',hint:'экипаж'},
   left:{label:'ЛЕВЫЙ УЗЕЛ',accept:'WEAPON',hint:'оружие'},
@@ -91,14 +91,91 @@ function cvUids(){
   return set;
 }
 
+// ===== ОГРАБЛЕНИЯ: СКЛАДЫ И ШАНСЫ =====
+const RW={COMMON:1,UNCOMMON:2,RARE:3,EPIC:4,LEGENDARY:5,RUNE:6,UNKNOWN:3};
+const MIN_SCORE=60,MAX_SCORE=180;
+const WAREHOUSES=[
+  {id:'WH1',tier:1,name:'СКЛАД «ПАТРОННЫЙ»',type:'AMMO',timer:45,min:38,max:95,
+   desc:'тыловой склад боеприпасов · охрана 4 чел · слабые решётки · добыча: ящики патронов',
+   loot:{pool:'GEAR',cat:'AMMO',count:6}},
+  {id:'WH2',tier:2,name:'СКЛАД «БРОНЯ»',type:'ARMOR',timer:60,min:30,max:93,
+   desc:'склад средств защиты · охрана 6 чел · датчики движения · добыча: броня и шлемы',
+   loot:{pool:'GEAR',cat:'ARMOR',count:5}},
+  {id:'WH3',tier:3,name:'АРСЕНАЛ «ЧЁРНЫЙ»',type:'WEAPON',timer:75,min:22,max:90,
+   desc:'арсенал стволов · охрана 9 чел · вооружены · камеры по периметру · добыча: 7 из 9 стволов',
+   loot:{pool:'GEAR',cat:'WEAPON',count:7}},
+  {id:'WH4',tier:4,name:'ХРАНИЛИЩЕ «РЕЛИКТ»',type:'ARTIFACTS',timer:90,min:14,max:85,
+   desc:'частное хранилище артефактов · ЧОП · прямая сигнализация · добыча: 5 артефактов',
+   loot:{pool:'MARKET',cat:'ARTIFACTS',count:5}},
+  {id:'WH5',tier:5,name:'ВОЕННАЯ ЗОНА 51',type:'MILITARY',timer:150,min:0.0000001,max:9,
+   desc:'военный объект · гарнизон 120 чел · ПВО · протокол поражения без предупреждения · добыча: 10 позиций элиты',
+   loot:{pool:'ELITE',count:10}},
+  {id:'WH6',tier:6,name:'АВТОБАЗА «ВЕКТОР»',type:'VEHICLES',locked:true,timer:0,min:0,max:0,
+   desc:'стоянка бронетранспорта · периметр под током · МОДУЛЬ АВТОУГОНА В РАЗРАБОТКЕ',loot:null}
+];
+function convoyScore(){
+  const crew=cvCrew();
+  let sc=crew.length*3;
+  crew.forEach(m=>{sc+=(RW[m.rarity]||1)*2});
+  const v=cvItem('core'),w=cvItem('left'),a=cvItem('bottom'),am=cvItem('right');
+  if(v)sc+=(RW[v.rarity]||1)*8;
+  if(w)sc+=(RW[w.rarity]||1)*5;
+  if(a)sc+=(RW[a.rarity]||1)*4;
+  if(am)sc+=(RW[am.rarity]||1)*3;
+  return sc;
+}
+function heistChance(wh){
+  if(wh.locked)return 0;
+  const sc=convoyScore();
+  const t=Math.max(0,Math.min(1,(sc-MIN_SCORE)/(MAX_SCORE-MIN_SCORE)));
+  return Math.min(95,wh.min+(wh.max-wh.min)*t);
+}
+function fmtChance(ch){
+  if(ch<=0)return '0%';
+  if(ch<0.01)return ch.toExponential(1)+'%';
+  if(ch<1)return ch.toFixed(4)+'%';
+  return ch.toFixed(1)+'%';
+}
+function convoyReady(){
+  return !!(cvItem('core')&&cvItem('left')&&cvItem('right')&&cvItem('bottom')&&cvCrew().length>=CREW_MIN);
+}
+function sample(arr,n,allowDup){
+  const out=[];const pool=arr.slice();
+  for(let i=0;i<n;i++){
+    if(!pool.length){
+      if(!allowDup)break;
+      arr.forEach(x=>pool.push(x));
+    }
+    out.push(pool.splice(Math.floor(Math.random()*pool.length),1)[0]);
+  }
+  return out;
+}
+function rollLoot(wh){
+  const L=wh.loot;
+  let count=L.count;
+  if(Math.random()<0.1)count*=2;
+  let src=[];
+  if(L.pool==='GEAR')src=GEAR.filter(x=>x.cat===L.cat);
+  else if(L.pool==='MARKET')src=(MARKET.products||[]).filter(p=>p.cat===L.cat);
+  else if(L.pool==='ELITE')src=GEAR.filter(x=>x.rarity==='EPIC'||x.rarity==='LEGENDARY').concat((MARKET.products||[]).filter(p=>p.rarity==='LEGENDARY'));
+  if(!src.length)return [];
+  return sample(src,count,L.pool==='ELITE').map(p=>({
+    name:p.name,rarity:p.rarity,cat:p.cat,desc:p.desc||'',
+    hue:Math.floor(Math.random()*360),
+    bought:Math.round(p.price||p.base||0),val:Math.round(p.price||p.base||0),
+    gear:!!p.desc
+  }));
+}
+
 let S={bal:100000,inv:[],tx:[],user:'ГОСТЬ',rep:0,promo:[]};
 let TG_ID='';
-let ui={page:'market',cat:'ALL',open:null,convoy:false,barScroll:0};
+let ui={page:'market',cat:'ALL',open:null,convoy:false,heist:false,barScroll:0};
 let notes=[],unread=0,entered=false;
 let MARKET={products:[],tick:0,raid:{active:false,left:0}};
 let AUCTIONS=[],CONTRACTS=[];
 let raidWas=false,stateReady=false,promoDraft='';
 let pollStarted=false;
+let HEIST=null;
 
 async function api(path,method,body){
   const ctl=new AbortController();
@@ -169,7 +246,6 @@ function raidCheck(){
   const el=$('#raid');if(el){el.classList.toggle('on',r.active)}
 }
 
-// === ФИКС ШАПКИ НА МОБИЛЬНЫХ ===
 function fixHeader(){
   try{
     const bal=$('#bal');if(!bal)return;
@@ -202,23 +278,21 @@ function fixHeader(){
 let rsT=null;
 window.addEventListener('resize',()=>{clearTimeout(rsT);rsT=setTimeout(fixHeader,150)});
 
-// запоминаем скролл ленты фильтров
 document.addEventListener('scroll',e=>{
   const t=e.target;
   if(t&&t.classList&&t.classList.contains('bar'))ui.barScroll=t.scrollLeft;
 },true);
 
-// === СИГНАТУРЫ СОСТАВА (ключ = НАЗВАНИЕ, оно стабильно в отличие от ID лотов) ===
 function setSig(sig){const v=$('#view');if(v)v.dataset.sig=ui.page+'|'+sig}
 function getSig(){const v=$('#view');return v?v.dataset.sig||'':''}
 function keyOf(x){return String(x.name).replace(/"/g,'')}
 
-// === ПОЛНАЯ ОТРИСОВКА + WATCHDOG ===
 function render(){
   const y=window.scrollY||0;
   try{
     $$('.tab').forEach(t=>t.classList.toggle('on',t.dataset.page===ui.page));
-    if(ui.convoy)renderConvoy();
+    if(ui.heist)renderHeist();
+    else if(ui.convoy)renderConvoy();
     else if(ui.page==='market')renderMarket();
     else if(ui.page==='auctions')renderAuctions();
     else if(ui.page==='contracts')renderContracts();
@@ -233,7 +307,6 @@ function render(){
   try{window.scrollTo(0,y)}catch(e){}
 }
 
-// === МЯГКОЕ ОБНОВЛЕНИЕ (без пересоздания DOM) ===
 function marketList(){
   if(ui.cat==='WEAPON'||ui.cat==='ARMOR'||ui.cat==='AMMO'||ui.cat==='MERC')return GEAR.filter(x=>x.cat===ui.cat);
   let a=MARKET.products||[];
@@ -327,7 +400,7 @@ function softCraft(){
 }
 function softRender(){
   hdr();
-  if(ui.convoy||ui.open)return;
+  if(ui.convoy||ui.open||ui.heist)return;
   if(ui.page==='market')softMarket();
   else if(ui.page==='auctions')softAuctions();
   else if(ui.page==='inventory')softInventory();
@@ -347,7 +420,6 @@ function watchdog(){
   },ms));
 }
 
-// === ПОЛЛИНГ (мягкий) ===
 function startPoll(){
   if(pollStarted)return;pollStarted=true;
   setInterval(async()=>{
@@ -374,13 +446,12 @@ async function buyProduct(p){
   }else{showNotification('ОШИБКА',r.msg||'Покупка не удалась','dn');SND.play('err')}
 }
 
-// ===== ПОКУПКА СНАРЯЖЕНИЯ (наёмники — штучно) =====
 async function buyGear(g,qty){
   if(g.cat==='MERC')qty=1;
   qty=Math.max(1,Math.min(99,Math.round(qty)||1));
   const total=g.price*qty;
   if(S.bal<total)return showNotification('НЕДОСТАТОЧНО СРЕДСТВ','Нужно '+fmt(total),'dn'),SND.play('err');
-  const r=await api('/api/action','POST',{action:'buy',price:total,qty:qty,item:{name:g.name,rarity:g.rarity,cat:g.cat,hue:Math.floor(Math.random()*360),desc:g.desc,gear:true}});
+  const r=await api('/api/action','POST',{action:'buy',price:total,qty:qty,item:{name:g.name,rarity:g.rarity,cat:g.cat,hue:Math.floor(Math.random()*360),desc:g.desc,gear:true,rounds:g.rounds||0}});
   if(r.ok){
     showNotification('ПОКУПКА ЗАВЕРШЕНА',g.name+(qty>1?' ×'+qty:'')+' в инвентаре','up');
     SND.play(qty>1?'rare':'buy');
@@ -693,7 +764,7 @@ function renderMarket(){
     '<div class="stats"><div class="stat"><small>ЛОТЫ</small><b>'+(MARKET.products||[]).length+'</b></div>'+
     '<div class="stat"><small>БАЛАНС</small><b>'+fmt(S.bal)+'</b></div>'+
     '<div class="stat"><small>ТИК</small><b>#'+(MARKET.tick||0)+'</b></div>'+
-    '<div class="stat"><small>ИНВЕНТАРЬ</small><b>'+S.inv.length+'</b></div></div>'+
+    '<div class="stat"><small>ИНВЕНТАРЬ</small><b>'+S.inv.length+'</b></div></stats>'.replace('</stats>','</div>')+
     '<div class="bar">'+CATS.map(c=>'<button class="chip '+(c[0]===ui.cat?'on':'')+'" data-cat="'+c[0]+'">'+c[1]+'</button>').join('')+'</div>'+
     '<div id="grid" class="grid"></div>';
   renderGrid();
@@ -776,7 +847,7 @@ function renderCraft(){
     '<div class="empty" style="margin-top:12px">Материалы добываются на рынке и аукционах</div>';
 }
 
-// ===== КОНВОЙ / АНГАР С ЭКИПАЖЕМ =====
+// ===== КОНВОЙ / АНГАР / ОГРАБЛЕНИЯ =====
 function ensureCvCSS(){
   if($('#cv-css'))return;
   const s=document.createElement('style');
@@ -794,6 +865,13 @@ function ensureCvCSS(){
     '.cv-slot.filled{border-color:rgba(126,224,143,.5);box-shadow:inset 0 0 18px rgba(126,224,143,.08)}'+
     '.cv-core.filled{border-color:var(--amb);box-shadow:0 0 22px rgba(200,144,58,.25),inset 0 0 22px rgba(200,144,58,.10)}'+
     '.cv-acts{display:flex;gap:6px;margin-top:6px}.cv-acts .btn{flex:1;padding:8px 6px}'+
+    '.hv-map{border:1px solid var(--ln);border-radius:10px;background:radial-gradient(80% 80% at 50% 50%,rgba(126,224,143,.05),rgba(5,6,7,.92));height:190px;position:relative;overflow:hidden}'+
+    '.hv-map svg{width:100%;height:100%;display:block}'+
+    '.hv-map::after{content:"";position:absolute;left:0;right:0;top:-50%;height:45%;background:linear-gradient(180deg,transparent,rgba(126,224,143,.08),transparent);animation:artScan 3s linear infinite;pointer-events:none}'+
+    '.hv-bar{height:8px;border:1px solid var(--ln);border-radius:6px;margin:12px 0;overflow:hidden}'+
+    '.hv-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--grn),var(--amb));box-shadow:0 0 12px rgba(126,224,143,.5)}'+
+    '.wh-row{flex-direction:column;align-items:flex-start;gap:2px}'+
+    '.wh-row.off{opacity:.45;cursor:not-allowed}'+
     '@media(max-width:430px){.cv-scheme{grid-template-columns:1fr 1fr}.cv-top{grid-column:1;grid-row:1}.cv-core{grid-column:2;grid-row:1;min-height:124px}.cv-left{grid-column:1;grid-row:2}.cv-right{grid-column:2;grid-row:2}.cv-bottom{grid-column:1/3;grid-row:3}}';
   document.head.appendChild(s);
 }
@@ -839,6 +917,7 @@ function renderConvoy(){
       '<div class="cv-scheme">'+
         cvSlotHTML('top')+cvSlotHTML('left')+cvSlotHTML('core')+cvSlotHTML('right')+cvSlotHTML('bottom')+
       '</div>'+
+      (convoyReady()?'<div class="ft" style="margin-top:14px"><button class="btn pri" data-heist="1">▶ ОТПРАВИТЬ КОНВОЙ</button></div>':'')+
       '<div class="hangar-log" id="hangar-log">'+(cvLog||def)+'</div>'+
     '</div>';
 }
@@ -902,6 +981,159 @@ function convoyDrop(slot){
   render();
 }
 
+// ===== ОГРАБЛЕНИЕ: ВЫБОР ЦЕЛИ, ОПЕРАЦИЯ, ИСХОД =====
+function heistSelect(){
+  if(!convoyReady())return showNotification('КОНВОЙ НЕ ГОТОВ','Загрузи все узлы и экипаж 5+','dn'),SND.play('err');
+  ui.open='heistpick';
+  modal('<h4>ВЫБОР ЦЕЛИ // ОГРАБЛЕНИЕ</h4>'+
+    '<div class="line"><span>МОЩНОСТЬ КОНВОЯ</span><b>'+convoyScore()+' / '+MAX_SCORE+'</b></div>'+
+    '<span style="font-size:11px;color:var(--mut);display:block;margin:10px 0 6px">ЧЕМ КРУПНЕЕ ОБЪЕКТ — ТЕМ НИЖЕ ШАНС И ВЫШЕ РИСК ПОТЕРИ</span>'+
+    WAREHOUSES.map(w=>{
+      const ch=heistChance(w);
+      return '<div class="sel-row wh-row'+(w.locked?' off':'')+'" data-wh="'+w.id+'">'+
+        '<b>'+w.name+(w.locked?' · СКОРО':'')+'</b>'+
+        '<span>'+(w.locked?'модуль автоугона в разработке':'шанс успеха '+fmtChance(ch)+' · операция '+w.timer+' с')+'</span>'+
+        '<div style="font-size:9px;color:var(--mut);margin-top:4px;line-height:1.5">'+w.desc+'</div>'+
+        '</div>';
+    }).join('')+
+    '<div class="acts"><button class="btn" id="m-no">ОТМЕНА</button><button class="btn pri" id="m-yes" disabled>ОТПРАВИТЬ КОНВОЙ</button></div>');
+  let selW=null;
+  $$('.wh-row').forEach(el=>el.onclick=()=>{
+    const w=WAREHOUSES.find(x=>x.id===el.dataset.wh);
+    if(!w||w.locked)return SND.play('err');
+    $$('.wh-row').forEach(o=>o.classList.remove('on'));
+    el.classList.add('on');selW=w;
+    $('#m-yes').disabled=false;SND.play('click');
+  });
+  $('#m-no').onclick=closeModal;
+  $('#m-yes').onclick=()=>{if(!selW)return;closeModal();startHeist(selW)};
+}
+const HV_PTS=[[5,50],[25,42],[45,46],[65,30],[85,22],[95,12]];
+function hvPoint(p){
+  const segs=HV_PTS.length-1;
+  const f=Math.max(0,Math.min(1,p))*segs;
+  const i=Math.min(segs-1,Math.floor(f));
+  const t=f-i;
+  const a=HV_PTS[i],b=HV_PTS[i+1];
+  return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+}
+const HLOG=[
+  [0,'> расчёт маршрута ухода...'],
+  [8,'> маршрут построен: 3 точки смены транспорта'],
+  [16,'> синхронизация GPS-меток экипажа...'],
+  [26,'> экипаж в позиции ожидания'],
+  [38,'> отключение периметральной сигнализации...'],
+  [52,'> проникновение на объект...'],
+  [66,'> работа внутри: поиск ценностей...'],
+  [80,'> погрузка добычи...'],
+  [92,'> выход по маршруту Б...']
+];
+function startHeist(wh){
+  HEIST={wh:wh,start:Date.now(),dur:wh.timer*1000,chance:heistChance(wh),done:false,logIdx:0,iv:null};
+  ui.heist=true;
+  SND.play('raid');
+  render();
+  heistLoop();
+}
+function heistLoop(){
+  if(HEIST&&HEIST.iv)clearInterval(HEIST.iv);
+  HEIST.iv=setInterval(()=>{
+    if(!HEIST)return;
+    const el=Date.now()-HEIST.start;
+    const p=Math.min(1,el/HEIST.dur);
+    const t=$('#hv-timer');
+    if(t)t.textContent=left(Math.max(0,Math.ceil((HEIST.dur-el)/1000)));
+    const f=$('#hv-fill');if(f)f.style.width=(p*100).toFixed(1)+'%';
+    const dot=$('#hv-dot');
+    if(dot){const pt=hvPoint(p);dot.setAttribute('cx',pt[0].toFixed(1));dot.setAttribute('cy',pt[1].toFixed(1))}
+    const lg=$('#hv-log');
+    if(lg){
+      while(HEIST.logIdx<HLOG.length&&HLOG[HEIST.logIdx][0]<=p*100){
+        lg.innerHTML+=HLOG[HEIST.logIdx][1]+'<br>';
+        HEIST.logIdx++;
+        SND.play('click');
+      }
+    }
+    if(p>=1){
+      clearInterval(HEIST.iv);HEIST.iv=null;
+      finishHeist();
+    }
+  },120);
+}
+function renderHeist(){
+  ensureCvCSS();
+  const h=HEIST;
+  if(!h)return;
+  $('#view').innerHTML=
+    '<div class="convoy-top">'+
+      '<b class="convoy-title">ОПЕРАЦИЯ // '+h.wh.name+'</b>'+
+      '<span class="convoy-status">ШАНС '+fmtChance(h.chance)+'</span>'+
+    '</div>'+
+    '<div class="hangar">'+
+      '<div class="hangar-floor"></div>'+
+      '<div class="cv-head"><span>GPS // МАРШРУТ КОНВОЯ</span><b id="hv-timer">--:--</b></div>'+
+      '<div class="hv-map"><svg viewBox="0 0 100 60" preserveAspectRatio="none">'+
+        '<polyline points="5,50 25,42 45,46 65,30 85,22 95,12" fill="none" stroke="rgba(126,224,143,.35)" stroke-width="0.8" stroke-dasharray="2 2"/>'+
+        '<circle cx="5" cy="50" r="1.6" fill="#7ee08f"/>'+
+        '<circle cx="95" cy="12" r="2" fill="#c8903a"/>'+
+        '<circle id="hv-dot" cx="5" cy="50" r="1.8" fill="#e8e8ea"/>'+
+      '</svg></div>'+
+      '<div class="hv-bar"><i id="hv-fill"></i></div>'+
+      '<div class="hangar-log" id="hv-log" style="min-height:130px"></div>'+
+    '</div>';
+}
+async function finishHeist(){
+  if(!HEIST||HEIST.done)return;
+  HEIST.done=true;
+  const wh=HEIST.wh;
+  const roll=Math.random()*100;
+  const ok=roll<HEIST.chance;
+  const crew=cvCrew();
+  const loaded=[cvItem('core'),cvItem('left'),cvItem('right'),cvItem('bottom')].filter(Boolean).concat(crew);
+  const ops={remove:[],update:[],add:[]};
+  const report=[];
+  let loot=null;
+  if(ok){
+    const am=cvItem('right');
+    if(am&&am.rounds){
+      const leftR=Math.max(0,Math.round(am.rounds*(0.1+Math.random()*0.5)));
+      if(leftR<20){
+        ops.remove.push(am.uid);
+        report.push('боекомплект израсходован полностью');
+      }else{
+        ops.update.push({uid:am.uid,rounds:leftR,desc:am.desc.replace(/· остаток \d+ шт/,'')+' · остаток '+leftR+' шт',val:Math.max(1,Math.round((am.val||am.bought)*leftR/am.rounds))});
+        report.push('израсходовано '+(am.rounds-leftR)+' патронов');
+      }
+    }
+    loot=rollLoot(wh);
+    loot.forEach(l=>ops.add.push(l));
+    report.push('добыча: '+loot.length+' позиций погружено');
+  }else{
+    loaded.forEach(it=>ops.remove.push(it.uid));
+    report.push('охрана сорвала операцию: конвой захвачен');
+    report.push('конфисковано: '+loaded.length+' позиций снаряжения и экипаж');
+  }
+  await api('/api/action','POST',{action:'heist',ops:ops,label:wh.name,amount:0});
+  if(!ok){CONVOY={core:null,left:null,right:null,bottom:null,top:[]};cvSave()}
+  await loadState();
+  ui.heist=false;HEIST=null;
+  render();
+  showHeistResult(ok,wh,report,loot);
+}
+function showHeistResult(ok,wh,report,loot){
+  ui.open='heistres';
+  modal('<h4>'+(ok?'ОПЕРАЦИЯ УСПЕШНА':'ОПЕРАЦИЯ ПРОВАЛЕНА')+' · '+wh.name+'</h4>'+
+    '<div class="line"><span>ИТОГ</span><b class="'+(ok?'up':'dn')+'">'+(ok?'объект вскрыт, конвой ушёл':'конвой захвачен охраной')+'</b></div>'+
+    report.map(r=>'<div class="line"><span>СВОДКА</span><b style="font-size:10px;text-align:right">'+r+'</b></div>').join('')+
+    (ok&&loot&&loot.length?'<span style="font-size:11px;color:var(--mut);display:block;margin:12px 0 6px">ДОБЫЧА УЖЕ В ИНВЕНТАРЕ:</span>'+
+      loot.map(l=>'<div class="drop-line r-'+l.rarity+'"><b>'+l.name+'</b><span>'+(RAR_RU[l.rarity]||'')+' · '+fmt(l.val)+'</span></div>').join(''):'')+
+    (!ok?'<span style="font-size:11px;color:var(--red);display:block;margin-top:12px">Экипаж, стволы, броня, боекомплект и машина конфискованы. Конвой потерян.</span>':'')+
+    '<div class="acts"><button class="btn pri" id="m-yes">ПРИНЯТО</button></div>');
+  $('#m-yes').onclick=closeModal;
+  SND.play(ok?'rare':'fail');
+  showNotification(ok?'ОГРАБЛЕНИЕ УСПЕШНО':'КОНВОЙ ПОТЕРЯН',wh.name,ok?'up':'dn');
+}
+
 function renderProfile(){
   const worth=S.bal+S.inv.reduce((s,i)=>s+(i.val||i.bought||0),0);
   const profit=worth-100000;
@@ -937,6 +1169,7 @@ function renderProfile(){
 }
 
 document.addEventListener('click',e=>{
+  if(ui.heist)return;
   const tab=e.target.closest('.tab');
   if(tab){ui.page=tab.dataset.page;ui.convoy=false;render();return}
   const cat=e.target.closest('[data-cat]');
@@ -981,14 +1214,15 @@ document.addEventListener('click',e=>{
   if(cp){convoyPick(cp.dataset.cvPick);return}
   const cd3=e.target.closest('[data-cv-drop]');
   if(cd3){convoyDrop(cd3.dataset.cvDrop);return}
+  const hs=e.target.closest('[data-heist]');
+  if(hs){heistSelect();return}
   if(e.target.closest('#bell')){
     unread=0;badge();
     modal('<h4>УВЕДОМЛЕНИЯ</h4>'+(notes.slice(0,10).map(x=>'<div class="line"><span>'+x.title+'</span><b style="font-size:11px">'+x.msg+'</b></div>').join('')||'<div class="empty">ПУСТО</div>'));
   }
 });
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal()});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!ui.heist)closeModal()});
 
-// тик рейд-полосы
 setInterval(()=>{
   const r=MARKET.raid||{active:false,left:0};
   const t=$('#rd-t'),bar=$('#rd-i');
@@ -998,9 +1232,8 @@ setInterval(()=>{
   }
 },1000);
 
-// тик таймеров аукционов
 setInterval(()=>{
-  if(ui.page!=='auctions'||ui.open||ui.convoy)return;
+  if(ui.page!=='auctions'||ui.open||ui.convoy||ui.heist)return;
   $$('[data-auc]').forEach(cardEl=>{
     const a=AUCTIONS.find(x=>x.id===cardEl.dataset.auc);
     if(!a)return;
