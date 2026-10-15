@@ -624,7 +624,24 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         tx.insert(0, {'t': now, 'type': 'КРАФТ', 'item': 'ПРОВАЛ', 'amount': 0})
                         tx = tx[:100]
                         resp = {'ok': True, 'res': None}
-
+        elif action == 'heist':
+            ops = data.get('ops', {}) or {}
+            for u in ops.get('remove', []):
+                idx = next((i for i, x in enumerate(inv) if x.get('uid') == u), None)
+                if idx is not None:
+                    inv.pop(idx)
+            for up in ops.get('update', []):
+                it = next((x for x in inv if x.get('uid') == up.get('uid')), None)
+                if it:
+                    for k in ('desc', 'val', 'bought', 'rounds'):
+                        if k in up:
+                            it[k] = up[k]
+            for ad in ops.get('add', []):
+                inv.append({**ad, 'uid': int(now * 1000) + len(inv), 'date': now})
+            tx.insert(0, {'t': now, 'type': 'ОГРАБЛЕНИЕ', 'item': data.get('label', ''), 'amount': 0})
+            tx = tx[:100]
+            resp = {'ok': True, 'balance': balance}
+            
         # ИСПРАВЛЕНО: СОХРАНЕНИЕ СОСТОЯНИЯ ДЛЯ ВСЕХ ЭКШЕНОВ!
         state['inv'] = inv
         state['tx'] = tx
