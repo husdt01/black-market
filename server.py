@@ -480,26 +480,41 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         resp = {'ok': False, 'msg': 'unknown action'}
 
         if action == 'buy':
-            if RAID['frozen'] is not None: resp = {'ok': False, 'msg': 'Торги приостановлены: идёт рейд'}
+            if RAID['frozen'] is not None:
+                resp = {'ok': False, 'msg': 'Торги приостановлены: идёт рейд'}
             else:
                 price = data.get('price', 0)
                 item = data.get('item', {})
-                if balance >= price:
-                    balance -= price
-                    qty = data.get('qty', 1)
-                    try:
-                        qty = max(1, min(99, int(qty)))
-                    except Exception:
-                        qty = 1
-                    unit = round(price / qty)
-                    for q in range(qty):
-                        inv.append({**item, 'uid': int(now*1000) + q, 'bought': unit, 'val': unit, 'date': now})
-                    tx.insert(0, {'t': now, 'type': 'ПОКУПКА', 'item': item.get('name', '') + (' x' + str(qty) if qty > 1 else ''), 'amount': -price})
-                    tx = tx[:100]
-                    resp = {'ok': True, 'balance': balance}
-                else: resp = {'ok': False, 'msg': 'Недостаточно средств'}
-
-        elif action == 'sell':
+                mid = item.get('merc_id')
+                blocked = False
+                if mid:
+                    mercs = state.get('mercs', [])
+                    if mid in mercs:
+                        blocked = True
+                        resp = {'ok': False, 'msg': 'Контракт уже заключён: боец в единственном экземпляре'}
+                    else:
+                        mercs.append(mid)
+                        state['mercs'] = mercs
+                if not blocked:
+                    if balance >= price:
+                        balance -= price
+                        qty = data.get('qty', 1)
+                        try:
+                            qty = max(1, min(99, int(qty)))
+                        except Exception:
+                            qty = 1
+                        if mid:
+                            qty = 1
+                        unit = round(price / qty)
+                        for q in range(qty):
+                            inv.append({**item, 'uid': int(now*1000) + q, 'bought': unit, 'val': unit, 'date': now})
+                        tx.insert(0, {'t': now, 'type': 'КОНТРАКТ' if mid else 'ПОКУПКА', 'item': item.get('name', '') + (' x' + str(qty) if qty > 1 else ''), 'amount': -price})
+                        tx = tx[:100]
+                        resp = {'ok': True, 'balance': balance}
+                    else:
+                        resp = {'ok': False, 'msg': 'Недостаточно средств'}
+                        
+             elif action == 'sell':           
             uid = data.get('uid', 0)
             price = data.get('price', 0)
             idx = next((i for i, x in enumerate(inv) if x.get('uid') == uid), None)
