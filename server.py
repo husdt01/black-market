@@ -514,7 +514,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     else:
                         resp = {'ok': False, 'msg': 'Недостаточно средств'}
                         
-             elif action == 'sell':           
+        elif action == 'sell':           
             uid = data.get('uid', 0)
             price = data.get('price', 0)
             idx = next((i for i, x in enumerate(inv) if x.get('uid') == uid), None)
