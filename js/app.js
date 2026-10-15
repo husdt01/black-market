@@ -10,10 +10,11 @@ const CATS=[['ALL','ВСЕ'],['TECH','ТЕХНИКА'],['ARTIFACTS','АРТЕФ�
 const RCP={c3:{need:3,from:'COMMON',to:'UNCOMMON',chance:'85%',title:'3 × ОБЫЧНЫЙ → НЕОБЫЧНЫЙ'},e2:{need:2,from:'EPIC',to:'LEGENDARY',chance:'22%',title:'2 × ЭПИЧЕСКИЙ → ЛЕГЕНДАРНЫЙ'}};
 const CASES={c50:{price:50000,name:'СТАЛЬНОЙ',t:1},c100:{price:100000,name:'ТЕНЕВОЙ',t:2},c150:{price:150000,name:'ОМЕГА',t:3},c500:{price:500000,name:'РУНА',t:4}};
 const STAR_PKGS={p10:{stars:10,bal:50000},p25:{stars:25,bal:140000},p50:{stars:50,bal:300000},p100:{stars:100,bal:650000}};
+const BRIBE=50000;
+const PRISON_MS=30*60*1000;
 
 // ===== КАТАЛОГ =====
 const GEAR=[
-  // ОРУЖИЕ
   {id:'W-01',cat:'WEAPON',rarity:'COMMON',name:'ПМ МАКАРОВА',price:18000,desc:'9×18 ПМ · 32 выстр/мин · магазин 8 · дальность 50 м'},
   {id:'W-02',cat:'WEAPON',rarity:'UNCOMMON',name:'АПС СТЕЧКИНА',price:26000,desc:'9×18 ПМ · 700 выстр/мин · магазин 20 · дальность 100 м'},
   {id:'W-03',cat:'WEAPON',rarity:'RARE',name:'АК-74М',price:45000,desc:'5.45×39 · 650 выстр/мин · магазин 30 · дальность 500 м'},
@@ -23,7 +24,6 @@ const GEAR=[
   {id:'W-07',cat:'WEAPON',rarity:'EPIC',name:'ВСС ВИНТОРЕЗ',price:120000,desc:'9×39 · 600 выстр/мин · магазин 20 · дальность 400 м · бесшумный'},
   {id:'W-08',cat:'WEAPON',rarity:'EPIC',name:'СВ-98',price:150000,desc:'7.62×54R · болт · магазин 10 · дальность 1000 м'},
   {id:'W-09',cat:'WEAPON',rarity:'LEGENDARY',name:'ПКМ ПЕЧЕНЕГ',price:220000,desc:'7.62×54R · 650 выстр/мин · лента 100 · дальность 1500 м'},
-  // БРОНЯ
   {id:'A-01',cat:'ARMOR',rarity:'COMMON',name:'БАЛАКЛАВА «МАСКА-2»',price:6000,desc:'арамид · защита от осколков · обзор 90%'},
   {id:'A-02',cat:'ARMOR',rarity:'UNCOMMON',name:'ШЛЕМ 6Б47',price:30000,desc:'класс 2 · 1.0 кг · арамид · осколочный'},
   {id:'A-03',cat:'ARMOR',rarity:'UNCOMMON',name:'ВИЗОР «ЗАБРАЛО-6Ш»',price:22000,desc:'класс 2 · поликарбонат · противоосколочный'},
@@ -32,7 +32,6 @@ const GEAR=[
   {id:'A-06',cat:'ARMOR',rarity:'EPIC',name:'ШЛЕМ «АЛТЫН»',price:95000,desc:'класс 3 · 3.5 кг · сталь + визор · штурмовой'},
   {id:'A-07',cat:'ARMOR',rarity:'RARE',name:'ПЛАСТИНА «ГРАНИТ-4»',price:18000,desc:'класс 6 · керамика · усиленный нагрудник'},
   {id:'A-08',cat:'ARMOR',rarity:'EPIC',name:'ЩИТ «ВАНТ-ВМ»',price:75000,desc:'класс 5 · 5.5 кг · смотровое окно · штурмовой'},
-  // ПАТРОНЫ (ящиками)
   {id:'P-01',cat:'AMMO',rarity:'COMMON',name:'ЯЩИК 9×18 ПМ (250 шт)',price:6000,rounds:250,desc:'патроны ПМ/АПС · ящик 250 штук'},
   {id:'P-02',cat:'AMMO',rarity:'COMMON',name:'ЯЩИК 9×19 PARA (300 шт)',price:9000,rounds:300,desc:'патроны ВИТЯЗЬ · ящик 300 штук'},
   {id:'P-03',cat:'AMMO',rarity:'UNCOMMON',name:'ЯЩИК 5.45×39 ПС (240 шт)',price:12000,rounds:240,desc:'патроны АК-74 · ящик 240 штук'},
@@ -40,7 +39,6 @@ const GEAR=[
   {id:'P-05',cat:'AMMO',rarity:'RARE',name:'ЯЩИК 7.62×54R (100 шт)',price:16000,rounds:100,desc:'патроны СВ-98/ПКМ · ящик 100 штук'},
   {id:'P-06',cat:'AMMO',rarity:'RARE',name:'ЯЩИК 9×39 СП-6 (60 шт)',price:21000,rounds:60,desc:'патроны ВСС · бронебойные · ящик 60 штук'},
   {id:'P-07',cat:'AMMO',rarity:'COMMON',name:'ЯЩИК 12/70 КАРТЕЧЬ (50 шт)',price:7000,rounds:50,desc:'патроны САЙГА-12 · картечь · ящик 50 штук'},
-  // ТРАНСПОРТ
   {id:'V-01',cat:'VEHICLES',rarity:'RARE',name:'«ТИГР» ГАЗ-233036',price:180000,desc:'броневик · класс 3 · 8 мест · 220 км/ч · решётки на стёклах'},
   {id:'V-02',cat:'VEHICLES',rarity:'EPIC',name:'БТР-80 «ВЕКТОР»',price:320000,desc:'БТР · класс 5 · десант 8 · амфибия · термодым'},
   {id:'V-03',cat:'VEHICLES',rarity:'EPIC',name:'КАМАЗ «ТАЙФУН»',price:260000,desc:'бронегрузовик · класс 4 · кузов 14 паллет · усиленные шины'},
@@ -48,7 +46,6 @@ const GEAR=[
   {id:'V-05',cat:'VEHICLES',rarity:'RARE',name:'УРАЛ-ВВ «ПЕРИМЕТР»',price:210000,desc:'бронегрузовик · класс 4 · 10 мест · усиленная кабина'},
   {id:'V-06',cat:'VEHICLES',rarity:'UNCOMMON',name:'ФУРГОН «ФЕРМЕР»',price:22000,desc:'грузовой фургон · без брони · 12 м³ · документы чистые'},
   {id:'V-07',cat:'VEHICLES',rarity:'UNCOMMON',name:'УАЗ «БУХАНКА»',price:30000,desc:'укреплённый · внедорожный · 4 места · кузов переварен'},
-  // НАЁМНИКИ (15 бойцов, единственные экземпляры, контракт одноразовый)
   {id:'M-01',cat:'MERC',rarity:'RARE',name:'ПОЗЫВНОЙ «ГРИФ»',price:65000,role:'ШТУРМ',desc:'роль: штурмовик · входит первым · 12 выходов · вопросов не задаёт'},
   {id:'M-02',cat:'MERC',rarity:'EPIC',name:'ПОЗЫВНОЙ «КОЩЕЙ»',price:120000,role:'ВЗЛОМ',desc:'роль: взломщик · замки и сейфы · стаж 14 лет · без следов'},
   {id:'M-03',cat:'MERC',rarity:'UNCOMMON',name:'ПОЗЫВНОЙ «РТУТЬ»',price:40000,role:'ВОДИТЕЛЬ',desc:'роль: водитель · уход с точки · водит всё что ездит'},
@@ -66,7 +63,7 @@ const GEAR=[
   {id:'M-15',cat:'MERC',rarity:'UNCOMMON',name:'ПОЗЫВНОЙ «ФАРА»',price:32000,role:'ВОДИТЕЛЬ',desc:'роль: водитель · ночные смены · светомаскировка'}
 ];
 
-// ===== УЗЛЫ КОНВОЯ (top/left/right/bottom — списки, core — один) =====
+// ===== УЗЛЫ КОНВОЯ =====
 const CV_SLOTS={
   top:{label:'ВЕРХНИЙ УЗЕЛ',accept:'MERC',hint:'экипаж',multi:true},
   left:{label:'ЛЕВЫЙ УЗЕЛ',accept:'WEAPON',hint:'оружие',multi:true},
@@ -105,8 +102,13 @@ function convoyReady(){
   const crew=cvCrew().length;
   return !!(cvItem('core')&&crew>=CREW_MIN&&cvList('left').length>=crew&&cvList('bottom').length>=crew&&cvList('right').length>=crew);
 }
+function mercIdOf(it){
+  if(it.merc_id)return it.merc_id;
+  const g=GEAR.find(x=>x.cat==='MERC'&&x.name===it.name);
+  return g?g.id:'';
+}
 
-// ===== ОГРАБЛЕНИЯ: СКЛАДЫ И ШАНСЫ =====
+// ===== ОГРАБЛЕНИЯ =====
 const RW={COMMON:1,UNCOMMON:2,RARE:3,EPIC:4,LEGENDARY:5,RUNE:6,UNKNOWN:3};
 const MIN_SCORE=120,MAX_SCORE=380;
 const WAREHOUSES=[
@@ -181,7 +183,7 @@ function rollLoot(wh){
   }));
 }
 
-let S={bal:100000,inv:[],tx:[],user:'ГОСТЬ',rep:0,promo:[],mercs:[]};
+let S={bal:100000,inv:[],tx:[],user:'ГОСТЬ',rep:0,promo:[],mercs:[],prison:{}};
 let TG_ID='';
 let ui={page:'market',cat:'ALL',open:null,convoy:false,heist:false,barScroll:0};
 let notes=[],unread=0,entered=false;
@@ -232,6 +234,7 @@ async function loadState(){
     const old=new Set(S.inv.map(x=>x.uid));
     S.bal=d.balance!=null?d.balance:100000;
     const st=d.state||{};S.inv=st.inv||[];S.tx=st.tx||[];S.rep=st.rep||0;S.promo=st.promo||[];S.mercs=st.mercs||[];
+    S.prison=d.prison||st.prison||{};
     if(d.username&&S.user==='ГОСТЬ')S.user=d.username;
     let ch=false;
     if(CONVOY.core&&!S.inv.some(x=>x.uid===CONVOY.core)){CONVOY.core=null;ch=true}
@@ -241,7 +244,14 @@ async function loadState(){
       if(CONVOY[k].length!==before)ch=true;
     });
     if(ch)cvSave();
-    if(stateReady){S.inv.forEach(x=>{if(!old.has(x.uid)){showNotification('ПОСТАВКА',x.name+' поступил в инвентарь','up');SND.play('ping')}})}
+    if(stateReady){
+      S.inv.forEach(x=>{
+        if(!old.has(x.uid)&&x.cat!=='MERC'){
+          showNotification('ПОСТАВКА',x.name+' поступил в инвентарь','up');
+          SND.play('ping');
+        }
+      });
+    }
     stateReady=true;
   }
 }
@@ -460,10 +470,10 @@ async function buyProduct(p){
   }else{showNotification('ОШИБКА',r.msg||'Покупка не удалась','dn');SND.play('err')}
 }
 
-// ===== ЗАКУПКА / КОНТРАКТЫ С БОЙЦАМИ =====
 async function buyGear(g,qty){
   if(g.cat==='MERC'){
     if((S.mercs||[]).indexOf(g.id)>=0)return showNotification('КОНТРАКТ ЗАКЛЮЧЁН','Боец в единственном экземпляре','dn'),SND.play('err');
+    if((S.prison||{})[g.id]>Date.now())return showNotification('БОЕЦ В ТЮРЬМЕ','Дождитесь выхода или внесите взятку','dn'),SND.play('err');
     qty=1;
   }
   qty=Math.max(1,Math.min(99,Math.round(qty)||1));
@@ -482,7 +492,9 @@ async function buyGear(g,qty){
 function confirmBuyGear(g){
   const merc=g.cat==='MERC';
   const contracted=merc&&(S.mercs||[]).indexOf(g.id)>=0;
+  const inPrison=merc&&((S.prison||{})[g.id]||0)>Date.now();
   if(contracted)return showNotification('КОНТРАКТ ЗАКЛЮЧЁН','Этот боец уже работает на тебя','dn'),SND.play('err');
+  if(inPrison)return showNotification('БОЕЦ В ТЮРЬМЕ','Дождитесь выхода или внесите взятку','dn'),SND.play('err');
   const batch=!merc;
   ui.open='gear';
   modal('<h4>'+(merc?'КОНТРАКТ · ':'ЗАКУПКА · ')+g.name+'</h4>'+
@@ -491,7 +503,7 @@ function confirmBuyGear(g){
     '<div class="line"><span>'+(merc?'СТАВКА БОЙЦА':'ЦЕНА')+'</span><b>'+fmt(g.price)+'</b></div>'+
     '<div class="line"><span>БАЛАНС</span><b>'+fmt(S.bal)+'</b></div>'+
     (merc
-      ? '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">Боец в единственном экземпляре: контракт подписывается один раз. Повторно заключить нельзя даже после потери.</span>'
+      ? '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">Боец в единственном экземпляре: контракт подписывается один раз. Если боец будет захвачен — вызволяйте из тюрьмы или ждите срока.</span>'
       : '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">КОЛИЧЕСТВО (1–99)</span>'+
         '<input class="inp" id="qty" type="number" min="1" max="99" value="1">'+
         '<div class="line" style="margin-top:10px"><span>ИТОГО</span><b id="qty-total" style="color:var(--grn)">'+fmt(g.price)+'</b></div>')+
@@ -516,16 +528,49 @@ function openGear(id){
   if(!g)return;
   const merc=g.cat==='MERC';
   const contracted=merc&&(S.mercs||[]).indexOf(g.id)>=0;
+  const pTs=merc?((S.prison||{})[g.id]||0):0;
+  const inPrison=pTs>Date.now();
   ui.open=id;
   modal('<h4>'+g.name+'</h4>'+
     '<div class="line"><span>ID</span><b>'+g.id+'</b></div>'+
     '<div class="line"><span>ТИП</span><b>'+(RAR_RU[g.rarity]||g.rarity)+(merc?' · '+g.role:'')+'</b></div>'+
     '<div class="line"><span>ХАРАКТЕРИСТИКИ</span><b style="text-align:right;font-size:10px">'+g.desc+'</b></div>'+
     '<div class="line"><span>ЦЕНА</span><b style="color:var(--grn)">'+fmt(g.price)+'</b></div>'+
-    '<div class="line"><span>ДОСТУП</span><b>'+(merc?(contracted?'контракт заключён':'единственный экземпляр'):'партии 1–99 шт')+'</b></div>'+
-    '<div class="acts"><button class="btn" id="m-no">ЗАКРЫТЬ</button><button class="btn pri" id="m-yes" '+(contracted?'disabled':'')+'>'+(merc?'КОНТРАКТ':'КУПИТЬ')+'</button></div>');
+    '<div class="line"><span>ДОСТУП</span><b>'+(merc?(inPrison?'ЗАРЕШЁТЧЕН':contracted?'контракт заключён':'единственный экземпляр'):'партии 1–99 шт')+'</b></div>'+
+    (inPrison?'<div class="line"><span>ВЫХОД ПО СРОКУ</span><b class="dn">'+left(Math.max(0,Math.ceil((pTs-Date.now())/1000)))+'</b></div>'+
+      '<div class="line"><span>ВЗЯТКА СМОТРЕЛЮ</span><b style="color:var(--amb)">'+fmt(BRIBE)+'</b></div>':'')+
+    '<div class="acts">'+(inPrison?'<button class="btn danger" id="m-bribe">ВЗЯТКА '+fmt(BRIBE)+'</button>':'')+
+    '<button class="btn" id="m-no">ЗАКРЫТЬ</button><button class="btn pri" id="m-yes" '+(contracted||inPrison?'disabled':'')+'>'+(merc?'КОНТРАКТ':'КУПИТЬ')+'</button></div>');
   $('#m-no').onclick=closeModal;
   $('#m-yes').onclick=()=>confirmBuyGear(g);
+  const mb=$('#m-bribe');
+  if(mb)mb.onclick=()=>{closeModal();bribeModal(g.id)};
+}
+
+// ===== ТЮРЬМА / ВЗЯТКА =====
+function bribeModal(id){
+  const g=GEAR.find(x=>x.id===id);
+  const ts=(S.prison||{})[id]||0;
+  ui.open='bribe';
+  modal('<h4>ВЗЯТКА // '+g.name+'</h4>'+
+    '<div class="line"><span>СТАТУС</span><b class="dn">ЗАРЕШЁТЧЕН ПОСЛЕ ПРОВАЛА</b></div>'+
+    '<div class="line"><span>ВЫХОД ПО СРОКУ</span><b>'+left(Math.max(0,Math.ceil((ts-Date.now())/1000)))+'</b></div>'+
+    '<div class="line"><span>ВЗЯТКА СМОТРЕЛУ</span><b style="color:var(--amb)">'+fmt(BRIBE)+'</b></div>'+
+    '<span style="font-size:11px;color:var(--mut);display:block;margin-top:12px">Смотритель закрывает глаза за '+fmt(BRIBE)+'. Боец выйдет досрочно и станет доступен для нового контракта сразу.</span>'+
+    '<div class="acts"><button class="btn" id="m-no">ОТМЕНА</button><button class="btn pri" id="m-yes">ПЛАТИТЬ '+fmt(BRIBE)+'</button></div>');
+  $('#m-no').onclick=closeModal;
+  $('#m-yes').onclick=()=>payBribe(id);
+}
+async function payBribe(id){
+  const r=await api('/api/action','POST',{action:'bribe',merc_id:id});
+  if(r.ok){
+    showNotification('ВЗЯТКА ДАНА','Боец на свободе: контракт доступен','up');
+    SND.play('sell');
+    closeModal();await loadState();render();
+  }else{
+    showNotification('ОШИБКА',r.msg||'Не удалось дать взятку','dn');
+    SND.play('err');
+  }
 }
 
 async function sellProduct(uid,price){
@@ -765,18 +810,25 @@ function gearCard(g){
   const key=keyOf(g);
   const merc=g.cat==='MERC';
   const contracted=merc&&(S.mercs||[]).indexOf(g.id)>=0;
+  const pTs=merc?((S.prison||{})[g.id]||0):0;
+  const inPrison=pTs>Date.now();
+  let ft;
+  if(inPrison){
+    ft='<button class="btn danger" data-bribe="'+g.id+'">ВЗЯТКА '+fmt(BRIBE)+'</button>'+
+       '<button class="btn" disabled data-prison-t="'+pTs+'" data-merc-id="'+g.id+'">В ТЮРЬМЕ · '+left(Math.max(0,Math.ceil((pTs-Date.now())/1000)))+'</button>';
+  }else if(contracted){
+    ft='<button class="btn" disabled>КОНТРАКТ ЗАКЛЮЧЁН</button>';
+  }else{
+    ft='<button class="btn pri" data-gbuy="'+g.id+'">'+(merc?'КОНТРАКТ':'КУПИТЬ')+'</button>';
+  }
   return '<article class="card r-'+g.rarity+'" data-key="'+key+'">'+
     '<div class="art"><i></i></div>'+
     '<div style="display:flex;justify-content:space-between;font-size:10px;color:var(--mut)"><span>'+(RAR_RU[g.rarity]||g.rarity)+(merc?' · '+g.role:'')+'</span><span>'+g.id+'</span></div>'+
     '<h3>'+g.name+'</h3>'+
     '<div style="font-size:10px;color:var(--mut);font-family:var(--mono);letter-spacing:.05em;margin:2px 0 8px;line-height:1.5">'+g.desc+'</div>'+
     '<div class="row"><span>'+(merc?'Ставка':'Цена за шт')+'</span><b style="color:var(--grn)">'+fmt(g.price)+'</b></div>'+
-    '<div class="row"><span>Доступ</span><b>'+(merc?(contracted?'контракт заключён':'единственный'):'партии 1–99')+'</b></div>'+
-    '<div class="ft">'+
-      (contracted
-        ? '<button class="btn" disabled>КОНТРАКТ ЗАКЛЮЧЁН</button>'
-        : '<button class="btn pri" data-gbuy="'+g.id+'">'+(merc?'КОНТРАКТ':'КУПИТЬ')+'</button>')+
-      '<button class="btn" data-gview="'+g.id+'">ДЕТАЛИ</button></div>'+
+    '<div class="row"><span>Доступ</span><b style="'+(inPrison?'color:var(--red)':'')+'">'+(inPrison?'отбывает срок':merc?(contracted?'контракт заключён':'единственный'):'партии 1–99')+'</b></div>'+
+    '<div class="ft">'+ft+'<button class="btn" data-gview="'+g.id+'">ДЕТАЛИ</button></div>'+
     '</article>';
 }
 function renderGrid(){
@@ -914,7 +966,6 @@ function cvSlotHTML(slot){
   const m=CV_SLOTS[slot];
   if(m.multi){
     const list=cvList(slot);
-    const need=slot==='top'?CREW_MIN:cvCrew().length;
     return '<div class="cv-slot cv-'+slot+(list.length?' filled':'')+'">'+
       '<small class="cv-label">'+m.label+' // '+m.hint.toUpperCase()+(slot==='top'?' (МИН. '+CREW_MIN+')':' (1 НА БОЙЦА)')+'</small>'+
       '<b class="cv-name">'+(list.length?list.length+(slot==='top'?' / '+Math.max(CREW_MIN,list.length)+' бойцов':' шт.'):'— пусто —')+'</b>'+
@@ -1017,14 +1068,13 @@ function convoyDrop(slot){
   render();
 }
 
-// ===== ОГРАБЛЕНИЕ =====
 function heistSelect(){
   if(!convoyReady())return showNotification('КОНВОЙ НЕ ГОТОВ','Экипаж 5+ и полное снаряжение каждого бойца','dn'),SND.play('err');
   ui.open='heistpick';
   modal('<h4>ВЫБОР ЦЕЛИ // ОГРАБЛЕНИЕ</h4>'+
     '<div class="line"><span>МОЩНОСТЬ КОНВОЯ</span><b>'+convoyScore()+' / '+MAX_SCORE+'</b></div>'+
     '<div class="line"><span>ЭКИПАЖ</span><b>'+cvCrew().length+' бойцов · экипировано '+equippedCount()+'</b></div>'+
-    '<span style="font-size:11px;color:var(--mut);display:block;margin:10px 0 6px">ЧЕМ КРУПНЕЕ ОБЪЕКТ — ТЕМ НИЖЕ ШАНС И ВЫШЕ РИСК ПОТЕРИ</span>'+
+    '<span style="font-size:11px;color:var(--mut);display:block;margin:10px 0 6px">ЧЕМ КРУПНЕЕ ОБЪЕКТ — ТЕМ НИЖЕ ШАНС И ВЫШЕ РИСК ПОТЕРИ. ПРИ ПРОВАЛЕ ЭКИПАЖ СЯДЕТ НА 30 МИНУТ.</span>'+
     WAREHOUSES.map(w=>{
       const ch=heistChance(w);
       return '<div class="sel-row wh-row'+(w.locked?' off':'')+'" data-wh="'+w.id+'">'+
@@ -1130,6 +1180,7 @@ async function finishHeist(){
   const ops={remove:[],update:[],add:[]};
   const report=[];
   let loot=null;
+  let prisonIds=[];
   if(ok){
     cvList('right').forEach(am=>{
       if(am.rounds){
@@ -1148,11 +1199,12 @@ async function finishHeist(){
     report.push('добыча: '+loot.length+' позиций погружено');
   }else{
     loaded.forEach(it=>ops.remove.push(it.uid));
+    prisonIds=crew.map(m=>mercIdOf(m)).filter(Boolean);
     report.push('охрана сорвала операцию: конвой захвачен');
     report.push('конфисковано: '+loaded.length+' позиций, включая экипаж и машину');
-    report.push('контракты бойцов расторгнуты без возврата (повторный найм невозможен)');
+    if(prisonIds.length)report.push('экипаж за решёткой: 30 минут или взятка '+fmt(BRIBE)+' за каждого');
   }
-  await api('/api/action','POST',{action:'heist',ops:ops,label:wh.name,amount:0});
+  await api('/api/action','POST',{action:'heist',ops:ops,label:wh.name,amount:0,prison:prisonIds});
   if(!ok){CONVOY={core:null,top:[],left:[],right:[],bottom:[]};cvSave()}
   await loadState();
   ui.heist=false;HEIST=null;
@@ -1166,7 +1218,7 @@ function showHeistResult(ok,wh,report,loot){
     report.map(r=>'<div class="line"><span>СВОДКА</span><b style="font-size:10px;text-align:right">'+r+'</b></div>').join('')+
     (ok&&loot&&loot.length?'<span style="font-size:11px;color:var(--mut);display:block;margin:12px 0 6px">ДОБЫЧА УЖЕ В ИНВЕНТАРЕ:</span>'+
       loot.map(l=>'<div class="drop-line r-'+l.rarity+'"><b>'+l.name+'</b><span>'+(RAR_RU[l.rarity]||'')+' · '+fmt(l.val)+'</span></div>').join(''):'')+
-    (!ok?'<span style="font-size:11px;color:var(--red);display:block;margin-top:12px">Экипаж, стволы, броня, боекомплект и машина конфискованы. Конвой потерян.</span>':'')+
+    (!ok?'<span style="font-size:11px;color:var(--red);display:block;margin-top:12px">Экипаж, стволы, броня, боекомплект и машина конфискованы. Бойцы в тюрьме: выход через 30 минут или взятка '+fmt(BRIBE)+'.</span>':'')+
     '<div class="acts"><button class="btn pri" id="m-yes">ПРИНЯТО</button></div>');
   $('#m-yes').onclick=closeModal;
   SND.play(ok?'rare':'fail');
@@ -1227,6 +1279,8 @@ document.addEventListener('click',e=>{
   if(gb){const g=GEAR.find(x=>x.id===gb.dataset.gbuy);if(g)confirmBuyGear(g);return}
   const gv=e.target.closest('[data-gview]');
   if(gv){openGear(gv.dataset.gview);return}
+  const br=e.target.closest('[data-bribe]');
+  if(br){bribeModal(br.dataset.bribe);return}
   const auc=e.target.closest('[data-auc]');
   if(auc){const a=AUCTIONS.find(x=>x.id===auc.dataset.auc);if(a)openAuction(a);return}
   const sell=e.target.closest('[data-sell]');
@@ -1281,6 +1335,24 @@ setInterval(()=>{
     const last=rows[rows.length-1];
     if(last){const b=last.querySelector('b');if(b)b.textContent=left(a.left)}
   });
+},1000);
+
+// тик тюремных сроков на карточках наёмников
+setInterval(()=>{
+  if(!entered||ui.open||ui.heist)return;
+  let dirty=false;
+  $$('[data-prison-t]').forEach(el=>{
+    const ts=+el.dataset.prisonT;
+    const rem=Math.max(0,Math.ceil((ts-Date.now())/1000));
+    if(rem<=0){
+      const id=el.dataset.mercId;
+      if(id&&S.prison[id]){delete S.prison[id];dirty=true}
+      el.textContent='СРОК ИСТЁК: КОНТРАКТ ДОСТУПЕН';
+    }else{
+      el.textContent='В ТЮРЬМЕ · ВЫХОД ЧЕРЕЗ '+left(rem);
+    }
+  });
+  if(dirty&&ui.page==='market')renderGrid();
 },1000);
 
 function enterApp(){
