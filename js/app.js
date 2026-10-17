@@ -183,7 +183,7 @@ function rollLoot(wh){
   }));
 }
 
-let S={bal:100000,inv:[],tx:[],user:'ГОСТЬ',rep:0,promo:[],mercs:[],prison:{}};
+let S={bal:100000,inv:[],tx:[],user:'ГОСТЬ',rep:0,promo:[],mercs:[],prison:{},nova:false};
 let TG_ID='';
 let ui={page:'market',cat:'ALL',open:null,convoy:false,heist:false,barScroll:0};
 let notes=[],unread=0,entered=false;
@@ -235,6 +235,7 @@ async function loadState(){
     S.bal=d.balance!=null?d.balance:100000;
     const st=d.state||{};S.inv=st.inv||[];S.tx=st.tx||[];S.rep=st.rep||0;S.promo=st.promo||[];S.mercs=st.mercs||[];
     S.prison=d.prison||st.prison||{};
+    S.nova=!!(d.nova!==undefined?d.nova:st.nova);
     if(d.username&&S.user==='ГОСТЬ')S.user=d.username;
     let ch=false;
     if(CONVOY.core&&!S.inv.some(x=>x.uid===CONVOY.core)){CONVOY.core=null;ch=true}
@@ -538,7 +539,7 @@ function openGear(id){
     '<div class="line"><span>ЦЕНА</span><b style="color:var(--grn)">'+fmt(g.price)+'</b></div>'+
     '<div class="line"><span>ДОСТУП</span><b>'+(merc?(inPrison?'ЗАРЕШЁТЧЕН':contracted?'контракт заключён':'единственный экземпляр'):'партии 1–99 шт')+'</b></div>'+
     (inPrison?'<div class="line"><span>ВЫХОД ПО СРОКУ</span><b class="dn">'+left(Math.max(0,Math.ceil((pTs-Date.now())/1000)))+'</b></div>'+
-      '<div class="line"><span>ВЗЯТКА СМОТРЕЛЮ</span><b style="color:var(--amb)">'+fmt(BRIBE)+'</b></div>':'')+
+      '<div class="line"><span>ВЗЯТКА СМОТРЕЛУ</span><b style="color:var(--amb)">'+fmt(BRIBE)+'</b></div>':'')+
     '<div class="acts">'+(inPrison?'<button class="btn danger" id="m-bribe">ВЗЯТКА '+fmt(BRIBE)+'</button>':'')+
     '<button class="btn" id="m-no">ЗАКРЫТЬ</button><button class="btn pri" id="m-yes" '+(contracted||inPrison?'disabled':'')+'>'+(merc?'КОНТРАКТ':'КУПИТЬ')+'</button></div>');
   $('#m-no').onclick=closeModal;
