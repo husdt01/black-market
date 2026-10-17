@@ -388,9 +388,10 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     conn.execute("UPDATE users SET state=? WHERE tg_id=?",
                         (json.dumps(st, ensure_ascii=False), tg_id))
                 conn.commit()
-                self.send_json({'balance': row['balance'], 'state': st, 'username': row['username'], 'prison': st.get('prison', {})})
+                self.send_json({'balance': row['balance'], 'state': st, 'username': row['username'],
+                    'prison': st.get('prison', {}), 'nova': bool(st.get('nova'))})
             else:
-                self.send_json({'balance': 100000, 'state': {}, 'username': '', 'prison': {}})
+                self.send_json({'balance': 100000, 'state': {}, 'username': '', 'prison': {}, 'nova': False})
             conn.close()
         else:
             super().do_GET()
@@ -564,6 +565,14 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             else:
                 balance -= c['price']
                 drops = roll_case(cid)
+                nova_used = False
+                # NOVA1: гарантированная РУНА ПЕРВОИСТОКА при открытии контейнера РУНА
+                if cid == 'c500' and state.get('nova'):
+                    if drops:
+                        drops[0] = {'name': 'РУНА ПЕРВОИСТОКА', 'cat': 'RUNE', 'rarity': 'RUNE',
+                            'mult': 1, 'rune': True, 'val': 4000000}
+                        state['nova'] = False
+                        nova_used = True
                 for d in drops:
                     mp = d.get('val') or market_price(d['name']) or 0
                     inv.append({'uid': int(now*1000) + len(inv), 'name': d['name'], 'rarity': d['rarity'],
@@ -571,7 +580,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                         'rune': bool(d.get('rune')), 'date': now})
                 tx.insert(0, {'t': now, 'type': 'КОНТЕЙНЕР', 'item': c['name'], 'amount': -c['price']})
                 tx = tx[:100]
-                resp = {'ok': True, 'balance': balance, 'drops': drops}
+                resp = {'ok': True, 'balance': balance, 'drops': drops, 'nova_used': nova_used}
 
         elif action == 'promo':
             code = (data.get('code') or '').strip().upper()
@@ -587,6 +596,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
                     tx.insert(0, {'t': now, 'type': 'КЛЮЧ', 'item': 'ZERO', 'amount': 0})
                     tx = tx[:100]
                     resp = {'ok': True, 'balance': balance, 'reward': 0, 'item': 'РУНА ПЕРВОИСТОКА'}
+            elif code == 'NOVA1':
+                if 'NOVA1' in used: resp = {'ok': False, 'msg': 'Ключ уже активирован этим каналом'}
+                else:
+                    used.append('NOVA1')
+                    state['promo'] = used
+                    state['nova'] = True
+                    tx.insert(0, {'t': now, 'type': 'КЛЮЧ', 'item': 'NOVA1', 'amount': 0})
+                    tx = tx[:100]
+                    resp = {'ok': True, 'balance': balance, 'reward': 0, 'nova': True}
             elif code not in PROMOS: resp = {'ok': False, 'msg': 'Ключ не распознан: нет доступа'}
             elif code in used: resp = {'ok': False, 'msg': 'Ключ уже активирован этим каналом'}
             else:
